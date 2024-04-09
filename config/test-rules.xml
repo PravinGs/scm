@@ -1,0 +1,22 @@
+<group name="syslog,sshd,">
+    <rule id="2902" level="7">
+      <if_sid>2900</if_sid>
+      <pcre2>^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} status installed</pcre2>
+      <description>New dpkg (Debian Package) installed.</description>
+      <group>config_changed,</group>
+    </rule>
+    <rule id="2900" level="0">
+      <decoded_as>windows-date-format</decoded_as>
+      <pcre2>^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} status |</pcre2>
+      <pcre2>^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} startup |</pcre2>
+      <pcre2>^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} remove |</pcre2>
+      <pcre2>^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} configure |</pcre2>
+      <pcre2>^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} install |</pcre2>
+      <pcre2>^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} purge |</pcre2>
+      <pcre2>^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} trigproc |</pcre2>
+      <pcre2>^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} conffile |</pcre2>
+      <pcre2>^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} upgrade </pcre2>
+      <description>Dpkg (Debian Package) log.</description>
+    </rule>
+    
+</group>

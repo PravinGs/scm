@@ -1,0 +1,1551 @@
+<root name="decoder-parent"> 
+
+  <decoder name="pam">
+    <program_name_pcre2>\(pam_unix\)$</program_name_pcre2>
+  </decoder>
+
+  <decoder name="pam">
+    <!-- allow any program name if the prematch_pcre2 regex matches -->
+    <!--program_name_pcre2>.*</program_name_pcre2 -->
+    <prematch_pcre2>^pam_unix|^\(pam_unix\)|^pam_succeed_if</prematch_pcre2>
+  </decoder>
+
+  <decoder name="pam-user">
+    <parent>pam</parent>
+    <prematch_pcre2>^session \w+ </prematch_pcre2>
+    <pcre2 offset="after_prematch">^for user (\S+)</pcre2>
+    <order>user</order>
+  </decoder>
+
+  <decoder name="pam-host-user">
+    <parent>pam</parent>
+    <prematch_pcre2>rhost=\S+[ ]+user=\S+</prematch_pcre2>
+    <pcre2>rhost=(\S+)[ ]+?user=(\S+)</pcre2>
+    <order>srcip, user</order>
+  </decoder>
+
+  <decoder name="pam-ruser">
+    <parent>pam</parent>
+    <prematch_pcre2> ruser</prematch_pcre2>
+    <pcre2 offset="after_prematch">^=(\S+) </pcre2>
+    <order>user</order>
+  </decoder>
+
+  <decoder name="pam-ruser">
+    <parent>pam</parent>
+    <pcre2> rhost=(\S+)</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="pam-host">
+    <parent>pam</parent>
+    <prematch_pcre2> rhost</prematch_pcre2>
+    <pcre2 offset="after_prematch">^=(\S+)</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="sshd">
+    <program_name_pcre2>^sshd</program_name_pcre2>
+  </decoder>
+
+  <decoder name="sshd-success">
+    <parent>sshd</parent>
+    <prematch_pcre2>^Accepted</prematch_pcre2>
+    <pcre2 offset="after_prematch">^ \S+ for (\S+) from (\S+) port </pcre2>
+    <order>user, srcip</order>
+    <fts>name, user, location</fts>
+  </decoder>
+
+  <decoder name="ssh-denied">
+    <parent>sshd</parent>
+    <prematch_pcre2>^User \S+ from </prematch_pcre2>
+    <pcre2 offset="after_parent">^User (\S+) from (\S+) </pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="sshd-success-solaris">
+    <parent>sshd</parent>
+    <prematch_pcre2>^User </prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+), coming from (\S+), </pcre2>
+    <order>user, srcip</order>
+    <fts>name, user, location</fts>
+  </decoder>
+
+  <decoder name="ssh-kbd">
+    <parent>sshd</parent>
+    <prematch_pcre2 offset="after_parent">^Postponed keyboard-interactive|^Failed keyboard-interactive</prematch_pcre2>
+    <pcre2 offset="after_prematch"> user (\S+) from (\S+) port (\d+) </pcre2>
+    <order>user, srcip, srcport</order>
+  </decoder>
+
+  <decoder name="ssh-invfailed">
+    <parent>sshd</parent>
+    <prematch_pcre2>^Failed \S+ for invalid user|^Failed \S+ for illegal user</prematch_pcre2>
+    <pcre2 offset="after_prematch">from (\S+) port \d+ \w+$</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="ssh-failed">
+    <parent>sshd</parent>
+    <prematch_pcre2>^Failed \S+ </prematch_pcre2>
+    <pcre2 offset="after_prematch">^for (\S+) from (\S+) port \d+</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="iptables">
+    <program_name_pcre2>^kernel</program_name_pcre2>
+  </decoder>
+
+  <decoder name="ssh-error">
+    <parent>sshd</parent>
+    <prematch_pcre2>^error: PAM: Authentication \w+ </prematch_pcre2>
+    <pcre2 offset="after_prematch">^for (\S+) from (\S+)$</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="ssh-pam-error">
+    <parent>sshd</parent>
+    <prematch_pcre2>^error: PAM: </prematch_pcre2>
+    <pcre2 offset="after_prematch">user (\S+) from (\S+)</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="ssh-reverse-mapping">
+    <parent>sshd</parent>
+    <prematch_pcre2>^reverse mapping checking </prematch_pcre2>
+    <pcre2 offset="after_prematch">^\w+ for \S+ \[(\S+)\] |^\w+ for (\S+) </pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="ssh-invalid-user">
+    <parent>sshd</parent>
+    <prematch_pcre2>^Invalid user|^Illegal user</prematch_pcre2>
+    <pcre2 offset="after_prematch"> from (\S+)</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="ssh-scan">
+    <parent>sshd</parent>
+    <prematch_pcre2>^scanned from</prematch_pcre2>
+    <pcre2 offset="after_prematch"> (\S+) </pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="ssh-received">
+    <parent>sshd</parent>
+    <prematch_pcre2>^Received disconnect </prematch_pcre2>
+    <pcre2 offset="after_prematch">^from (\S+): |^from (\S+) </pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="ssh-disconnected">
+    <parent>sshd</parent>
+    <prematch_pcre2>^Disconnected from invalid user</prematch_pcre2>
+    <pcre2 offset="after_prematch">\S+ (\S+) </pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="ssh-connection">
+    <parent>sshd</parent>
+    <prematch_pcre2>^Connection closed by </prematch_pcre2>
+    <pcre2 offset="after_prematch">user (\S+) (\S+) </pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="ssh-negotiate">
+    <parent>sshd</parent>
+    <prematch_pcre2>^Unable to negotiate with </prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+) port (\d+)</pcre2>
+    <order>srcip, srcport</order>
+  </decoder>
+
+  <decoder name="ssh-protocol">
+    <parent>sshd</parent>
+    <prematch_pcre2>^Protocol major versions differ for </prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+)</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="ssh-scan2">
+    <parent>sshd</parent>
+    <prematch_pcre2>^Did not receive identification |^Bad protocol version </prematch_pcre2>
+    <pcre2 offset="after_prematch"> from (\S+)$| from (\S+) port (\d+?)$</pcre2>
+    <order>srcip,srcport</order>
+  </decoder>
+
+  <decoder name="ssh-osx-refuse">
+    <parent>sshd</parent>
+    <prematch_pcre2>^refused connect </prematch_pcre2>
+    <pcre2 offset="after_prematch">^from (\S+)$|^from \S+ \((\S+[A-Za-z0-9@_-]+?)\)$|^from \S+ \((\S+::)\)$</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="ssh-closed">
+    <parent>sshd</parent>
+    <prematch_pcre2>^Connection closed </prematch_pcre2>
+    <pcre2 offset="after_prematch">^by (\S+)$</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="ssh-disconnect">
+    <parent>sshd</parent>
+    <prematch_pcre2>^Received disconnect </prematch_pcre2>
+    <pcre2 offset="after_prematch">^from (\S+):</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="sshd-ldap">
+    <parent>sshd</parent>
+    <prematch_pcre2>^pam_ldap: </prematch_pcre2>
+    <pcre2>user "uid=(\S+),ou=[A-Za-z0-9@_-]+?,dc=[A-Za-z0-9@_-]+?,dc=[A-Za-z0-9@_-]+"</pcre2>
+    <order>user</order>
+  </decoder>
+
+  <decoder name="sshd-negotiate">
+    <parent>sshd</parent>
+    <prematch_pcre2 offset="after_parent">fatal: Unable to negotiate with </prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+) port (\d+?): |^(\S+): </pcre2>
+    <order>srcip, srcport</order>
+  </decoder>
+
+  <decoder name="sshd-pam-host-user">
+    <parent>sshd</parent>
+    <prematch_pcre2>rhost=\S+[ ]+?user=\S+</prematch_pcre2>
+    <pcre2>rhost=(\S+)[ ]+?user=(\S+)</pcre2>
+    <order>srcip, user</order>
+  </decoder>
+
+  <decoder name="sshd-exceed">
+    <parent>sshd</parent>
+    <prematch_pcre2> exceeded for </prematch_pcre2>
+    <pcre2 offset="after_prematch">(\S+) from (\S+) port (\d+) </pcre2>
+    <order>user, srcip, srcport</order>
+  </decoder>
+
+
+  <!-- Dropbear rules -->
+  <decoder name="dropbear">
+    <program_name_pcre2>^dropbear</program_name_pcre2>
+  </decoder>
+
+  <!--
+  Jan  8 16:39:33 tp.lan dropbear[14824]: Bad password attempt for 'root' from 193.219.28.149:48629
+  -->
+
+  <decoder name="dropbear-bad-password">
+    <parent>dropbear</parent>
+    <prematch_pcre2>password</prematch_pcre2>
+    <pcre2 offset="after_prematch">for '(\S+)' from (\S+):\d+$</pcre2>
+    <order>dstuser, srcip</order>
+  </decoder>
+
+  <!--
+  Jan  8 19:54:12 tp.lan dropbear[15197]: Login attempt for nonexistent user from 182.72.89.122:4328
+  -->
+
+  <decoder name="dropbear-nonexist">
+    <parent>dropbear</parent>
+    <prematch_pcre2>nonexistent</prematch_pcre2>
+    <pcre2 offset="after_prematch">from (\S+):\d+$</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <!--
+  Jan  8 19:32:41 tp.lan dropbear[15165]: Pubkey auth succeeded for 'root' with key md5 78:d6:41:ca:78:37:80:88:1d:15:0a:68:91:d1:4e:ad from 10.10.10.241:51737
+  -->
+
+  <decoder name="dropbear-from">
+    <parent>dropbear</parent>
+    <pcre2>(\S+) for '(\S+)' with key \S+ (\S+) from (\S+):\d+$</pcre2>
+    <order>status,dstuser,extra_data,srcip</order>
+  </decoder>
+
+  <decoder name="telnetd">
+    <program_name_pcre2>^telnetd|^in\.telnetd</program_name_pcre2>
+  </decoder>
+
+  <decoder name="telnetd-ip">
+    <parent>telnetd</parent>
+    <pcre2>from (\S+)$</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="rshd">
+    <program_name_pcre2>^rshd$</program_name_pcre2>
+  </decoder>
+
+  <decoder name="rshd-illegal-connection">
+    <parent>rshd</parent>
+    <pcre2>^Connection from (\S+) on illegal port$</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="cimserver">
+    <program_name_pcre2>^cimserver$</program_name_pcre2>
+  </decoder>
+
+  <decoder name="cimserver-failed-authentication">
+    <parent>cimserver</parent>
+    <prematch_pcre2>^[A-Za-z0-9@_-]+: Authentication failed for user </prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+)\.$</pcre2>
+    <order>user</order>
+  </decoder>
+
+  <decoder name="smbd">
+    <program_name_pcre2>^smbd</program_name_pcre2>
+  </decoder>
+
+  <decoder name="smbd-user">
+    <parent>smbd</parent>
+    <prematch_pcre2>User name:</prematch_pcre2>
+    <pcre2 offset="after_prematch">^ (\S+)\.</pcre2>
+    <order>user</order>
+  </decoder>
+
+  <decoder name="smbd-ip">
+    <parent>smbd</parent>
+    <pcre2> from \((\S+)\)</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="smbd-from">
+    <parent>smbd</parent>
+    <prematch_pcre2> from (\S+)$</prematch_pcre2>
+    <pcre2> from (\S+)$</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="smbd-client">
+    <parent>smbd</parent>
+    <prematch_pcre2>to client \S+\.</prematch_pcre2>
+    <pcre2>to client (\S+)\. </pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="nmbd">
+    <program_name_pcre2>^nmbd</program_name_pcre2>
+  </decoder>
+
+  <decoder name="sudo">
+    <program_name_pcre2>^sudo</program_name_pcre2>
+    <pcre2>^[ ]*?(\S+)[ ]:[ ]TTY=\S+[ ];[ ]PWD=(\S+)[ ];[ ]USER=(\S+)[ ];[ ]COMMAND=(.+)$|</pcre2>
+    <pcre2>^[ ]*?(\S+)[ ]:[ ]TTY=\S+[ ];[ ]PWD=(\S+)[ ];[ ]USER=(\S+)[ ];[ ]TSID=\S+[ ];[ ]COMMAND=(.+)$</pcre2>
+    <order>dstuser,url,srcuser,status</order>
+    <fts>name,dstuser,location</fts>
+    <ftscomment>First time user executed the sudo command</ftscomment>
+  </decoder>
+
+  <decoder name="su">
+    <program_name_pcre2>^su$</program_name_pcre2>
+  </decoder>
+
+  <decoder name="su-detail">
+    <parent>su</parent>
+    <prematch_pcre2>^'su </prematch_pcre2>
+    <pcre2>^'su (\S+)' \S+ for (\S+) on \S+$</pcre2>
+    <order>dstuser, srcuser</order>
+    <fts>name, srcuser, location</fts>
+  </decoder>
+
+  <decoder name="su-ldap">
+    <parent>su</parent>
+    <prematch_pcre2>pam_ldap</prematch_pcre2>
+    <pcre2>user "uid=(\S+),</pcre2>
+    <order>user</order>
+  </decoder>
+
+  <decoder name="su">
+    <prematch_pcre2>^SU \S+ \S+ </prematch_pcre2>
+    <pcre2 offset="after_prematch">^\S \S+ (\S+)-(\S+)$</pcre2>
+    <order>srcuser, dstuser</order>
+    <fts>name, srcuser, location</fts>
+  </decoder>
+
+  <decoder name="su-failed">
+    <parent>su</parent>
+    <prematch_pcre2>^FAILED SU </prematch_pcre2>
+    <pcre2 offset="after_prematch">^\(to (\S+) (\S+) on</pcre2>
+    <order>dstuser, srcuser</order>
+  </decoder>
+
+  <decoder name="su-detail2">
+    <parent>su</parent>
+    <prematch_pcre2> </prematch_pcre2>
+    <pcre2><![CDATA[^BAD SU (\S+) to (\S+) on|]]></pcre2>
+    <pcre2><![CDATA[^failed: \S+ changing from (\S+) to (\S+)|]]></pcre2>
+    <pcre2><![CDATA[^\S \S+ (\S+)[()*+,.:;\<=>?\[\]!"'#%&$|{}-](\S+)$|^(\S+) to (\S+) on ]]></pcre2>
+    <order>srcuser, dstuser</order>
+    <fts>name, srcuser, location</fts>
+  </decoder>
+
+  <decoder name="proftpd">
+    <program_name_pcre2>^proftpd</program_name_pcre2>
+  </decoder>
+
+  <decoder name="proftpd-success">
+    <parent>proftpd</parent>
+    <prematch_pcre2>: Login successful</prematch_pcre2>
+    <pcre2>^\S+ \(\S+\[(\S+)\]\)[ ]*?\S [A-Za-z0-9@_-]+? (\S+): </pcre2>
+    <pcre2>Login successful</pcre2>
+    <order>srcip, user</order>
+    <fts>name, user, srcip, location</fts>
+  </decoder>
+
+  <decoder name="proftpd-ip">
+    <parent>proftpd</parent>
+    <pcre2>^\S+ \(\S+\[(\S+)\]\)</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="pure-ftpd">
+    <program_name_pcre2>^pure-ftpd</program_name_pcre2>
+  </decoder>
+
+  <decoder name="pure-ftpd-login">
+    <parent>pure-ftpd</parent>
+    <prematch_pcre2>^\S+ \[INFO\] \S+ is now logged in</prematch_pcre2>
+    <pcre2>^\(\?@(\S+)\) \[INFO\] (\S+) is now logged in</pcre2>
+    <order>srcip, user</order>
+    <fts>name, user, srcip, location</fts>
+  </decoder>
+
+  <decoder name="pure-ftpd-generic">
+    <parent>pure-ftpd</parent>
+    <pcre2>^\((\S+)@(\S+)\) \[</pcre2>
+    <order>user,srcip</order>
+  </decoder>
+
+  <decoder name="pure-transfer">
+    <prematch_pcre2>^\S+ - \S+ \[\d{2}/\S{3}/\d{4}:\d{2}:\d{2}:\d{2} \S\d{4}\] "[A-Za-z0-9@_-]+? \S+" </prematch_pcre2>
+    <pcre2>^(\S+) - (\S+) \[\d{2}/\S{3}/\d{4}:\d{2}:\d{2}:\d{2} -\d{4}\] "(\S+) (.+) (\d+) \d+$</pcre2>
+    <order>extra_data,dstuser,action,url,status</order>
+  </decoder>
+
+  <decoder name="vsftpd">
+    <prematch_pcre2>^[A-Za-z0-9@_-]{3} [A-Za-z0-9@_-]{3}[ ]+?\d+? \S+ \d+? \[pid \d+?\] </prematch_pcre2>
+  </decoder>
+
+  <decoder name="vsftpd">
+    <program_name_pcre2>^vsftpd</program_name_pcre2>
+    <prematch_pcre2>^[A-Za-z0-9@_-]{3} [A-Za-z0-9@_-]{3}[ ]+?\d+? \S+ \d+? \[pid \d+?\] </prematch_pcre2>
+  </decoder>
+
+  <decoder name="vsftpd_login">
+    <parent>vsftpd</parent>
+    <prematch_pcre2 offset="after_parent"> LOGIN:</prematch_pcre2>
+    <pcre2 offset="after_parent">\[(\S+)\] (\S+ LOGIN): Client "(\S+[A-Za-z0-9@_-])"$</pcre2>
+    <order>user,status,srcip</order>
+  </decoder>
+
+  <decoder name="vsftpd_connect">
+    <parent>vsftpd</parent>
+    <prematch_pcre2 offset="after_parent">^CONNECT:</prematch_pcre2>
+    <pcre2 offset="after_parent">(CONNECT): Client "(\S+[A-Za-z0-9@_-]+?)"$</pcre2>
+    <order>action,srcip</order>
+  </decoder>
+
+  <decoder name="vsftpd_cmd">
+    <parent>vsftpd</parent>
+    <pcre2 offset="after_parent">\[(\S+)\] (OK \S+): Client "(\S+)", "(.+)".*</pcre2>
+    <order>user,status,srcip,url</order>
+  </decoder>
+
+  <decoder name="vsftpd_default">
+    <parent>vsftpd</parent>
+    <pcre2 offset="after_parent">Client "(\S+[A-Za-z0-9@_-])"$</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="ftpd">
+    <program_name_pcre2>^ftpd|^in\.ftpd</program_name_pcre2>
+  </decoder>
+
+  <decoder name="ftpd-mac-failure">
+    <parent>ftpd</parent>
+    <prematch_pcre2>^Failed authentication from: \S+ |</prematch_pcre2>
+    <prematch_pcre2>^repeated login failures from </prematch_pcre2>
+    <!--<regex offset="after_prematch">(\S+)</regex>-->
+    <pcre2 offset="after_prematch">^\S+ \[(\S+)\]$|^(\S+)</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="ftpd-refused">
+    <parent>ftpd</parent>
+    <prematch_pcre2>^FTP LOGIN REFUSED </prematch_pcre2>
+    <pcre2 offset="after_prematch">\[(\S+)\]$</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="ftpd-ip">
+    <parent>ftpd</parent>
+    <pcre2>from (\S+)$</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="ftpd-tru64">
+    <parent>ftpd</parent>
+    <prematch_pcre2>^login \S+ from \S+ failed\.</prematch_pcre2>
+    <pcre2>^login (\S+) from (\S+) failed\.$</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="arpwatch">
+    <program_name_pcre2>^arpwatch</program_name_pcre2>
+  </decoder>
+
+  <decoder name="arpwatch-new">
+    <parent>arpwatch</parent>
+    <prematch_pcre2>^new station |^bogon </prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+) (\S+)</pcre2>
+    <order>srcip, extra_data</order>
+    <fts>name, srcip, extra_data</fts>
+  </decoder>
+
+  <decoder name="mysql_log">
+    <prematch_pcre2>^MySQL log:</prematch_pcre2>
+  </decoder>
+
+  <decoder name="postgresql_log">
+    <prematch_pcre2>^\[\d{4}-\d{2}-\d{2} \S+ [A-Za-z0-9@_-]+?\] </prematch_pcre2>
+    <pcre2 offset="after_prematch">^\S+ ([A-Za-z0-9@_-]+?): </pcre2>
+    <order>status</order>
+  </decoder>
+
+  <decoder name="imapd">
+    <program_name_pcre2>^imapd</program_name_pcre2>
+    <pcre2 offset="after_prematch">user=(\S+) .+ \[(\S+)\]$</pcre2>
+    <order>user,srcip</order>
+  </decoder>
+
+  <decoder name="vpopmail">
+    <program_name_pcre2>^vpopmail</program_name_pcre2>
+  </decoder>
+
+  <decoder name="vpopmail-fail">
+    <parent>vpopmail</parent>
+    <prematch_pcre2>^vchkpw-\S+: password fail</prematch_pcre2>
+    <pcre2 offset="after_prematch"> (\S+)@\S+:(\S+)$</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="vpopmail-notfound">
+    <parent>vpopmail</parent>
+    <prematch_pcre2>^vchkpw-\S+: vpopmail user not </prematch_pcre2>
+    <pcre2 offset="after_prematch">^found (\S+):(\S+)$</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="vpopmail-empty">
+    <parent>vpopmail</parent>
+    <prematch_pcre2>^vchkpw-\S+: null password </prematch_pcre2>
+    <pcre2 offset="after_prematch">^given (\S+):(\S+)$</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="vpopmail-success">
+    <parent>vpopmail</parent>
+    <prematch_pcre2>^vchkpw-\S+: \(\S+\) login </prematch_pcre2>
+    <pcre2 offset="after_prematch">^success (\S+):(\S+)$</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="vm-pop3d">
+    <program_name_pcre2>^vm-pop3d</program_name_pcre2>
+  </decoder>
+
+  <decoder name="vm-pop3d-fail">
+    <parent>vm-pop3d</parent>
+    <prematch_pcre2>^User '</prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+)' - [A-Za-z0-9@_-]+? auth, </pcre2>
+    <pcre2>from=(\S+)$</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="courier">
+    <program_name_pcre2>^pop3d|^courierpop3login|^imaplogin|^courier-pop3|^courier-imap</program_name_pcre2>
+  </decoder>
+
+  <decoder name="courier-login">
+    <parent>courier</parent>
+    <prematch_pcre2>^LOGIN, </prematch_pcre2>
+    <pcre2 offset="after_prematch">^user=(\S+), ip=\[(\S+)\]$</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="courier-generic">
+    <parent>courier</parent>
+    <pcre2>, ip=\[(\S+)\]$</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="dovecot">
+    <program_name_pcre2>^dovecot</program_name_pcre2>
+  </decoder>
+
+  <decoder name="dovecot-success">
+    <parent>dovecot</parent>
+    <prematch_pcre2 offset="after_parent">^\w{4}-login: Login: </prematch_pcre2>
+    <pcre2 offset="after_prematch">^user=&lt;(\S+)>, method=\S+, rip=(\S+), lip=(\S+), mpid=\S+, (\S*?)$</pcre2>
+    <order>user, srcip, dstip, protocol</order>
+  </decoder>
+
+  <decoder name="dovecot-aborted">
+    <parent>dovecot</parent>
+    <prematch_pcre2 offset="after_parent">^\w{4}-login: Aborted login</prematch_pcre2>
+  <pcre2 offset="after_prematch">: user=&lt;(\S+)>, method=\S+, rip=(\S+), lip=(\S+), (\S*)$</pcre2>
+    <order>user, srcip, dstip, protocol</order>
+  </decoder> 
+
+  <decoder name="dovecot-fail">
+    <parent>dovecot</parent>
+    <prematch_pcre2 offset="after_parent">^auth\(default\)|auth-worker\(default\)</prematch_pcre2>
+    <pcre2 offset="after_prematch">^: \S+\((\S+),(\S+)\)</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="dovecot-authfailed">
+    <parent>dovecot</parent>
+    <prematch_pcre2 offset="after_parent">^\w{4}-login:</prematch_pcre2>
+    <pcre2 offset="after_prematch"><![CDATA[\(auth failed, \d+? attempts in \d+? secs\): user=\<(\S+)\>, method=\S+, rip=(\S+), lip=(\S+)]]></pcre2>
+    <order>user,srcip,dstip</order>
+  </decoder>
+
+  <decoder name="dovecot-disconnect">
+    <parent>dovecot</parent>
+    <prematch_pcre2 offset="after_parent">^\w{4}-login: Disconnected: </prematch_pcre2>
+    <pcre2 offset="after_prematch">^rip=(\S+), lip=(\S+)</pcre2>
+    <order>srcip, dstip</order>
+  </decoder>
+
+  <decoder name="dovecot-info">
+    <program_name_pcre2>^Info$|^Warn$</program_name_pcre2>
+  </decoder>
+
+  <decoder name="imap-login-login">
+    <parent>dovecot-info</parent>
+    <prematch_pcre2>imap-login</prematch_pcre2>
+    <pcre2 offset="after_parent">Login: user=(\S+), method=.+, rip=(\S+), lip=(\S+) </pcre2>
+    <order>user, srcip, dstip</order>
+  </decoder>
+
+  <decoder name="dovecot-info-auth">
+    <parent>dovecot-info</parent>
+    <pcre2 offset="after_parent">auth\(.+\): \S+\((\S+),(\S+)\):</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="named">
+    <program_name_pcre2>^named</program_name_pcre2>
+  </decoder>
+
+  <decoder name="named-query">
+    <parent>named</parent>
+    <prematch_pcre2>: query:? </prematch_pcre2>
+    <pcre2>client @\S+ (\S+)#\d+[ ]*?\S*: </pcre2>
+    <order>srcip,url</order>
+  </decoder>
+
+  <decoder name="named-query">
+    <parent>named</parent>
+    <pcre2>query: (\S+) IN|query \S+ '(\S+)/</pcre2>
+    <order>url</order>
+  </decoder>
+
+  <decoder name="named_client">
+    <parent>named</parent>
+    <prematch_pcre2>^client </prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+)#</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="named_from">
+    <parent>named</parent>  
+    <pcre2 offset="after_parent"> from \[(\S+)\]</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="named-master">
+    <parent>named</parent>
+    <prematch_pcre2> for master</prematch_pcre2>
+    <pcre2>for master (\S+):(\d+) \S+ \(source (\S+)#d\+\)$</pcre2>
+    <order>dstip,dstport,srcip</order>
+  </decoder>
+
+  <decoder name="postfix">
+    <program_name_pcre2>^postfix</program_name_pcre2>
+  </decoder>
+
+  <decoder name="postfix-reject">
+    <use_own_name>true</use_own_name>
+    <parent>postfix</parent>
+    <prematch_pcre2>^NOQUEUE: reject: \w{4} from </prematch_pcre2>
+    <pcre2 offset="after_prematch">\[(\S+)\]:\d+?: (\d+?) |\[(\S+)\]:(\d+?): |\[(\S+)\]: (\d+?) |\[(\S+)\]:(\d+?): </pcre2>
+    <order>srcip,id</order>
+  </decoder>
+
+  <decoder name="postfix-sasl">
+    <parent>postfix</parent>
+    <prematch_pcre2>^warning: \S+: SASL </prematch_pcre2>
+    <pcre2>^warning: \S+\[(\S+)\]:</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="sendmail-reject">
+    <program_name_pcre2>^sendmail|^sm-mta|^sm-msp-queue</program_name_pcre2>
+  </decoder>
+
+  <decoder name="sendmail-pre-greeting">
+    <parent>sendmail-reject</parent>
+    <prematch_pcre2>^\S+: rejecting commands from</prematch_pcre2>
+    <pcre2 offset="after_prematch">^ \S+ \[(\S+)\]</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="sendmail-reject-nodns">
+    <parent>sendmail-reject</parent>
+    <prematch_pcre2>relay=\[</prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+)\]</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="sendmail-reject-dns">
+    <parent>sendmail-reject</parent>
+    <prematch_pcre2>relay=\S+ \[</prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+)\]</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="smf-sav-reject">
+    <program_name_pcre2>^smf-sav</program_name_pcre2>
+    <prematch_pcre2>^sender check failed|</prematch_pcre2>
+    <prematch_pcre2>^sender check tempfailed</prematch_pcre2>
+    <pcre2 offset="after_prematch">^ \(cached\): \S+, (\S+),|</pcre2>
+    <pcre2>^: \S+, (\S+),</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="mailscanner">
+    <program_name_pcre2>^MailScanner</program_name_pcre2>
+  </decoder>
+
+  <decoder name="mailscanner-ip">
+    <parent>mailscanner</parent>
+    <prematch_pcre2>^Message \S+ from </prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+) \S+ to \S+ is (\w+)</pcre2>
+    <order>srcip, action</order>
+  </decoder>
+
+  <decoder name="smtpd">
+    <program_name_pcre2>^smtpd</program_name_pcre2>
+  </decoder>
+
+  <decoder name="smtpd-client">
+    <parent>smtpd</parent>
+    <prematch_pcre2 offset="after_parent">^client</prematch_pcre2>
+    <pcre2>^client (\S+) </pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="smtpd-relay">
+    <parent>smtpd</parent>
+    <prematch_pcre2>relay=</prematch_pcre2>
+    <pcre2>relay=\S+ \[(\S+)\], </pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="smtpd-in">
+    <parent>smtpd</parent>
+    <prematch_pcre2 offset="after_parent">^smtp-in: </prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+) </pcre2>
+    <order>status</order>
+  </decoder>
+
+  <decoder name="smtpd-in">
+    <parent>smtpd</parent>
+    <pcre2> => (\d+) </pcre2>
+    <order>action</order>
+  </decoder>
+
+  <decoder name="iptables-1">
+    <parent>iptables</parent>
+    <type>firewall</type>
+    <prematch_pcre2>^\[\d+\.\d+\] \S+ IN=</prematch_pcre2>
+
+    <pcre2>^\[\d+\.\d+\] (\S+) .+ SRC=(\S+) DST=(\S+)</pcre2>
+    <pcre2> .+ PROTO=(\w+) </pcre2>
+    <order>action,srcip,dstip,protocol</order>
+  </decoder>
+
+  <decoder name="iptables-1">
+    <parent>iptables</parent>
+    <type>firewall</type>
+    <pcre2 offset="after_regex">^SPT=(\d+) DPT=(\d+) </pcre2>
+    <order>srcport,dstport</order>
+  </decoder>
+
+  <decoder name="iptables-2">
+    <parent>iptables</parent>
+    <type>firewall</type>
+    <prematch_pcre2>^\S+ IN=</prematch_pcre2>
+
+    <pcre2>^(\S+) .+ SRC=(\S+) DST=(\S+) .+ </pcre2>
+    <pcre2>PROTO=(\w+) </pcre2>
+    <order>action,srcip,dstip,protocol</order>
+  </decoder>
+
+  <decoder name="iptables-2">
+    <parent>iptables</parent>
+    <type>firewall</type>
+    <pcre2 offset="after_regex">^SPT=(\d+?) DPT=(\d+?) </pcre2>
+    <order>srcport,dstport</order>
+  </decoder>
+
+  <decoder name="iptables-shorewall">
+    <parent>iptables</parent>
+    <type>firewall</type>
+    <prematch_pcre2>^Shorewall:\S+:</prematch_pcre2>
+
+    <pcre2 offset="after_prematch">^(\S+):.+ SRC=(\S+) DST=(\S+) .+ </pcre2>
+    <pcre2>PROTO=(\w+) </pcre2>
+    <order>action,srcip,dstip,protocol</order>
+  </decoder>
+
+  <decoder name="iptables-shorewall">
+    <parent>iptables</parent>
+    <type>firewall</type>
+    <pcre2 offset="after_regex">^SPT=(\d+) DPT=(\d+) </pcre2>
+    <order>srcport,dstport</order>
+  </decoder>
+
+  <decoder name="iptables-shorewall2">
+    <parent>iptables</parent>
+    <type>firewall</type>
+    <prematch_pcre2><![CDATA[^[()*+,.:;\<=>?\[\]!"'#%&$|{}-]\S+[()*+,.:;\<=>?\[\]!"'#%&$|{}-] Shorewall:\S+:]]></prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+):.+ SRC=(\S+) DST=(\S+) .+ </pcre2>
+    <pcre2>PROTO=(\w+) </pcre2>
+    <order>action,srcip,dstip,protocol</order>
+  </decoder>
+
+  <decoder name="ipfilter">
+    <type>firewall</type>
+    <program_name_pcre2>^ipmon</program_name_pcre2>
+    <pcre2> (\w) (\S+),(\d+?) -> (\S+),(\d+?) PR (\w+) </pcre2>
+    <order>action,srcip,srcport,dstip,dstport,protocol</order>
+  </decoder>
+
+  <decoder name="aix-ipsec">
+    <type>firewall</type>
+    <program_name_pcre2>^ipsec_logd</program_name_pcre2>
+    <pcre2> R:(\w)  \w:\S+ S:(\S+) </pcre2>
+    <pcre2>D:(\S+) P:(\S+) SP:(\d+) DP:(\d+) </pcre2>
+    <order>action,srcip,dstip,protocol,srcport,dstport</order>
+  </decoder>
+
+  <decoder name="pf">
+    <type>firewall</type>
+    <program_name_pcre2>^pf$</program_name_pcre2>
+    <plugin_decoder>PF_Decoder</plugin_decoder>
+  </decoder>
+
+  <decoder name="sonicwall">
+    <type>firewall</type>
+    <prematch_pcre2>^id=[A-Za-z0-9@_-]+? sn=[A-Za-z0-9@_-]+? time=\S+ \S+ fw=\S+ pri=\d </prematch_pcre2>
+    <plugin_decoder>SonicWall_Decoder</plugin_decoder>
+  </decoder>
+
+  <decoder name="netscreenfw">
+    <program_name />
+    <prematch_pcre2>^NetScreen device_id</prematch_pcre2>
+  </decoder>
+
+  <decoder name="netscreenfw-traffic">
+    <parent>netscreenfw</parent>
+    <type>firewall</type>
+
+    <prematch_pcre2 offset="after_parent">system-notification-00257</prematch_pcre2>
+    <prematch_pcre2>\(traffic\): </prematch_pcre2>
+
+    <pcre2 offset="after_prematch"> proto=(\w+) .+action=(\w+) </pcre2>
+    <pcre2>.+src=(\S+) dst=(\S+) src_port=(\d+) dst_port=(\d+)</pcre2>
+    <order>protocol, action, srcip, dstip, srcport, dstport</order>
+  </decoder>
+
+  <decoder name="netscreenfw-critical">
+    <parent>netscreenfw</parent>
+    <prematch_pcre2 offset="after_parent">system-critical-.+ from |</prematch_pcre2>
+    <prematch_pcre2>system-alert-.+ from |</prematch_pcre2>
+    <prematch_pcre2>system-emergency-.+ From </prematch_pcre2>
+
+    <pcre2 offset="after_parent">system-(\w+?)-(\d+): .+ </pcre2>
+    <pcre2>from.+(\S+)</pcre2>
+    <order>action, id, srcip</order>
+  </decoder>
+
+  <decoder name="netscreenfw-admin">
+    <parent>netscreenfw</parent>
+    <pcre2 offset="after_parent">system-(\w+?)-(\d+):</pcre2>
+    <order>action, id</order>
+  </decoder>
+
+  <decoder name="pix">
+    <prematch_pcre2>^%PIX-|^[A-Za-z0-9@_-]{3} \d{2} \d{4} \d{2}:\d{2}:\d{2}: %PIX-|</prematch_pcre2>
+    <prematch_pcre2>^%ASA-|^[A-Za-z0-9@_-]{3} \d{2} \d{4} \d{2}:\d{2}:\d{2}: %ASA-|</prematch_pcre2>
+    <prematch_pcre2>^%FWSM-|^[A-Za-z0-9@_-]{3} \d{2} \d{4} \d{2}:\d{2}:\d{2}: %FWSM-</prematch_pcre2>
+  </decoder>
+
+  <decoder name="pix-fw1">
+    <parent>pix</parent>
+    <type>firewall</type>
+    <prematch_pcre2 offset="after_parent">^2-106001</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+): [A-Za-z0-9@_-]+ ([A-Za-z0-9@_-]+) \S+ (\S+) from </pcre2>
+    <pcre2>(\S+)/(\S+) to (\S+)/(\S+)</pcre2>
+    <order>id, protocol, action, srcip, srcport, dstip, dstport</order>
+  </decoder>
+
+  <decoder name="pix-fw2">
+    <parent>pix</parent>
+    <type>firewall</type>
+    <prematch_pcre2 offset="after_parent">^3-710003|^7-710002|^7-710005</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+): (\S+) [A-Za-z0-9@_-]+ ([A-Za-z0-9@_-]+) .+from </pcre2>
+    <pcre2>(\S+)/(\S+) to [A-Za-z0-9@_-]+:(\S+)/(\S+)</pcre2>
+    <order>id, protocol, action, srcip, srcport, dstip, dstport</order>
+  </decoder>
+
+  <decoder name="pix-fw3">
+    <parent>pix</parent>
+    <type>firewall</type>
+    <prematch_pcre2 offset="after_parent">^4-106023</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+): ([A-Za-z0-9@_-]+) ([A-Za-z0-9@_-]+) src [A-Za-z0-9@_-]+:</pcre2>
+    <pcre2>(\S+)/(\S+) dst [A-Za-z0-9@_-]+?:(\S+)/(\S+)</pcre2>
+    <order>id, action, protocol, srcip, srcport, dstip, dstport</order>
+  </decoder>
+
+  <decoder name="pix-fw4">
+    <parent>pix</parent>
+    <type>firewall</type>
+    <prematch_pcre2 offset="after_parent">^4-106019</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+): IP packet from (\S+) to </pcre2>
+    <pcre2>(\S+), protocol ([A-Za-z0-9@_-]+) ([A-Za-z0-9@_-]+) </pcre2>
+    <order>id, srcip, dstip, protocol, action</order>
+  </decoder>
+
+  <decoder name="pix-fw5">
+    <parent>pix</parent>
+    <type>firewall</type>
+    <prematch_pcre2 offset="after_parent">^2-106006|^2-106007</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+): ([A-Za-z0-9@_-]+) \S+ ([A-Za-z0-9@_-]+) from </pcre2>
+    <pcre2>(\S+)/(\d+?) to (\S+)/(\d+) </pcre2>
+    <order>id, action, protocol, srcip, srcport, dstip, dstport</order>
+  </decoder>
+
+  <decoder name="pix-fw6">
+    <parent>pix</parent>
+    <type>firewall</type>
+    <prematch_pcre2 offset="after_parent">^6-106015</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+): ([A-Za-z0-9@_-]+) ([A-Za-z0-9@_-]+) \(no connection\) from (\S+)/</pcre2>
+    <pcre2>(\d+) to (\S+)/(\d+)</pcre2>
+    <order>id, action, protocol, srcip, srcport, dstip, dstport</order>
+  </decoder>
+
+  <decoder name="pix-fw7">
+    <parent>pix</parent>
+    <type>firewall</type>
+    <prematch_pcre2 offset="after_parent">^6-305012</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+): ([A-Za-z0-9@_-]+) [A-Za-z0-9@_-]+ ([A-Za-z0-9@_-]+) translation </pcre2>
+    <pcre2>from [A-Za-z0-9@_-]+:(\S+)/(\d+) to [A-Za-z0-9@_-]+:(\S)/(\d+) </pcre2>
+    <order>id, action, protocol, srcip, srcport, dstip, dstport</order>
+  </decoder>
+
+  <decoder name="pix-fw8">
+    <parent>pix</parent>
+    <type>firewall</type>
+    <prematch_pcre2 offset="after_parent">^3-106011|^3-106010</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+): ([A-Za-z0-9@_-]+) .+ ([A-Za-z0-9@_-]+) src </pcre2>
+    <pcre2>[A-Za-z0-9@_-]+?:(\S+)/(\d+?) dst [A-Za-z0-9@_-]+?:(\S+)/(\d+)</pcre2>
+    <order>id, action, protocol, srcip, srcport, dstip, dstport</order>
+  </decoder>
+
+  <decoder name="pix-url-success">
+    <parent>pix</parent>
+    <prematch_pcre2 offset="after_parent">^5-304001: </prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+): (\S+) Accessed URL </pcre2>
+    <pcre2>(\S+):(http[A-Za-z0-9@_-]*://.+)|</pcre2>
+    <pcre2>^(\S+): (\S+) Accessed URL (\S+):</pcre2>
+    <order>id, srcip, dstip, url</order>
+  </decoder>
+
+  <decoder name="pix-url-deny">
+    <parent>pix</parent>
+    <prematch_pcre2 offset="after_parent">^5-304002: </prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+): Access (denied) URL (http[A-Za-z0-9@_-]*://.+) </pcre2>
+    <pcre2>SRC (\S+) DEST (\S+) on interface</pcre2>
+    <order>id, action, url, srcip, dstip</order>
+  </decoder>
+
+  <decoder name="pix-attacks">
+    <parent>pix</parent>
+    <prematch_pcre2 offset="after_parent">^2-106012: |^2-106017: |</prematch_pcre2>
+    <prematch_pcre2>^2-106020|^1-106021|^1-106022|</prematch_pcre2>
+    <prematch_pcre2>^4-4000</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+): .+ from (\S+) </pcre2>
+    <order>id, srcip</order>
+  </decoder>
+
+  <decoder name="pix-srcip">
+    <parent>pix</parent>
+    <prematch_pcre2 offset="after_parent">^6-308001</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+): .+ (\S+)</pcre2>
+    <order>id, srcip</order>
+  </decoder>
+
+  <decoder name="pix-srcip-port">
+    <parent>pix</parent>
+    <prematch_pcre2 offset="after_parent">^6-605004|^6-605005</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+): Login (\S+) from (\S+)/(\d+?) .+user "([A-Za-z0-9@_-]+?)"</pcre2>
+    <order>id, action, srcip, srcport, user</order>
+  </decoder>
+
+  <decoder name="pix-generic">
+    <parent>pix</parent>
+    <pcre2 offset="after_parent">^(\S+): </pcre2>
+    <order>id</order>
+  </decoder>
+
+  <decoder name="cisco-vpn-concentrator">
+    <prematch_pcre2>^\d+? \d{2}/\d{2}/\d{4} \S+ SEV=\d </prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+) RPT=\d+? (\S+) </pcre2>
+    <order>id, srcip</order>
+  </decoder>
+
+  <decoder name="snort">
+    <program_name_pcre2>^snort</program_name_pcre2>
+  </decoder>
+
+  <decoder name="snort">
+    <type>ids</type>
+    <prematch_pcre2>^\[\*\*\] \[\d+:\d+:\d+\] </prematch_pcre2>
+  </decoder>
+
+  <decoder name="snort2">
+    <parent>snort</parent>
+    <type>ids</type>
+    <prematch_pcre2>^\[\*\*\] \[|^\[Drop\] \[\*\*\] \[|^\[</prematch_pcre2>
+    <pcre2 offset="after_prematch">(\d+:\d+:\d+)\] .+ (\S+?):?\d* -> ([^:]+)</pcre2>
+    <order>id,srcip,dstip</order>
+    <fts>name,id,srcip,dstip</fts>
+  </decoder>
+
+  <decoder name="isakmpd">
+    <program_name_pcre2>^isakmpd</program_name_pcre2>
+  </decoder>
+
+  <decoder name="isakmpd-from">
+    <parent>isakmpd</parent>
+    <prematch_pcre2>message from </prematch_pcre2>
+    <pcre2>from (\S+) port (\d+)</pcre2>
+    <order>srcip,srcport</order>
+  </decoder>
+
+  <decoder name="isakmpd-peer">
+    <parent>isakmpd</parent>
+    <prematch_pcre2>from peer</prematch_pcre2>
+    <pcre2>from peer (\S+):(\d+?)$</pcre2>
+    <order>srcip,srcport</order>
+  </decoder>
+
+  <decoder name="suhosin">
+    <program_name_pcre2>^suhosin</program_name_pcre2>
+    <type>ids</type>
+    <pcre2>^ALERT - (.+) \(attacker '(\S+)', </pcre2>
+    <order>id, srcip</order>
+    <fts>name, location, id</fts>
+  </decoder>
+
+  <decoder name="dragon-nids">
+    <type>ids</type>
+    <prematch_pcre2>^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\|</prematch_pcre2>
+    <pcre2 offset="after_prematch">^\S+\|(\S+)\|</pcre2>
+    <pcre2>(\S+)\|(\S+)\|</pcre2>
+    <order>id, srcip, dstip</order>
+    <fts>name, id, srcip, dstip</fts>
+  </decoder>
+
+  <decoder name="horde_imp">
+    <prematch_pcre2>^\[[A-Za-z0-9@_-]+\] \[imp\] |^\[[A-Za-z0-9@_-]+\] \[horde\] </prematch_pcre2>
+  </decoder>
+
+  <decoder name="horde_imp_success">
+    <parent>horde_imp</parent>
+    <prematch_pcre2 offset="after_parent">^Login success </prematch_pcre2>
+    <pcre2 offset="after_prematch">^for (\S+) \[(\S+)\] </pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="horde_imp_failed">
+    <parent>horde_imp</parent>
+    <prematch_pcre2 offset="after_parent">^FAILED LOGIN</prematch_pcre2>
+    <pcre2 offset="after_prematch">^ (\S+) to \S+ as (\S+) </pcre2>
+    <order>srcip, user</order> 
+  </decoder>
+
+  <decoder name="wordpress">
+    <program_name_pcre2>^WPsyslog|^wpcore</program_name_pcre2>
+    <prematch_pcre2>^\[</prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+) </pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="roundcube">
+    <program_name_pcre2>^roundcube</program_name_pcre2>
+  </decoder>
+
+  <decoder name="roundcube">
+    <prematch_pcre2>^\[\d{2}-[\w]{3}-\d{4} \d{2}:\d{2}:\d{2} \S+\]</prematch_pcre2>
+  </decoder>
+
+  <decoder name="roundcube-success">
+    <parent>roundcube</parent>
+    <prematch_pcre2> Successful login for </prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+) \(id \d+\) from (\S+)$|^(\S+) \(ID: \d+\) from (\S+)</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="roundcube-denied-old">
+    <parent>roundcube</parent>
+    <prematch_pcre2>\] \w+ Error: Authentication </prematch_pcre2>
+    <pcre2 offset="after_prematch">^for (\S+) failed</pcre2>
+    <order>user</order>
+  </decoder>
+
+  <decoder name="roundcube-denied-new">
+    <parent>roundcube</parent>
+    <prematch_pcre2>> \w+ Error: Login failed |> Failed login </prematch_pcre2>
+    <pcre2 offset="after_prematch">^for (\S+) from (\S+). |^for (\S+) from (\S+) in session </pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="apache-errorlog">
+      <program_name_pcre2>^httpd</program_name_pcre2>
+  </decoder>
+
+  <decoder name="apache-errorlog">
+      <prematch_pcre2>^\[warn\] |^\[notice\] |^\[error\] </prematch_pcre2>
+  </decoder>
+
+  <decoder name="apache-errorlog">
+      <prematch_pcre2>^\[\w+ \w+ \d+ \d+:\d+:\d+\.\d+ \d+\] (?:\[\S+:warn\]|\[\S+:notice\]|\[\S*:error\]|\[\S+:info\]) </prematch_pcre2>
+  </decoder>
+
+  <decoder name="apache24-errorlog-ip-port">
+      <parent>apache-errorlog</parent>
+      <prematch_pcre2 offset="after_parent">\[client \S+:\d+?\] \S+:</prematch_pcre2>
+      <pcre2 offset="after_parent">\[client (\S+):(\d+?)\] (\S+): </pcre2>
+      <order>srcip,srcport,id</order>
+  </decoder>
+
+  <decoder name="apache24-errorlog-ip">
+      <parent>apache-errorlog</parent>
+      <prematch_pcre2 offset="after_parent">\[client \S+\] \S+:</prematch_pcre2>
+      <pcre2 offset="after_parent">\[client (\S+)\] (\S+): </pcre2>
+      <order>srcip,id</order>
+  </decoder>
+
+
+  <decoder name="apache-errorlog-ip">
+      <parent>apache-errorlog</parent>
+      <prematch_pcre2 offset="after_parent">\[client</prematch_pcre2>
+      <pcre2 offset="after_prematch">^ (\S+):(\d+?)\] |^ (\S+)\] </pcre2>
+      <order>srcip,srcport</order>
+  </decoder>
+
+  <decoder name="nginx-errorlog">
+    <prematch_pcre2>^20\d{2}/\d{2}/\d{2} \d{2}:\d{2}:\d{2} \[</prematch_pcre2>
+  </decoder>
+
+  <decoder name="nginx-errorlog-ip">
+    <parent>nginx-errorlog</parent>
+    <prematch_pcre2 offset="after_parent">, client: \S+, server: \S+, request: "\S+ </prematch_pcre2>
+    <pcre2 offset="after_parent">, client: (\S+), </pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="web-accesslog">
+    <type>web-log</type>
+    <prematch_pcre2>^\S+ \S+ \S+ \[\S+ \S\d+\] "\w+ \S+ HTTP\S+" </prematch_pcre2>
+    <pcre2>^(\S+) \S+ (\S+) \[\S+ \S\d+\] </pcre2>
+    <pcre2>"(\w+) (\S+) HTTP\S+" (\d+) </pcre2>
+    <order>srcip, srcuser, action, url, id</order>
+  </decoder>
+
+  <decoder name="windows-date-format">
+    <prematch_pcre2>^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} </prematch_pcre2>
+  </decoder>
+
+  <decoder name="windows-firewall">
+    <parent>windows-date-format</parent>
+    <type>firewall</type>
+    <use_own_name>true</use_own_name>
+    <prematch_pcre2 offset="after_parent">^OPEN|^CLOSE|^DROP</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\w+) (\w+) </pcre2>
+    <pcre2>(\S+) (\S+) (\d+) (\d+) </pcre2>
+    <order>action, protocol, srcip, dstip, srcport, dstport</order>
+  </decoder>
+
+  <decoder name="web-accesslog-iis5">
+    <parent>windows-date-format</parent>
+    <type>web-log</type>
+    <use_own_name>true</use_own_name>
+    <prematch_pcre2 offset="after_parent">^\S+ \S+ W3SVC</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+) \S+ \S+ \S+ \S+ </pcre2>
+    <pcre2>\d+ \S+ (\S+ \S+) (\d+) </pcre2>
+    <order>srcip,url,id</order>
+  </decoder>
+
+  <decoder name="web-accesslog-iis6">
+    <parent>windows-date-format</parent>
+    <type>web-log</type>
+    <use_own_name>true</use_own_name>
+    <prematch_pcre2 offset="after_parent">^W3SVC\d+ \S+ \S+ \S+ </prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+ \S+) \d+ \S+ (\S+) </pcre2>
+    <pcre2>\S+ \S+ \S+ \S+ \S+ (\d+) </pcre2>
+    <order>url, srcip, id</order>
+  </decoder>
+
+  <decoder name="web-accesslog-iis-default">
+    <parent>windows-date-format</parent>
+    <type>web-log</type>
+    <use_own_name>true</use_own_name>
+    <prematch_pcre2 offset="after_parent">^\S+ GET |^\S+ POST </prematch_pcre2>
+    <pcre2 offset="after_prematch">(\S+ \S*) .* (\S+) \S*.* (\d{3}) \S+ \S+ \S+</pcre2>
+    <order>url,srcip,id</order>
+  </decoder>
+
+  <decoder name="msftp">
+    <parent>windows-date-format</parent>
+    <use_own_name>true</use_own_name>
+    <prematch_pcre2 offset="after_parent">^\S+ \S+ MSFTPSVC</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+) (\S+) \S+ \S+ \S+ </pcre2>
+    <pcre2>\d+ \[\d+\](\S+) \S+ \S+ (\d+) </pcre2>
+    <order>srcip,user,action,id</order>
+  </decoder>
+
+  <decoder name="msexchange">
+    <parent>windows-date-format</parent>
+    <use_own_name>true</use_own_name>
+    <prematch_pcre2 offset="after_parent">^\S+ \S+ SMTPSVC</prematch_pcre2>
+    <pcre2 offset="after_parent">^(\S+) \S+ \S+ \S+ \S+ </pcre2>
+    <pcre2>\d+ (\S+) \S+ \S+ (\d+) </pcre2>
+    <order>srcip, action, id</order>
+  </decoder>
+
+  <decoder name="lighttpd">
+    <prematch_pcre2>^\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d: \(</prematch_pcre2>
+  </decoder>
+
+  <decoder name="racoon">
+    <prematch_pcre2>^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}: </prematch_pcre2>
+  </decoder>
+
+  <decoder name="racoon-failed">
+    <parent>racoon</parent>
+    <use_own_name>true</use_own_name>
+    <prematch_pcre2 offset="after_parent">^ERROR: couldn't find the pskey </prematch_pcre2>
+    <pcre2 offset="after_prematch">^for (\S+)</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="racoon-action">
+    <parent>racoon</parent>
+    <pcre2 offset="after_parent">^([A-Za-z0-9@_-]+?): </pcre2>
+    <order>action</order>
+  </decoder>
+
+  <decoder name="symantec-av">
+    <prematch_pcre2>^[A-Za-z0-9@_-]{12},</prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\d+?),\d+?,\d+?,(\S+),(.+),</pcre2>
+    <order>id, system_name, extra_data</order>
+    <fts>name, location, id, system_name, extra_data</fts>
+  </decoder>
+
+  <decoder name="symantec-websecurity">
+    <prematch_pcre2>^\d{8},\d{3,},</prematch_pcre2>
+    <plugin_decoder>SymantecWS_Decoder</plugin_decoder>
+  </decoder>
+
+  <decoder name="trend-osce">
+    <prematch_pcre2><![CDATA[^20\d{6}\<;>]]></prematch_pcre2>
+    <pcre2 offset="after_prematch"><![CDATA[^\d+?\<;>\S+\<;>(\d+?)\<;>]]></pcre2>
+    <order>id</order>
+  </decoder>
+
+  <decoder name="vmware">
+    <prematch_pcre2>^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} '\S+' \d+? </prematch_pcre2>
+  </decoder>
+
+  <decoder name="vmware-extra">
+    <parent>vmware</parent>
+    <pcre2 offset="after_parent">^([A-Za-z0-9@_-]+?)\] \S+ \S+ </pcre2>
+    <order>status</order>
+  </decoder>
+
+  <decoder name="vmware-extra">
+    <parent>vmware</parent>
+    <pcre2 offset="after_regex">^: User ([A-Za-z0-9@_-]+?)@(\S+)</pcre2>
+    <pcre2> logged |^: Failed login \w+ for ([A-Za-z0-9_-]+)@(\S+)</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="vmware-syslog">
+    <program_name_pcre2>vmware</program_name_pcre2>
+  </decoder>
+
+  <decoder name="vmware-success">
+    <parent>vmware-syslog</parent>
+    <prematch_pcre2>^Accepted|^Rejected</prematch_pcre2>
+    <pcre2 offset="after_prematch">^ \S+ for user (\S+) from (\S+)$</pcre2>
+    <order>user, srcip</order>
+  </decoder>
+
+  <decoder name="vmware-login">
+    <parent>vmware-syslog</parent>
+    <prematch_pcre2>^login from </prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+) as</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="solaris_bsm">
+    <program_name_pcre2>^audit$</program_name_pcre2>
+  </decoder>
+
+  <decoder name="solaris_bsm_session">
+    <parent>solaris_bsm</parent>
+    <prematch_pcre2> [A-Za-z0-9@_-]+? session \d+? by </prematch_pcre2>
+    <pcre2> ([A-Za-z0-9@_-]+) session \d+ by</pcre2>
+    <order>status</order>
+  </decoder>
+
+  <decoder name="solaris_bsm_session">
+    <parent>solaris_bsm</parent>
+    <pcre2 offset="after_regex">^ \S+ as \S+:\S+ from (\S+)</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="asterisk">
+    <program_name_pcre2>^asterisk</program_name_pcre2>
+  </decoder>
+
+  <decoder name="asterisk-hijacking">
+    <parent>asterisk</parent>
+    <prematch_pcre2>^WARNING\[\d+?\]: \S+ in \S+: Don't know </prematch_pcre2>
+    <pcre2 offset="after_prematch">^\S+ how to respond via '([A-Za-z0-9@_-]+/\d\.\d/[A-Za-z0-9@_-]+)'</pcre2>
+    <order>user</order>
+  </decoder>
+
+  <decoder name="asterisk-denied">
+    <parent>asterisk</parent>
+    <prematch_pcre2>^NOTICE\[\d+?\]: \S+ in \S+: Registration from </prematch_pcre2>
+    <pcre2 offset="after_prematch">^'.+' failed for '(\S+):(\d+?)'|^'.+' failed for '(\S+)'</pcre2>
+    <order>srcip,srcport</order>
+  </decoder>
+
+  <decoder name="asterisk-denied2">
+    <parent>asterisk</parent>
+    <prematch_pcre2>Registration from </prematch_pcre2>
+    <pcre2 offset="after_prematch">failed for '(\S+):(\d+?)'|failed for '(\S+)'</pcre2>
+    <order>srcip,srcport</order>
+  </decoder>
+
+  <decoder name="asterisk-denied3">
+    <parent>asterisk</parent>
+    <prematch_pcre2>^NOTICE\[\d+?\]\[[A-Za-z0-9@_-]+?\]: \S+ in \S+: Call from </prematch_pcre2>
+    <pcre2 offset="after_prematch">^'\S*' \((\S+):(\d+?)\) to extension '(\S+)' rejected because extension not found in context '(\S+)'\.$</pcre2>
+    <order>srcip, srcport, extra_data, extra_data</order>
+  </decoder>
+
+  <decoder name="asterisk-iax-authentication-denied">
+    <parent>asterisk</parent>
+    <prematch_pcre2>^NOTICE\[\d+\]: \S+ in \S+: Host </prematch_pcre2>
+    <pcre2 offset="after_prematch">^(\S+) failed MD5 authentication for (\S+)</pcre2>
+    <order>srcip, user</order>
+  </decoder>
+
+  <decoder name="cisco-ios">
+    <prematch_pcre2>^%\w+-\d-\w+: </prematch_pcre2>
+  </decoder>
+
+  <decoder name="cisco-ios">
+    <program_name />
+    <prematch_pcre2>^%\w+-\d-\w+: </prematch_pcre2>
+  </decoder>
+
+  <decoder name="cisco-ios-acl">
+    <parent>cisco-ios</parent>
+    <type>firewall</type>
+    <prematch_pcre2>^%SEC-6-IPACCESSLOGP: </prematch_pcre2>
+    <pcre2 offset="after_prematch">^list \S+ (\w+) (\w+) </pcre2>
+    <pcre2>(\S+)\((\d+)\) -> (\S+)\((\d+)\),</pcre2>
+    <order>action, protocol, srcip, srcport, dstip, dstport</order>
+  </decoder>
+
+  <decoder name="cisco-ios-ids">
+    <parent>cisco-ios</parent>
+    <type>ids</type>
+    <prematch_pcre2>^%IPS-4-SIGNATURE: </prematch_pcre2>
+    <pcre2 offset="after_prematch">^Sig:(\d+) .+\[(\S+):(\d+) -> </pcre2>
+    <pcre2>(\S+):(\d+)\]</pcre2>
+    <order>id, srcip, srcport, dstip, dstport</order>
+    <fts>name, id, srcip, dstip</fts>
+    <ftscomment>First time Cisco IOS IDS/IPS module rule fired.</ftscomment>
+  </decoder>
+
+  <decoder name="cisco-ios-generic">
+    <parent>cisco-ios</parent>
+    <pcre2>^(%\w+-\d-\w+): </pcre2>
+    <order>id</order>
+  </decoder>
+
+  <decoder name="checkpoint-syslog">
+    <program_name_pcre2>^Checkpoint</program_name_pcre2>
+    <prematch_pcre2>^[ ]+?\S+ \d{2}:\d{2}:\d{2} </prematch_pcre2>
+  </decoder>
+
+  <decoder name="checkpoint-syslog-fw">
+    <parent>checkpoint-syslog</parent>
+    <type>firewall</type>
+    <prematch_pcre2 offset="after_parent">^drop|^accept|^reject</prematch_pcre2>
+    <pcre2 offset="after_parent">^([A-Za-z0-9@_-]+)[ ]+\S+ >\S+ rule:.+</pcre2>
+    <pcre2>src: (\S+); dst: (\S+); proto: (\S+);</pcre2>
+    <order>action,srcip,dstip,protocol</order>
+  </decoder>
+
+  <decoder name="checkpoint-syslog-fw">
+    <parent>checkpoint-syslog</parent>
+    <type>firewall</type>
+    <pcre2 offset="after_regex">service: (\d+); s_port: (\d+);</pcre2>
+    <order>dstport,srcport</order>
+  </decoder>
+
+  <decoder name="checkpoint-syslog-ids">
+    <parent>checkpoint-syslog</parent>
+    <type>ids</type>
+    <prematch_pcre2 offset="after_parent">^monitor|^drop</prematch_pcre2>
+    <pcre2 offset="after_prematch">attack: (.+); </pcre2>
+    <pcre2>src: (\S+); dst: (\S+); </pcre2>
+    <pcre2>proto: (\S+);</pcre2>
+    <order>extra_data, srcip, dstip, protocol</order>
+    <fts>name, extra_data, srcip, dstip</fts>
+    <ftscomment>First time Checkpoint rule fired.</ftscomment>
+  </decoder>
+
+  <decoder name="ms-dhcp-ipv6">
+    <prematch_pcre2>^\d{5},\d{2}/\d{2}/\d{2},\d{2}:\d{2}:\d{2},</prematch_pcre2>
+    <pcre2>^(\d{5}),</pcre2>
+    <order>id</order>
+  </decoder>
+
+  <decoder name="bsd_kernel">
+    <program_name_pcre2>^/bsd</program_name_pcre2>
+  </decoder>
+
+  <decoder name="bsd_arp">
+    <parent>bsd_kernel</parent>
+    <prematch_pcre2 offset="after_parent">^arp </prematch_pcre2>
+    <pcre2 offset="after_prematch"> for (\S+) by (\S+) on \S+</pcre2>
+    <order>dstip, extra_data</order>
+  </decoder>
+
+  <decoder name="open-userdel">
+    <program_name_pcre2>userdel</program_name_pcre2>
+    <pcre2>user removed: name=(\S+)$</pcre2>
+    <order>srcuser</order>
+  </decoder>
+
+  <decoder name="mountd">
+    <program_name_pcre2>^mountd</program_name_pcre2>
+  </decoder>
+
+  <decoder name="mountd-host">
+    <parent>mountd</parent>
+    <prematch_pcre2>from host </prematch_pcre2>
+    <pcre2 offset="after_prematch">(\S+) port \d+?$</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="groupdel">
+    <program_name_pcre2>groupdel</program_name_pcre2>
+    <pcre2>^group deleted: name=(\S+)$</pcre2>
+    <order>extra_data</order>
+  </decoder>
+
+  <decoder name="portsentry">
+    <program_name_pcre2>^portsentry</program_name_pcre2>
+  </decoder>
+
+  <decoder name="portsentry-attackalert">
+    <parent>portsentry</parent>
+    <prematch_pcre2>attackalert: Connect from host: </prematch_pcre2>
+    <pcre2 offset="after_prematch">(\S+)/\S+ to (\S+) port: (\d+?)$</pcre2>
+    <order>srcip,protocol,dstport</order>
+  </decoder>
+
+  <decoder name="portsentry-blocked">
+    <parent>portsentry</parent>
+    <prematch_pcre2>is already blocked\. Ignoring$</prematch_pcre2>
+    <pcre2>Host: (\S+) is</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="clamd">
+    <program_name_pcre2>^clamd</program_name_pcre2>
+  </decoder>
+
+  <decoder name="freshclam">
+    <program_name_pcre2>^freshclam</program_name_pcre2>
+  </decoder>
+
+  <decoder name="openldap">
+      <program_name_pcre2>^slapd</program_name_pcre2>
+      <accumulate/>
+  </decoder>
+
+  <decoder name="openldap-connect">
+      <parent>openldap</parent>
+      <prematch_pcre2>ACCEPT</prematch_pcre2>
+      <pcre2>^conn=(\d+) fd=\d+ ACCEPT from IP=(\S+):</pcre2>
+      <order>id, srcip</order>
+      <accumulate/>
+  </decoder>
+
+  <decoder name="openldap-bind">
+      <parent>openldap</parent>
+      <prematch_pcre2>BIND </prematch_pcre2>
+      <pcre2>^conn=(\d+) op=\d+ BIND dn="[A-Za-z0-9@_-]+=([A-Za-z0-9@_-]+),</pcre2>
+      <order>id, dstuser</order>
+      <accumulate/>
+  </decoder>
+
+  <decoder name="openldap-result">
+      <accumulate/>
+      <parent>openldap</parent>
+      <prematch_pcre2> RESULT </prematch_pcre2>
+      <pcre2>^conn=(\d+) op=\d+ RESULT </pcre2>
+      <order>id</order>
+  </decoder>
+
+  <decoder name="ntpd">
+    <program_name_pcre2>^ntpd</program_name_pcre2>
+  </decoder>
+
+  <decoder name="ntpd-bad-peer">
+    <parent>ntpd</parent>
+    <prematch_pcre2 offset="after_parent">^bad peer </prematch_pcre2>
+    <pcre2>^bad peer \S+ \((\S+)\)$|^bad peer from pool \S+ \((\S+)\)$</pcre2>
+    <order>srcip</order>
+  </decoder>
+
+  <decoder name="ntpd-recvmsg">
+    <parent>ntpd</parent>
+    <pcre2>^recvmsg (\S+):</pcre2>
+    <order>dstip</order>
+  </decoder>
+</root>
