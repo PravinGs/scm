@@ -2,7 +2,7 @@
 #define LOG_SERVICE_HPP
  
 #include "util/common.hpp"
-#include "log_reader/log_entity.hpp"
+#include "log_collector/log_entity.hpp"
  
 class log_service {
 public:

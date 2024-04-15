@@ -3,9 +3,9 @@
 #pragma once
 #include "util/entity_parser.hpp"
 #include "monitor/monitor_service_impl.hpp"
-class monitr_proxy : public monitor_service {
+class monitor_proxy : public monitor_service {
 public:
-    monitr_proxy() : thread_handler(true), service(std::make_unique<monitor_service_impl>()) {}
+    monitor_proxy() : thread_handler(true), service(std::make_unique<monitor_service_impl>()) {}
  
     int get_app_resource_details(const process_entity& entity, vector<process_data>& logs)
     {
@@ -29,7 +29,7 @@ public:
             schedular = cron::make_cron(entity.time_pattern);
             while (thread_handler)
             {
-                common::pause_till_next_execution(cron);
+                common::pause_till_next_execution(schedular);
                 result = get_app_resource_details(entity, logs);
                 if (result == Audit::FAILED)
                     thread_handler = false;
@@ -49,7 +49,8 @@ private:
     {
         if (!entity.write_path.empty() && os::is_dir_exist(entity.write_path))
         {
-            agent_utils::write_log("proxy: validate_process_entity: configured write directory path not exist", FAILED);
+            LOG_ERROR("configured write directory path not exist " + entity.write_path);
+            //common::write_log("proxy: validate_process_entity: configured write directory path not exist", Audit::FAILED);
             return false;
         }
  

@@ -2,9 +2,8 @@
 #define LOG_PROXY_HPP
 #pragma once
  
-#include "log_reader/log_service.hpp"
 #include "util/config.hpp"
-#include "log_reader/log_service_impl.hpp"
+#include "log_collector/log_service_impl.hpp"
 #include "util/entity_parser.hpp"
  
  

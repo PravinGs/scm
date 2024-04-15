@@ -121,7 +121,8 @@ public:
         vector<string> names;
         if (columns.find(sep) == string::npos)
         {
-            LOG_ERROR("Seperator not found in string: " + sep);
+            DEBUG("Seperator not found in string: " , std::to_string(sep));
+            names.push_back(common::trim(columns));
             return names;
         }
         std::stringstream iss(columns);

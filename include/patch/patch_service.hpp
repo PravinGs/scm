@@ -3,7 +3,7 @@
  
 #pragma once
 #include "util/common.hpp"
-#include "patch/path_entity.hpp"
+#include "patch/patch_entity.hpp"
  
 class patch_service {
 public:

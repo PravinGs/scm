@@ -4,11 +4,12 @@ fstream common::logfp;
 std::mutex logfile_mutex;
 bool common::debug = false;
 
-int common::setup_logger(const string& log_file)
+int common::setup_logger(const string &log_file)
 {
     int result = Audit::SUCCESS;
 #if __linux__
-    if (os::is_file_exist(Audit::Config::SYSLOG_FILE)){
+    if (os::is_file_exist(Audit::Config::SYSLOG_FILE))
+    {
         Audit::is_syslog_enabled = true;
         return Audit::SUCCESS;
     }
@@ -39,7 +40,7 @@ int common::setup_logger(const string& log_file)
     return result;
 }
 
-int common::backup_log_file(const string& file_path)
+int common::backup_log_file(const string &file_path)
 {
     if (os::is_file_exist(file_path) && is_file_greater_than_max_size(file_path) && os::compress_file(file_path) == Audit::SUCCESS)
     {
@@ -47,7 +48,7 @@ int common::backup_log_file(const string& file_path)
         common::logfp.open(file_path, std::ios::out);
         return Audit::SUCCESS;
     }
-    else 
+    else
     {
         return Audit::FAILED;
     }
@@ -55,7 +56,7 @@ int common::backup_log_file(const string& file_path)
 
 bool common::is_file_greater_than_max_size(const string &log_file)
 {
-    std::uintmax_t file_size = get_file_size(Audit::Config::LOG_PATH);
+    std::uintmax_t file_size = get_file_size(log_file);
     double max_file_size = static_cast<double>(file_size) / (1024 * 1024);
     return max_file_size < 5.0;
 }
@@ -70,14 +71,48 @@ string common::to_lower_case(string &str)
     return lower_case_string;
 }
 
-bool common::is_valid_syslog_time_string(const string &sys_time)
+bool common::is_valid_syslog_time_string(const string &s_time)
 {
-    std::regex pattern(R"([A-Za-z]{3} \d{1,2} \d{2}:\d{2}:\d{2})");
-    return std::regex_match(sys_time, pattern);
+    string sys_time = common::trim(s_time);
+    DEBUG(sys_time);
+
+    // Find positions of spaces to separate month, day, and time
+    size_t first_space_pos = sys_time.find(' ');
+    size_t last_space_pos = sys_time.find_last_of(' ');
+
+    // Extract month, day, and time substrings
+    string month = sys_time.substr(0, first_space_pos);
+    string day = sys_time.substr(first_space_pos + 1, last_space_pos - first_space_pos - 1);
+    string time = sys_time.substr(last_space_pos + 1);
+
+    std::cout << "month: " << month << ", day: " << day << ", time: " << time << std::endl;
+    std::cout << "day length: " << day.length() << '\n';
+    if (
+        day.length() > 3 ||
+        month.length() != 3 ||
+        !(common::trim(day).length() > 0 && common::trim(day).length() < 3))
+    {
+        
+        return false;
+    }
+
+    std::regex month_pattern(R"([A-Za-z]{3})");
+    std::regex day_pattern(R"(\d{1,2})");
+    std::regex time_pattern(R"(\d{2}:\d{2}:\d{2})");
+
+    // Check if month, day, and time match the expected patterns
+    return std::regex_match(month, month_pattern) &&
+           std::regex_match(common::trim(day), day_pattern) &&
+           std::regex_match(time, time_pattern);
 }
 
 string common::create_log_cache_file(const string &app_name)
 {
+    if (app_name.empty())
+    {
+        LOG_ERROR("App name should not be empty to create a cache file.");
+        return "";
+    }
     string file_path = Audit::Config::BASE_CONFIG_DIR;
     if (!os::is_dir_exist(file_path) && os::create_dir(file_path) != Audit::SUCCESS)
     {
@@ -98,6 +133,11 @@ string common::create_log_cache_file(const string &app_name)
 
 int common::update_log_written_time(const string &app_name, const string &time)
 {
+    if (app_name.empty() || time.empty())
+    {
+        LOG_ERROR((app_name.empty() ? "Appname shouldn't be empty" : app_name), (time.empty() ? "Time shouldn't be empty" : time));
+        return Audit::FAILED;
+    }
     string file_path = create_log_cache_file(app_name);
     fstream file(file_path, std::ios::out);
     if (!file.is_open())
@@ -154,7 +194,15 @@ int common::convert_syslog_to_utc_format(const string &sys_time, string &utc_tim
     {
         return Audit::FAILED;
     }
-    std::stringstream ss(sys_time);
+    size_t first_space_pos = sys_time.find(' ');
+    size_t last_space_pos = sys_time.find_last_of(' ');
+
+    // Extract month, day, and time substrings
+    string month = sys_time.substr(0, first_space_pos);
+    string day = sys_time.substr(first_space_pos + 1, last_space_pos - first_space_pos - 1);
+    string time = sys_time.substr(last_space_pos + 1);
+
+    /*std::stringstream ss(sys_time);
     string year, month, day, time;
     std::tm tm = {};
     int m = 0, d;
@@ -188,8 +236,9 @@ int common::convert_syslog_to_utc_format(const string &sys_time, string &utc_tim
     localtime_r(&current_time, &currentTm);
     tm.tm_year = currentTm.tm_year;
     tm.tm_year += 1900;
-
-    utc_time = std::to_string(tm.tm_year) + "-" + month + "-" + day + " " + time;
+    */
+    utc_time = std::to_string(os::current_year) + "-" + month + "-" + day + " " + time;
+    DEBUG("SYSLOG TIME: ", sys_time, " TIME : ", utc_time);
     return Audit::SUCCESS;
 }
 

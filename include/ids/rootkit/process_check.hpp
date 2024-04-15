@@ -9,15 +9,10 @@
 using namespace Audit;
 
 class process_check
-
 {
-
     private:
-
         int total;
-
         int error;
-
         pid_t max_pid = MAX_PID;
 
         int noproc = 1;

@@ -26,7 +26,7 @@ public:
         while (result == Audit::Patch::SERVER_ERROR)
         {
             std::chrono::system_clock::time_point currentTime = std::chrono::system_clock::now();
-            std::chrono::system_clock::time_point executionTime = currentTime + std::chrono::seconds(Audit::Monitor::DOWNLOAD_WAITING_TIME);
+            std::chrono::system_clock::time_point executionTime = currentTime + std::chrono::seconds(Audit::Patch::DOWNLOAD_WAITING_TIME);
             std::chrono::system_clock::duration duration = executionTime - currentTime;
             int waitingTime = std::chrono::duration_cast<std::chrono::seconds>(duration).count();
             std::this_thread::sleep_for(std::chrono::seconds(waitingTime));
@@ -89,22 +89,22 @@ private:
  
         if (entity.retry_count == 0)
         {
-            entity.retry_count = PATCH_DEFAULT_RETRY_COUNT;
+            entity.retry_count =  Audit::Patch::PATCH_DEFAULT_RETRY_COUNT;
         }
  
         if (entity.retry_time_out == 0)
         {
-            entity.retry_time_out = PATCH_DEFAULT_RETRY_TIMEOUT;
+            entity.retry_time_out =  Audit::Patch::PATCH_DEFAULT_RETRY_TIMEOUT;
         }
  
         if (entity.max_download_speed == 0)
         {
-            entity.max_download_speed = PATCH_DEFAULT_MAX_DOWNLOAD_SPEED;
+            entity.max_download_speed =  Audit::Patch::PATCH_DEFAULT_MAX_DOWNLOAD_SPEED;
         }
  
         if (entity.min_download_speed == 0)
         {
-            entity.min_download_speed = Audit::Patch::DEFAULT_DOWNLOAD_LOCATION;
+            entity.min_download_speed = Audit::Patch::PATCH_DEFAULT_MIN_DOWNLOAD_SPEED;
         }
  
         if (!os::is_dir_exist(Audit::Patch::DEFAULT_DOWNLOAD_LOCATION))

@@ -2,6 +2,10 @@
 #define MONITOR_SERVICE_IMPL_HPP
 #pragma once
 #include "monitor/monitor_service.hpp"
+
+using namespace Audit::Monitor;
+using namespace Audit;
+
 class monitor_service_impl : public monitor_service
 {
 public:
@@ -24,7 +28,7 @@ public:
             {
                 process_data p = create_process_data(process_id);
                 std::lock_guard<std::mutex> lock(process_mutex);
-                parent.push_back(p);
+                logs.push_back(p);
             };
             async_tasks.push_back(std::async(std::launch::async, async_task));
         }
@@ -33,7 +37,7 @@ public:
         return Audit::SUCCESS;
     }
 
-private:
+// private:
     vector<int> get_all_process_id()
     {
         vector<int> process_ids;
@@ -43,7 +47,7 @@ private:
         dirent *entry = nullptr;
         if (dir == nullptr)
         {
-            DEBUG(Audit::Config::INVALID_PATH + Audit::Monitor::PROC);
+            DEBUG(INVALID_PATH , PROC);
             // common::write_log("monitor_service: get_processes_id: " + Audit::Config::INVALID_PATH + PROC, Audit::FAILED);
             return process_ids;
         }
@@ -66,18 +70,18 @@ private:
         return process_ids;
     }
 
-    double monitor_service::calculate_cpu_time(cpu_table &table)
+    double calculate_cpu_time(cpu_table &table)
     {
-        double utime = table.getUTime() / CLK_TCK;
-        double stime = table.getSTime() / CLK_TCK;
-        double start_time = table.getStartTime() / CLK_TCK;
-        double elapsed_time = table.getUpTime() - start_time;
+        double utime = table.utime / CLK_TCK;
+        double stime = table.stime / CLK_TCK;
+        double start_time = table.start_time / CLK_TCK;
+        double elapsed_time = table.get_up_time() - start_time;
         double cpu_run_time = ((utime + stime) * 100) / elapsed_time;
-        cpu_run_time = cpu_run_time * (1 + (table.getNiceTime() / MAX_NICE_VALUE));
+        cpu_run_time = cpu_run_time * (1 + (table.nice_time / MAX_NICE_VALUE));
         return cpu_run_time;
     }
 
-    double monitor_service::get_memory_usage(const unsigned int &process_id)
+    double get_memory_usage(const unsigned int &process_id)
     {
         unsigned long size, resident, shared, text, lib, data, dt;
         double memory_percentage = -1.0;
@@ -88,14 +92,14 @@ private:
         std::ifstream file(path);
         if (!file)
         {
-            agent_utils::write_log("monitor_service: get_memory_usage: " + FILE_ERROR + path, FAILED);
+            common::write_log("monitor_service: get_memory_usage: " + FILE_ERROR + path, FAILED);
             return memory_percentage;
         }
         std::getline(file, line);
         std::istringstream iss(line);
         if (!(iss >> size >> resident >> shared >> text >> lib >> data >> dt))
         {
-            agent_utils::write_log("monitor_service: get_memory_usage: failed to parse memory statistics.", FAILED);
+            common::write_log("monitor_service: get_memory_usage: failed to parse memory statistics.", FAILED);
             return memory_percentage;
         }
         memory_percentage = 100.0 * resident * page_size / total_memory;
@@ -103,7 +107,7 @@ private:
         return memory_percentage;
     }
 
-    double monitor_service::get_disk_usage(const unsigned int &process_id)
+    double get_disk_usage(const unsigned int &process_id)
     {
         double disk_usage = -1.0;
         int i = 0;
@@ -112,7 +116,7 @@ private:
         std::fstream file(path, std::ios::in);
         if (!file.is_open())
         {
-            agent_utils::write_log("monitor_service: get_disk_usage: process does not exist with this id : " + std::to_string(process_id), FAILED);
+            common::write_log("monitor_service: get_disk_usage: process does not exist with this id : " + std::to_string(process_id), FAILED);
             return disk_usage;
         }
         disk_usage = 0.0;
@@ -140,8 +144,9 @@ private:
         return disk_usage;
     }
 
-    string monitor_service::get_process_name_id(const unsigned int &process_id)
+    string get_process_name_id(const unsigned int &process_id)
     {
+        if (process_id <= 0 ) { return "";}
         string process_name = "";
         string path = PROC + std::to_string(process_id) + COMM;
         std::ifstream file(path);
@@ -153,7 +158,7 @@ private:
         return process_name;
     }
 
-    cpu_table monitor_service::read_processing_time_id(const unsigned int &process_id)
+    cpu_table read_processing_time_id(const unsigned int &process_id)
     {
         string path = Audit::Monitor::PROC + std::to_string(process_id) + Audit::Monitor::CPUDATA;
         vector<string> stats;
@@ -183,7 +188,7 @@ private:
     process_data create_process_data(const int process_id)
     {
         cpu_table table = read_processing_time_id(process_id);
-        string process_name = get_proces_name_id(process_id);
+        string process_name = get_process_name_id(process_id);
         double cpuTime = calculate_cpu_time(table);
         double memUsage = get_memory_usage(process_id);
         double disk_usage = get_disk_usage(process_id);
@@ -194,7 +199,7 @@ private:
         return processData;
     }
 
-private:
+// private:
     vector<std::future<void>> async_tasks;
     std::mutex process_mutex;
 };

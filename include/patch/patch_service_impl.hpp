@@ -2,7 +2,6 @@
 #define PATCH_SERVICE_IMPL_HPP
 #pragma once
 #include "patch/patch_service.hpp"
- 
 class patch_service_impl : public patch_service {
 public:
 	int start(patch_entity& entity) 
@@ -55,7 +54,7 @@ private:
             return Audit::FAILED;
         }
  
-        entity.size = common::get_file_size(file);
+        entity.size = common::get_file_size(entity.download_path);
  
         if (curl == NULL)
         {
@@ -120,7 +119,7 @@ private:
                 }
                 else
                 {
-                    return_val = SERVER_ERROR;
+                    return_val = Audit::Patch::SERVER_ERROR;
                 }
             }
             else
@@ -135,6 +134,9 @@ private:
         fclose(file);
         return return_val;
     }
+
+private:
+    CURL* curl = nullptr;
 };
  
 #endif //PATCH_SERVICE_IMPL_HPP

@@ -12,6 +12,10 @@ include_directories(
     include/config
     include/log_collector
     include/monitor
+    include/mqtt
+    include/patch
+    include/rest
+    include/tpm
     include/test
     include/util
 )
@@ -39,6 +43,7 @@ find_package(OpenSSL REQUIRED)
 # Add source to this project's executable.
 add_executable (SCM 
     scm.cpp 
+    include/mqtt/mqtt_service.cpp
     include/util/os.cpp 
     include/util/common.cpp 
     include/ids/ids_service_impl.cpp
@@ -53,6 +58,23 @@ target_precompile_headers(SCM PRIVATE ${PCH_HEADER})
 # Add coverage flags for test coverage
 target_compile_options(SCM PRIVATE --coverage)
 target_link_options(SCM PRIVATE --coverage)
+
+add_custom_target(
+    cppcheck
+    COMMAND cppcheck
+        --enable=all
+        --std=c++17
+        --language=c++
+        --suppress=unusedFunction
+        --inconclusive
+        --force
+        --inline-suppr
+        --template=gcc
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/scm.cpp
+    COMMENT "Running cppcheck"
+)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Link with Google Test library, OpenSSL, and zlib
 target_link_libraries(SCM
@@ -69,6 +91,12 @@ target_link_libraries(SCM
     pugixml
     jsoncpp
     pcre2-8
+    tss2-esys
+    tss2-tctildr
+    tss2-rc
+    sw-tpm
+    paho-mqttpp3 
+    paho-mqtt3a
 )
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

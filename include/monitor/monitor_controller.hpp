@@ -9,7 +9,7 @@ class monitor_controller
 {
 public:
 	monitor_controller(const string& config_file) 
-		: service(std::make_unique<monitr_proxy>())
+		: service(std::make_unique<monitor_proxy>())
 	{
 		is_valid_config = (config_c.read_ini_config_file(config_file, config_table) == Audit::SUCCESS) ? true : false;
 	}
