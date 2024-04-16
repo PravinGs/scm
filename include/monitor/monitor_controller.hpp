@@ -16,7 +16,7 @@ public:
  
 	void start() {
 		if (!is_valid_config) { return; }
-		service->get_app_resource_details(config_table);
+		service->get_app_resource_details(const_cast<config_table_type &>(config_table));
 	}
  
 private:

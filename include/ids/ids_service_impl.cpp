@@ -770,34 +770,21 @@ int ids_service_impl::analyse_file(const string &file)
     // agent_utils::write_log("ids_service_impl: analyse_file: log analysis started for " + file, DEBUG);
 
     while (std::getline(fp, line))
-
     {
-
         if (line.empty())
-
         {
-
             continue;
         }
-
         log_event log_info = decode_log(line, format);
-
         match(log_info);
-
         if (log_info.is_matched == 1)
-
         {
-
             alert_logs.push_back(log_info);
         }
     }
-
     fp.close();
-
     DEBUG("total matched logs" + std::to_string(alert_logs.size()));
-
     // agent_utils::write_log("ids_service_impl: analyse_file: total matched logs : " + std::to_string(alert_logs.size()), DEBUG);
-
     return db.save(alert_logs);
 }
 
@@ -805,11 +792,12 @@ int ids_service_impl::start(analysis_entity &entity)
 {
     int result = Audit::SUCCESS;
     vector<string> files;
+    read_config_files(entity.decoder_path, entity.rules_path);
     if (!is_valid_config)
     {
         return Audit::FAILED;
     }
-    read_config_files(entity.decoder_path, entity.rules_path);
+
     int isFile = (os::is_dir_exist(entity.log_path) && std::filesystem::is_regular_file(entity.log_path)) ? 1 : 0;
     if (isFile)
     {

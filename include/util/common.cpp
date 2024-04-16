@@ -73,37 +73,8 @@ string common::to_lower_case(string &str)
 
 bool common::is_valid_syslog_time_string(const string &s_time)
 {
-    string sys_time = common::trim(s_time);
-    DEBUG(sys_time);
-
-    // Find positions of spaces to separate month, day, and time
-    size_t first_space_pos = sys_time.find(' ');
-    size_t last_space_pos = sys_time.find_last_of(' ');
-
-    // Extract month, day, and time substrings
-    string month = sys_time.substr(0, first_space_pos);
-    string day = sys_time.substr(first_space_pos + 1, last_space_pos - first_space_pos - 1);
-    string time = sys_time.substr(last_space_pos + 1);
-
-    std::cout << "month: " << month << ", day: " << day << ", time: " << time << std::endl;
-    std::cout << "day length: " << day.length() << '\n';
-    if (
-        day.length() > 3 ||
-        month.length() != 3 ||
-        !(common::trim(day).length() > 0 && common::trim(day).length() < 3))
-    {
-        
-        return false;
-    }
-
-    std::regex month_pattern(R"([A-Za-z]{3})");
-    std::regex day_pattern(R"(\d{1,2})");
-    std::regex time_pattern(R"(\d{2}:\d{2}:\d{2})");
-
-    // Check if month, day, and time match the expected patterns
-    return std::regex_match(month, month_pattern) &&
-           std::regex_match(common::trim(day), day_pattern) &&
-           std::regex_match(time, time_pattern);
+    std::tm tm_struct = {};
+    return (strptime(s_time.c_str(), "%b %e %H:%M:%S", &tm_struct) != nullptr) ? true : false;
 }
 
 string common::create_log_cache_file(const string &app_name)
@@ -191,54 +162,73 @@ string common::get_hostname()
 int common::convert_syslog_to_utc_format(const string &sys_time, string &utc_time)
 {
     if (!is_valid_syslog_time_string(sys_time))
+
     {
         return Audit::FAILED;
     }
-    size_t first_space_pos = sys_time.find(' ');
-    size_t last_space_pos = sys_time.find_last_of(' ');
 
-    // Extract month, day, and time substrings
-    string month = sys_time.substr(0, first_space_pos);
-    string day = sys_time.substr(first_space_pos + 1, last_space_pos - first_space_pos - 1);
-    string time = sys_time.substr(last_space_pos + 1);
+    std::stringstream ss(sys_time);
 
-    /*std::stringstream ss(sys_time);
     string year, month, day, time;
+
     std::tm tm = {};
+
     int m = 0, d;
+
     month = trim(sys_time.substr(0, 4));
+
     for (; m < (int)Audit::MONTHS.size(); m++)
+
     {
+
         if (Audit::MONTHS[m] == month)
+
         {
+
             m++;
+
             break;
         }
     }
+
     month = "";
+
     if (m <= 9 && m > 0)
+
     {
+
         month = "0";
     }
+
     month += std::to_string(m);
+
     day = trim(sys_time.substr(4, 6));
+
     d = std::stoi(day);
+
     day = "";
+
     if (d <= 9 && d > 0)
+
     {
+
         day = "0";
     }
+
     day += std::to_string(d);
+
     time = trim(sys_time.substr(6, 15));
-    std::time_t current_time;
-    std::time(&current_time);
-    std::tm currentTm;
-    localtime_r(&current_time, &currentTm);
-    tm.tm_year = currentTm.tm_year;
+
+    std::time_t current_time = std::time(nullptr);
+
+    std::tm *currentTm = std::localtime(&current_time);
+
+    tm.tm_year = currentTm->tm_year;
+
     tm.tm_year += 1900;
-    */
-    utc_time = std::to_string(os::current_year) + "-" + month + "-" + day + " " + time;
-    DEBUG("SYSLOG TIME: ", sys_time, " TIME : ", utc_time);
+
+    utc_time = std::to_string(tm.tm_year) + "-" + month + "-" + day + " " + time;
+
     return Audit::SUCCESS;
 }
 

@@ -46,6 +46,9 @@ public:
     int analyse_file(const string& file);
  
     int start(analysis_entity& entity);
+    int start(config_table_type& config_table) {
+        return Audit::SUCCESS;
+    }
  
     virtual ~ids_service_impl() {}
  

@@ -54,7 +54,11 @@ namespace Audit
 		const int START_TIME = 21;
 
 	}
-
+	namespace IDS
+	{
+		const string IDS_DEFAULT_XML_RULES_PATH = "/etc/scl/rules";
+		const string IDS_DEFAULT_DECODER_RULES_PATH = "/etc/scl/decoder/decoder.xml";
+	}
 	namespace Patch
 	{
 		const string DEFAULT_DOWNLOAD_LOCATION = "/etc/scl/tmp/";

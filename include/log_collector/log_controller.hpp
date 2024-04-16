@@ -2,7 +2,7 @@
 #define LOG_CONTROLLER_HPP
 #pragma once
 #include "util/config.hpp"
-#include "log_reader/log_proxy.hpp"
+#include "log_collector/log_proxy.hpp"
  
 class log_controller {
 public:

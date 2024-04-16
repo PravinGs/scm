@@ -7,6 +7,7 @@
 class ids_service {
 public:
 	virtual int start(analysis_entity& entity) = 0;
+	virtual int start(config_table_type& config_table) = 0;
 	virtual ~ids_service() {
  
 	}

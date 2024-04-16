@@ -6,10 +6,10 @@
  
 class ids_proxy: public ids_service {
 public:
-    ids_proxy() : service(std::make_unique<log_service_impl>()) {}
+    ids_proxy() : service(std::make_unique<ids_service_impl>()) {}
  
 	int start(analysis_entity& entity) {
-        if (!validate_analysis_entity(entity)
+        if (!validate_analysis_entity(entity))
         {
             return Audit::FAILED;
         }
@@ -43,7 +43,7 @@ private:
         }
         else
         {
-            entity.decoder_path = IDS_DEFAULT_DECODER_RULES_PATH;
+            entity.decoder_path = Audit::IDS::IDS_DEFAULT_DECODER_RULES_PATH;
         }
  
         if (!entity.write_path.empty() && !os::is_dir_exist(entity.write_path))
@@ -60,7 +60,7 @@ private:
         }
         else
         {
-            entity.rules_path = IDS_DEFAULT_XML_RULES_PATH;
+            entity.rules_path = Audit::IDS::IDS_DEFAULT_XML_RULES_PATH;
         }
  
         if (entity.storage_type.empty())

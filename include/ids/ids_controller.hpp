@@ -10,12 +10,12 @@ class ids_controller {
 public:
     ids_controller(const string& config_file) : service(std::make_unique<ids_proxy>())
     {
-        is_config_file_valid = (config_service.read_ini_config_file(config_file) == Audit::SUCCESS ? true : false);
+        is_config_file_valid = (config_service.read_ini_config_file(config_file,config_table) == Audit::SUCCESS ? true : false);
     }
  
     void start() {
         if (!is_config_file_valid) { return;  }
-        service->start();
+        service->start(const_cast<config_table_type &>(config_table));
     }
  
 private:

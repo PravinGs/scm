@@ -136,6 +136,7 @@ private:
             }
             if (is_required)
             {
+                std::cout << log << '\n';
                 logs.push_back(log);
                 entity.count += 1;
             }

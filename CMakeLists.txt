@@ -56,8 +56,8 @@ set(PCH_HEADER include/util/libs.hpp)
 target_precompile_headers(SCM PRIVATE ${PCH_HEADER})
 
 # Add coverage flags for test coverage
-target_compile_options(SCM PRIVATE --coverage)
-target_link_options(SCM PRIVATE --coverage)
+# target_compile_options(SCM PRIVATE --coverage)
+# target_link_options(SCM PRIVATE --coverage)
 
 add_custom_target(
     cppcheck

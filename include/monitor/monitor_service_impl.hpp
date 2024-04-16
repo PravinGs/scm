@@ -11,10 +11,10 @@ class monitor_service_impl : public monitor_service
 public:
     ~monitor_service_impl()
     {
-        for (auto &task : async_tasks)
-        {
-            task.get();
-        }
+        // for (auto &task : async_tasks)
+        // {
+        //     task.get();
+        // }
     }
 
     int get_app_resource_details(const process_entity &entity, vector<process_data> &logs)
@@ -24,20 +24,25 @@ public:
         vector<int> process_ids = get_all_process_id();
         for (const int process_id : process_ids)
         {
-            auto async_task = [&, process_id]()
-            {
-                process_data p = create_process_data(process_id);
-                std::lock_guard<std::mutex> lock(process_mutex);
-                logs.push_back(p);
-            };
-            async_tasks.push_back(std::async(std::launch::async, async_task));
+            // auto async_task = [&, process_id]()
+            // {
+            //     process_data p = create_process_data(process_id);
+            //     std::lock_guard<std::mutex> lock(process_mutex);
+            //     logs.push_back(p);
+            // };
+            // async_tasks.push_back(std::async(std::launch::async, async_task));
+            process_data p = create_process_data(process_id);
+            // std::lock_guard<std::mutex> lock(process_mutex);
+            logs.push_back(p);
         }
         DEBUG("process information collected");
         // common::write_log("monitor_service: get_monitor_data: process information collected", DEBUG);
         return Audit::SUCCESS;
     }
 
-// private:
+    int get_app_resource_details(config_table_type &config_table) { return Audit::SUCCESS; }
+
+    // private:
     vector<int> get_all_process_id()
     {
         vector<int> process_ids;
@@ -47,7 +52,7 @@ public:
         dirent *entry = nullptr;
         if (dir == nullptr)
         {
-            DEBUG(INVALID_PATH , PROC);
+            DEBUG(INVALID_PATH, PROC);
             // common::write_log("monitor_service: get_processes_id: " + Audit::Config::INVALID_PATH + PROC, Audit::FAILED);
             return process_ids;
         }
@@ -146,7 +151,10 @@ public:
 
     string get_process_name_id(const unsigned int &process_id)
     {
-        if (process_id <= 0 ) { return "";}
+        if (process_id <= 0)
+        {
+            return "";
+        }
         string process_name = "";
         string path = PROC + std::to_string(process_id) + COMM;
         std::ifstream file(path);
@@ -199,8 +207,8 @@ public:
         return processData;
     }
 
-// private:
-    vector<std::future<void>> async_tasks;
+    // private:
+    // vector<std::future<void>> async_tasks;
     std::mutex process_mutex;
 };
 #endif // !MONITOR_SERVICE_IMPL_HPP
