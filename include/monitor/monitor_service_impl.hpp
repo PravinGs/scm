@@ -42,6 +42,104 @@ public:
 
     int get_app_resource_details(config_table_type &config_table) { return Audit::SUCCESS; }
 
+    sys_properties get_system_properties()
+    {
+        DEBUG("request for collecting system properties");
+        // common::write_log("monitor_service: get_system_properties: request for collecting system properties started...", INFO);
+        sys_properties properties;
+        struct statvfs buffer;
+        if (statvfs("/", &buffer) == 0)
+        {
+            unsigned long long totalSpace = buffer.f_blocks * buffer.f_frsize;
+            properties.disk = static_cast<double>(totalSpace) / (1024 * 1024 * 1024);
+        }
+        std::ifstream meminfo(PROC + "meminfo");
+        std::string line;
+        unsigned long long total_memory = 0;
+        unsigned long long free_memory = 0;
+        while (std::getline(meminfo, line))
+        {
+            if (line.find("MemTotal:") != std::string::npos)
+            {
+                sscanf(line.c_str(), "MemTotal: %llu", &total_memory);
+            }
+            else if (line.find("MemFree:") != std::string::npos)
+            {
+                sscanf(line.c_str(), "MemFree: %llu", &free_memory);
+            }
+        }
+        properties.ram = static_cast<double>(total_memory) / (1024 * 1024);
+        meminfo.close();
+        std::ifstream stat_file("/proc/stat");
+        unsigned long long user_time = 0;
+        unsigned long long nice_time = 0;
+        unsigned long long system_time = 0;
+        unsigned long long idleTime = 0;
+        while (std::getline(stat_file, line))
+        {
+            if (line.find("cpu ") != std::string::npos)
+            {
+                sscanf(line.c_str(), "cpu %llu %llu %llu %llu", &user_time, &nice_time, &system_time, &idleTime);
+                break;
+            }
+        }
+        unsigned long long total_time = user_time + nice_time + system_time + idleTime;
+        properties.cpu = static_cast<double>(total_time);
+        stat_file.close();
+        return properties;
+    }
+
+    sys_properties get_availed_system_properties()
+    {
+        DEBUG("request for collecting availed system properties");
+        // agent_utils::write_log("monitor_service: get_availed_system_properties: request for collecting availed system properties started..", INFO);
+        sys_properties properties;
+        struct statvfs buffer;
+        if (statvfs("/", &buffer) == 0)
+        {
+            unsigned long long totalSpace = buffer.f_blocks * buffer.f_frsize;
+            unsigned long long availableSpace = buffer.f_bavail * buffer.f_frsize;
+            unsigned long long usedSpace = totalSpace - availableSpace;
+            properties.disk = static_cast<double>(usedSpace) / totalSpace * 100;
+        }
+        std::ifstream meminfo(PROC + "meminfo");
+        std::string line;
+        unsigned long long total_memory = 0;
+        unsigned long long freeMemory = 0;
+        while (std::getline(meminfo, line))
+        {
+            if (line.find("MemTotal:") != std::string::npos)
+            {
+                sscanf(line.c_str(), "MemTotal: %llu", &total_memory);
+            }
+            else if (line.find("MemFree:") != std::string::npos)
+            {
+                sscanf(line.c_str(), "MemFree: %llu", &freeMemory);
+            }
+        }
+        unsigned long long usedMemory = total_memory - freeMemory;
+        properties.ram = static_cast<double>(usedMemory) / total_memory * 100;
+        meminfo.close();
+        std::ifstream statFile("/proc/stat");
+        unsigned long long userTime = 0;
+        unsigned long long niceTime = 0;
+        unsigned long long systemTime = 0;
+        unsigned long long idleTime = 0;
+
+        while (std::getline(statFile, line))
+        {
+            if (line.find("cpu ") != std::string::npos)
+            {
+                sscanf(line.c_str(), "cpu %llu %llu %llu %llu", &userTime, &niceTime, &systemTime, &idleTime);
+                break;
+            }
+        }
+        unsigned long long totalTime = userTime + niceTime + systemTime + idleTime;
+        properties.cpu = (static_cast<double>(totalTime) - idleTime) / totalTime * 100;
+        statFile.close();
+        return properties;
+    }
+
     // private:
     vector<int> get_all_process_id()
     {

@@ -17,8 +17,8 @@ public:
         log_entity entity;
         entity.name = name;
         entity.read_path = common::trim(config_table[name]["read_path"]);
-        entity.write_path = common::trim(config_table[name]["write_path"]);
-        entity.time_pattern = common::trim(config_table[name]["time_pattern"]);
+        entity.write_path = common::trim(config_table[name]["write_path"]); // Not a madatory field
+        entity.time_pattern = common::trim(config_table[name]["time_pattern"]); // Not a mandatory field but also it shouldn't be incorrect(follow cron expression)
         entity.storage_type = common::trim(config_table[name]["storage_type"]);
         entity.connection = get_conn_entity(config_table, "client");
         string format = common::trim(config_table[name]["format"]);
@@ -175,6 +175,7 @@ public:
         entity.connection = get_conn_entity(config_table, "client");
         return entity;
     }
+
 
 private:
     config config_s;

@@ -106,7 +106,7 @@ private:
                 //std::cerr << "Error: " << error << "\n";
                 if (res == CURLE_COULDNT_RESOLVE_HOST)
                 {
-                    return_val = FAILED;
+                    return_val = Audit::FAILED;
                     break;
                 }
                 retry--;

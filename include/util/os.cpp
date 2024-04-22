@@ -18,7 +18,7 @@ int os::compress_file(const string &log_file)
 	{
 		vector<string> files;
 		os::get_regular_files(log_file.substr(0, log_file.find_last_of('/')), files);
-		new_file_path +=  + "."+std::to_string(files.size());
+		new_file_path += +"." + std::to_string(files.size());
 	}
 
 	fstream file(log_file, std::ios::in | std::ios::binary);
@@ -45,8 +45,8 @@ int os::compress_file(const string &log_file)
 			continue;
 		if (gzwrite(z_log, line.c_str(), static_cast<unsigned int>(line.size())) != (int)line.size())
 		{
-			LOG_ERROR( Audit::FWRITE_FAILED + zip_file);
-			//common::write_log("common: compress_file: " + Audit::FWRITE_FAILED + zip_file, Audit::FAILED);
+			LOG_ERROR(Audit::FWRITE_FAILED + zip_file);
+			// common::write_log("common: compress_file: " + Audit::FWRITE_FAILED + zip_file, Audit::FAILED);
 			result = Audit::FAILED;
 			break;
 		}
@@ -60,7 +60,7 @@ int os::compress_file(const string &log_file)
 	else
 	{
 		LOG_ERROR(Audit::FDELETE_FAILED + new_file_path);
-		//common::write_log("common: compress_file: " + Audit::FDELETE_FAILED + new_file_path, Audit::FAILED);
+		// common::write_log("common: compress_file: " + Audit::FDELETE_FAILED + new_file_path, Audit::FAILED);
 	}
 #else
 	DEBUG("archive not supported fot this platform");
@@ -115,7 +115,7 @@ bool os::is_file_exist(const string &file)
 	return std::filesystem::exists(common::trim(file));
 }
 
-string os::get_path_or_backup_file_path(const string& filename)
+string os::get_path_or_backup_file_path(const string &filename)
 {
 	string non_empty_path;
 	if (is_file_exist(filename))
@@ -141,7 +141,7 @@ string os::get_archive_by_day_and_log_name(const int day, const string &log_name
 	string current_log_file = Audit::Config::BASE_LOG_DIR;
 	current_log_file += Audit::Config::BASE_LOG_ARCHIVE;
 	current_log_file += Audit::Config::SEP + std::to_string(current_year) + Audit::Config::SEP + Audit::MONTHS[current_month] + Audit::Config::SEP + std::to_string(day) + "-" + log_name;
-	return os::is_file_exist(current_log_file) ? current_log_file: "";
+	return os::is_file_exist(current_log_file) ? current_log_file : "";
 }
 
 int os::handle_local_log_file(int day, int month, int year, string &file_path, const string &app_name)
@@ -172,8 +172,9 @@ int os::create_log_archive_file(int curr_day, int curr_month, int curr_year, str
 	{
 		LOG("path created", current_dir);
 	}
-	else if (!is_dir_exist(current_dir) && create_dir(current_dir) != Audit::SUCCESS){
-		LOG_ERROR("Check user permission to create file at this location: "+ current_dir);
+	else if (!is_dir_exist(current_dir) && create_dir(current_dir) != Audit::SUCCESS)
+	{
+		LOG_ERROR("Check user permission to create file at this location: " + current_dir);
 		return Audit::FAILED;
 	}
 	current_dir += Audit::Config::BASE_LOG_ARCHIVE;
@@ -181,8 +182,9 @@ int os::create_log_archive_file(int curr_day, int curr_month, int curr_year, str
 	{
 		LOG("path created", current_dir);
 	}
-	else if (!is_dir_exist(current_dir) && create_dir(current_dir) != Audit::SUCCESS){
-		LOG_ERROR("Check user permission to create file at this location: "+ current_dir);
+	else if (!is_dir_exist(current_dir) && create_dir(current_dir) != Audit::SUCCESS)
+	{
+		LOG_ERROR("Check user permission to create file at this location: " + current_dir);
 		return Audit::FAILED;
 	}
 	current_dir += Audit::Config::SEP + std::to_string(curr_year);
@@ -190,8 +192,9 @@ int os::create_log_archive_file(int curr_day, int curr_month, int curr_year, str
 	{
 		LOG("path created", current_dir);
 	}
-	else if (!is_dir_exist(current_dir) && create_dir(current_dir) != Audit::SUCCESS){
-		LOG_ERROR("Check user permission to create file at this location: "+ current_dir);
+	else if (!is_dir_exist(current_dir) && create_dir(current_dir) != Audit::SUCCESS)
+	{
+		LOG_ERROR("Check user permission to create file at this location: " + current_dir);
 		return Audit::FAILED;
 	}
 	int inclusive_month = curr_month;
@@ -200,13 +203,17 @@ int os::create_log_archive_file(int curr_day, int curr_month, int curr_year, str
 	{
 		LOG("path created", current_dir);
 	}
-	else if (!is_dir_exist(current_dir) && create_dir(current_dir) != Audit::SUCCESS){
-		LOG_ERROR("Check user permission to create file at this location: "+ current_dir);
+	else if (!is_dir_exist(current_dir) && create_dir(current_dir) != Audit::SUCCESS)
+	{
+		LOG_ERROR("Check user permission to create file at this location: " + current_dir);
 		return Audit::FAILED;
 	}
 	current_dir += Audit::Config::SEP + std::to_string(curr_day) + "-" + app_name;
 	file_path = current_dir;
-	if (os::is_file_exist(file_path)) {return Audit::SUCCESS;}
+	if (os::is_file_exist(file_path))
+	{
+		return Audit::SUCCESS;
+	}
 	fstream new_file(file_path, std::ios::out);
 	if (new_file)
 	{
@@ -282,7 +289,7 @@ int os::create_file(const string &file_path)
 		std::ofstream file(path);
 		if (file.is_open())
 		{
-			DEBUG("New file createad at: "+ path);
+			DEBUG("New file createad at: " + path);
 			// common::write_log("os: create_file: new file creation: " + file_path, DEBUG);
 			file.close();
 			return Audit::SUCCESS;
@@ -324,21 +331,18 @@ int os::get_regular_files(const string &directory, vector<string> &files)
 	return result;
 }
 
-string os::get_current_time()
+std::string os::get_current_time()
 {
-	char current_time[20];
+	std::ostringstream oss;
 	time_t now;
 	time(&now);
-#if __linux__
-	struct tm *timeinfo = localtime(&now);
-	strftime(current_time, sizeof(current_time), "%Y-%m-%d %H:%M:%S", timeinfo);
-#else
-	struct tm timeinfo;
-	localtime_s(&timeinfo, &now);
-	strftime(current_time, sizeof(current_time), "%Y-%m-%d %H:%M:%S", &timeinfo);
-#endif
-	
-	return current_time;
+
+	struct tm *timeinfo = gmtime(&now); // Get UTC time
+
+	// Format time as string
+	oss << std::put_time(timeinfo, "%Y-%m-%dT%H:%M:%S.") << std::setfill('0') << std::setw(7) << (now % 10000000) << "+00:00"; // Append microseconds and timezone offset
+
+	return oss.str();
 }
 
 string os::get_current_time_with_no_space()
@@ -350,26 +354,26 @@ string os::get_current_time_with_no_space()
 
 string os::create_json_file(const string &type)
 {
-	if (common::trim(type).empty()) 
+	if (common::trim(type).empty())
 	{
 		LOG_ERROR("Log type should not be empty");
 		return "";
-	} 
+	}
 
 	string file_path = Audit::Config::BASE_LOG_DIR;
 
 	if (!os::is_dir_exist(file_path) && os::create_dir(file_path) != Audit::SUCCESS)
-	{	
+	{
 		return "";
 	}
 	file_path += "json";
 	if (!os::is_dir_exist(file_path) && os::create_dir(file_path) != Audit::SUCCESS)
-	{	
+	{
 		return "";
 	}
 	file_path += Audit::Config::SEP + common::trim(type);
 	if (!os::is_dir_exist(file_path) && os::create_dir(file_path) != Audit::SUCCESS)
-	{	
+	{
 		return "";
 	}
 	file_path += Audit::Config::SEP + os::get_current_time_with_no_space() + ".json";
@@ -386,10 +390,11 @@ string os::create_json_file(const string &type)
 
 bool os::validate_path(const string &file_path)
 {
-	if (common::trim(file_path).empty()){
+	if (common::trim(file_path).empty())
+	{
 		LOG_ERROR("Given Path is empty to create file.");
 		return false;
 	}
 	auto pos = file_path.find_last_of(Audit::Config::SEP);
-	return (!is_file_exist(file_path.substr(0, pos)) && create_dir(file_path.substr(0, pos)) != Audit::SUCCESS) ? false: true;
+	return (!is_file_exist(file_path.substr(0, pos)) && create_dir(file_path.substr(0, pos)) != Audit::SUCCESS) ? false : true;
 }

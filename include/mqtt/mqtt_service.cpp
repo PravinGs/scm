@@ -22,9 +22,11 @@ void mqtt_client::mqtt_callback::send_response(const std::string &res_type, cons
     }
     else if (res_type == "RestApiResponse")
     {
-        long http_code = rest_service::post(r_entity, data);
+        // long http_code = rest_service::post(r_entity, data);
+        long http_code = 0L;
         if (http_code == 200L)
         {
+            // check at the default dir if log files been stored temproarily
             common::write_log("Syslog data sent to rest api", SUCCESS);
         }
     }
@@ -68,28 +70,28 @@ void mqtt_client::mqtt_callback::handle_log(mqtt::const_message_ptr msg)
         if (!request.start_time.empty())
         {
             entity.last_read_time = common::string_to_time_t(request.start_time);
-            entity.read_path = "/var/log/syslog";
+            //entity.read_path = "/var/log/syslog";
         }
-        result = log.get_syslog(entity, logs);
-        std::cout << "result: " << result << '\n';
+        result = log->get_syslog(entity, logs);
     }
     else if (request.log_type == "applog")
     {
-        result = log.get_applog();//
+        result = log->get_applog();//
     }
     else
     {
         result = INVALID_MQTT_REQUEST; // Invalid request from the server
     }
+    json_string = parser.log_to_json(logs, entity.name);
 
-    if (result != SUCCESS)
-    {
-        json_string = "{ status: failed }";
-    }
-    else
-    {
-        json_string = parser.log_to_json(logs);
-    }
+    // if (result != SUCCESS)
+    // {
+    //     json_string = "{ status: failed }";
+    // }
+    // else
+    // {
+    //     json_string = parser.log_to_json(logs);
+    // }
     send_response(parser.response_type_string(request.response_type), json_string, request.source_id);
 }
 
@@ -101,12 +103,14 @@ void mqtt_client::mqtt_callback::handle_process(mqtt::const_message_ptr msg)
 
     process_entity entity = e_parser.get_process_entity(client->config_table);
 
-    monitor.get_app_resource_details(entity, logs);
+    int result = monitor.get_app_resource_details(entity, logs);
 
-    if (!logs.empty())
-    {
-        json_string = parser.process_to_json(logs);
-    }
+    json_string = parser.process_to_json(logs);
+
+    // if (result == Audit::SUCCESS && !logs.empty())
+    // {
+    //     json_string = parser.process_to_json(logs);
+    // }
     send_response(parser.response_type_string(request.response_type), json_string, request.source_id);
 }
 

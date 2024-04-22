@@ -72,9 +72,12 @@ public:
         return ""; // Handle default case
     }
 
-    std::string log_to_json(const vector<std::string> &logs)
+    std::string log_to_json(const vector<std::string> &logs, const string& name)
     {
         Json::Value json;
+        json["OrgId"] = 234225;
+        json["AppName"] = name;
+        json["Source"] = os::host_name;
         json["LogObjects"] = Json::Value(Json::arrayValue);
         for (auto log : logs)
         {
@@ -97,11 +100,13 @@ public:
     std::string process_to_json(const vector<process_data> &logs)
     {
         Json::Value json;
+        json["OrgId"] = 234225;
+        json["AppName"] = "system_resources";
+        json["Source"] = os::host_name;
         json["ProcessObjects"] = Json::Value(Json::arrayValue);
         for (auto log : logs)
         {
             Json::Value json_log;
-
             process_data data = process_data(log);
             json_log["process_id"] = std::stoi(data.process_id);
             json_log["process_name"] = data.process_name;

@@ -6,10 +6,14 @@
  
 class log_controller {
 public:
-	log_controller(const std::string& config_file): thread_handler(true),service(std::make_unique<log_proxy>())
+	log_controller(const std::string& config_file): thread_handler(true)
 	{
 		is_config_file_valid = (config_service.read_ini_config_file(config_file, config_table) == Audit::SUCCESS ? true : false);
-	}
+		if (is_config_file_valid)
+		{
+			service = std::make_unique<log_proxy>(config_table);
+		}
+	}	
  
 	int start() 
 	{
@@ -17,7 +21,7 @@ public:
 		{
 			return Audit::FAILED;
 		}
-		return service->get_syslog(const_cast<config_table_type &>(config_table));
+		return service->get_syslog();
 	}
  
 	void start_async() 
@@ -50,7 +54,7 @@ private:
 		}
 		else if (process == "syslog")
 		{
-			(void)service->get_syslog(config_table);
+			(void)service->get_syslog();
 		}
 	}
 private:

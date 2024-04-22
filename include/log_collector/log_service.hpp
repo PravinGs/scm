@@ -6,7 +6,7 @@
  
 class log_service {
 public:
-	virtual int get_syslog(config_table_type& config_table) = 0;
+	virtual int get_syslog() = 0;
 	virtual int get_syslog(log_entity& entity, vector<string>& logs) = 0;
 	virtual int get_applog() = 0;
 	virtual ~log_service() {}

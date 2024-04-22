@@ -12,8 +12,6 @@ class common {
 public:
 	static fstream logfp;
 	static bool debug;
-
-	
  
 	static int setup_logger(const string& log_file); // default Audit::Config::
 	
@@ -34,6 +32,8 @@ public:
 	static string get_hostname();
  
 	static int convert_syslog_to_utc_format(const std::string& sys_time, std::string& utc_time);
+	
+	static std::string convert_dpkg_time_to_utc_format(const std::string& local_time_str);
  
 	static void write_log(const string& log);
  
@@ -48,7 +48,7 @@ public:
 	static std::uintmax_t get_file_size(const string& file_path);
  
 	static void pause_till_next_execution(const cron::cronexpr& cron);
- 
+   
 	~common()
 	{
 		if (logfp.is_open())

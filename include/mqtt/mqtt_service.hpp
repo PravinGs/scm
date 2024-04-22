@@ -32,6 +32,7 @@ public:
         mqtt_callback(mqtt_client* client)
             : client(client)
         {
+            log = std::make_unique<log_proxy>(client->config_table);
             r_entity = e_parser.get_rest_entity(client->config_table);
         }
 
@@ -47,7 +48,7 @@ public:
         void handle_tpm(mqtt::const_message_ptr msg);
 
         mqtt_client* client;
-        log_proxy log;
+        std::unique_ptr<log_proxy> log;
         monitor_proxy monitor;
         patch_proxy patch;
         // tpm tpm_service;

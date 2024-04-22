@@ -29,10 +29,11 @@ public:
 		return result;
 	}
  
-    int get_syslog(config_table_type& table) 
+    int get_syslog() 
     {
         return Audit::SUCCESS;
     }
+    
     int get_applog() { return Audit::SUCCESS; }
  
 private:
@@ -175,11 +176,12 @@ private:
             string log, temp;
             string current_time_string = line.substr(0, 19);
             std::time_t current_time = common::string_to_time_t(current_time_string); /* Convert string time to time_t format for comparision between time_t objects */
+            string utc_time = common::convert_dpkg_time_to_utc_format(current_time_string);
             if (current_time < entity.last_read_time)
             {
                 continue;
             }
-            log += current_time_string;
+            log += utc_time;
             log += "|" + os::host_name;
             log += "| dpkg";
             temp = line.substr(20);

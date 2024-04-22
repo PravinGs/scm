@@ -4,6 +4,8 @@
 
 #define PCRE2_CODE_UNIT_WIDTH 8
 
+#pragma warning(disable : 4996)
+
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -21,6 +23,7 @@
 #include <future>
 #include <chrono>
 #include <thread>
+#include <time.h>
 
 #if __linux__
 #include <zlib.h>
@@ -34,7 +37,12 @@
 #include <openssl/hmac.h>
 #include <syslog.h>
 #include <mqtt/async_client.h>
-
+#include <sys/statvfs.h>
+#include <sys/sysinfo.h>
+// #include <sys/statvfs.h>
+// #include <sys/stat.h>
+// #include <sys/inotify.h>
+// #include <sys/types.h>
 #endif
 
 #include "constants.hpp"

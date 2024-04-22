@@ -40,7 +40,7 @@ public:
         }*/
         return;
 	}
-private:
+// private:
     bool validate_patch_entity(patch_entity& entity)
     {
         if (entity.application.empty())
@@ -61,7 +61,7 @@ private:
         {
             LOG_ERROR("url not configured for patch download");
             //agent_utils::write_log("proxy: validate_patch_entity: url not configured for patch download", FAILED);
-            return FAILED;
+            return Audit::FAILED; 
         }
  
         if (entity.ca_cert_path.empty())
@@ -70,7 +70,7 @@ private:
         }
         else
         {
-            entity.is_secure = (os::is_file_exist(entity.ca_cert_path)) ? true : false;
+            entity.is_secure = os::is_file_exist(entity.ca_cert_path);
         }
  
         if (entity.client_cert_path.empty())
@@ -79,7 +79,7 @@ private:
         }
         else
         {
-            entity.is_secure = (os::is_file_exist(entity.client_cert_path)) ? true : false;
+            entity.is_secure = os::is_file_exist(entity.client_cert_path);
         }
  
         if (entity.username.empty() && entity.password.empty())

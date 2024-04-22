@@ -161,75 +161,58 @@ string common::get_hostname()
 
 int common::convert_syslog_to_utc_format(const string &sys_time, string &utc_time)
 {
-    if (!is_valid_syslog_time_string(sys_time))
-
-    {
-        return Audit::FAILED;
-    }
-
+        // Assuming the syslog time format is like "Jul 21 00:43:35"
+    std::tm tm = {};
     std::stringstream ss(sys_time);
 
-    string year, month, day, time;
+    std::string month_str, day_str, time_str;
+    ss >> month_str >> day_str >> time_str;
 
-    std::tm tm = {};
-
-    int m = 0, d;
-
-    month = trim(sys_time.substr(0, 4));
-
-    for (; m < (int)Audit::MONTHS.size(); m++)
-
-    {
-
-        if (Audit::MONTHS[m] == month)
-
-        {
-
-            m++;
-
+    // Convert month abbreviation to month number
+    const char* const month_names[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    for (int i = 0; i < 12; ++i) {
+        if (month_str == month_names[i]) {
+            tm.tm_mon = i;
             break;
         }
     }
 
-    month = "";
+    // Parse day and time
+    tm.tm_mday = std::stoi(day_str);
+    sscanf(time_str.c_str(), "%d:%d:%d", &tm.tm_hour, &tm.tm_min, &tm.tm_sec);
 
-    if (m <= 9 && m > 0)
-
-    {
-
-        month = "0";
-    }
-
-    month += std::to_string(m);
-
-    day = trim(sys_time.substr(4, 6));
-
-    d = std::stoi(day);
-
-    day = "";
-
-    if (d <= 9 && d > 0)
-
-    {
-
-        day = "0";
-    }
-
-    day += std::to_string(d);
-
-    time = trim(sys_time.substr(6, 15));
-
+    // Get current year
     std::time_t current_time = std::time(nullptr);
-
-    std::tm *currentTm = std::localtime(&current_time);
-
-    tm.tm_year = currentTm->tm_year;
-
+    std::tm* current_tm = std::localtime(&current_time);
+    tm.tm_year = current_tm->tm_year; // Current year
     tm.tm_year += 1900;
 
-    utc_time = std::to_string(tm.tm_year) + "-" + month + "-" + day + " " + time;
+    // Convert to UTC time
+    std::time_t utc_time_t = std::mktime(&tm);
 
+    // Format UTC time in the desired format
+    std::ostringstream oss;
+    oss << std::put_time(&tm, "%Y-%m-%dT%H:%M:%S") << ".9111923+05:30";
+
+    utc_time = oss.str();
     return Audit::SUCCESS;
+}
+
+std::string common::convert_dpkg_time_to_utc_format(const std::string& local_time_str) {
+    // Parse the given local time string
+    std::tm tm = {};
+    std::istringstream ss(local_time_str);
+    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+
+    // Convert local time to UTC time
+    std::time_t local_time = std::mktime(&tm);
+    std::tm* utc_tm = std::gmtime(&local_time);
+
+    // Format UTC time in the desired format
+    std::ostringstream oss;
+    oss << std::put_time(utc_tm, "%Y-%m-%dT%H:%M:%S") << ".3785938+00:00";
+
+    return oss.str();
 }
 
 void common::write_log(const string &log)
@@ -355,4 +338,6 @@ void common::pause_till_next_execution(const cron::cronexpr &cron)
     std::this_thread::sleep_for(duration);
     return;
 }
+
+
 // common.cpp

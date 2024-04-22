@@ -2,20 +2,21 @@
 #define LOG_ENTITY_HPP
 #pragma once
 #include "util/common.hpp"
+
+static string log_to_json(const vector<std::string> &logs, const string& app_name);
 struct log_entity
 {
     int count;
-    char remote = 'n';
-    bool is_empty;
+    char remote = 'n'; //
+    bool is_empty;     //
     char delimeter = ',';
-    string format;
-    string name;
+    string format; //
+    string name;   //
     string read_path;
     string write_path;
-    vector<string> json_attributes;
-    string columns;
+    vector<string> json_attributes; // No Columns configured , default columns.
     string time_pattern;
-    string storage_type;
+    string storage_type; // dafult json
     vector<string> log_levels;
     std::time_t last_read_time;
     string current_read_time;
@@ -48,6 +49,7 @@ struct standard_log_attrs
         std::getline(ss, t_category, '|');
         level = handle_exception(t_level);
         category = LogCategory[t_category];
+        // common::convert_syslog_to_utc_format(timestamp, utc_time);
     }
 
     int handle_exception(const string &level)
@@ -66,5 +68,29 @@ struct standard_log_attrs
 
     ~standard_log_attrs() {}
 };
- 
+
+string log_to_json(const vector<std::string> &logs, const string& app_name)
+{
+    Json::Value json;
+    json["AppName"] = app_name;
+    json["TimeGenerated"] = os::get_current_time();
+    json["Source"] = os::host_name;
+    json["OrgId"] = 10;
+    json["LogObjects"] = Json::Value(Json::arrayValue);
+    for (auto log : logs)
+    {
+        Json::Value jsonLog;
+        standard_log_attrs f_log = standard_log_attrs(log);
+        jsonLog["TimeGenerated"] = f_log.timestamp;
+        jsonLog["UserLoginId"] = f_log.user;
+        jsonLog["ServiceName"] = f_log.program;
+        jsonLog["Message"] = f_log.message;
+        jsonLog["LogLevel"] = f_log.level;
+        jsonLog["LogCategory"] = f_log.category;
+
+        json["LogObjects"].append(jsonLog);
+    }
+    // json["status"] = "success";
+    return json.toStyledString();
+}
 #endif // !LOG_ENTITY_HPP

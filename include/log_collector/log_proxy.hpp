@@ -3,13 +3,19 @@
 #pragma once
 
 #include "util/config.hpp"
-#include "log_collector/log_service_impl.hpp"
+#include "log_service_impl.hpp"
+#include "log_repository.hpp"
 #include "util/entity_parser.hpp"
+#include "rest/rest_service.hpp"
 
 class log_proxy : public log_service
 {
 public:
-    log_proxy() : thread_handler(true), service(std::make_unique<log_service_impl>()) {}
+    log_proxy(config_table_type &config_table) : config_table(config_table), thread_handler(true), service(std::make_unique<log_service_impl>())
+    {
+        r_entity = parser.get_rest_entity(config_table);
+    }
+
     ~log_proxy()
     {
         // for (auto &async_task : async_syslog_tasks)
@@ -17,7 +23,8 @@ public:
         // async_task.get();
         // }
     }
-    int get_syslog(config_table_type &config_table)
+
+    int get_syslog()
     {
         int result = Audit::SUCCESS;
         log_entity entity = parser.get_log_entity(config_table, "syslog");
@@ -44,6 +51,7 @@ public:
 
     int get_syslog(log_entity &entity, vector<string> &logs)
     {
+        string json_string;
         if (!get_previous_log_read_time(entity) || !validate_log_entity(entity))
         {
             return Audit::FAILED;
@@ -53,28 +61,63 @@ public:
         if (result == Audit::SUCCESS && common::update_log_written_time(entity.name, entity.current_read_time) == Audit::SUCCESS)
         {
             LOG("LOG collected and cache updated");
+            json_string = log_to_json(logs, entity.name);
+            std::cout << json_string << '\n';
+            // Send to cloud
+            long http_status = rest_service::post(r_entity.logs_post_url, json_string);
+            DEBUG("Rest Api status: ", std::to_string(http_status));
+            if (http_status == 200L)
+            {
+                http_status = rest_service::start(r_entity, "syslog"); // see later
+            }
+            if (http_status != 200L && db.save(entity, logs) != Audit::SUCCESS)
+            {
+                DEBUG("Failed to store ", entity.name, " data locally");
+            }
         }
         return result;
     }
 
     int get_applog() { return Audit::SUCCESS; }
 
-private: // member functions
+    // private: // member functions
+
     bool validate_log_entity(log_entity &entity)
     {
         try
         {
-            if (!entity.columns.empty())
+            if (
+                entity.read_path.empty() ||
+                (entity.name == "applog" && entity.name == entity.format) ||
+                (entity.format == "applog" && entity.json_attributes.size() == 0))
             {
-                entity.json_attributes = config_s.to_vector(entity.columns, ',');
+                throw std::invalid_argument("read_path | format cannot be empty");
             }
+
+            if (!entity.write_path.empty() && !os::is_dir_exist(entity.write_path)) // incorrect write path
+            {
+                throw std::invalid_argument("Invalid write path configured");
+            }
+            else
+            {
+                entity.write_path = Audit::Config::BASE_LOG_DIR;
+            }
+
+            if (!entity.time_pattern.empty() && !(validate_cron_expression(entity.time_pattern)))
+            {
+                DEBUG("Invalid cron expression ignoring");
+                entity.time_pattern = "";
+            }
+
             if (entity.last_read_time == std::numeric_limits<time_t>::min())
             {
                 throw std::invalid_argument("proxy: validate_log_entity: no Specific time mentioned to collect log");
             }
-            if (entity.format == "applog" && entity.columns.size() == 0)
+
+            if (entity.storage_type.empty() || entity.storage_type != "archive" || entity.storage_type != "json")
             {
-                throw std::invalid_argument("proxy: validate_log_entity: log attributes not configured for " + entity.name);
+                DEBUG("Ignoring invalida storage default json type assigned");
+                entity.storage_type = "json";
             }
             return true;
         }
@@ -85,6 +128,15 @@ private: // member functions
             // agent_utils::write_log("proxy: validate_log_entity: " + error, FAILED);
         }
         return false;
+    }
+
+    bool validate_cron_expression(const std::string &cron_expression)
+    {
+        // Regular expression pattern for a valid cron expression
+        std::regex pattern("^(\\*|([0-5]?[0-9])|([0-5]?[0-9]-[0-5]?[0-9])|([0-5]?[0-9],[0-5]?[0-9](,[0-5]?[0-9])*)|((\\*/)?[0-5]?[0-9](/[0-5]?[0-9])?))\\s+(\\*|([01]?[0-9]|2[0-3])|([01]?[0-9]|2[0-3])-([01]?[0-9]|2[0-3])|([01]?[0-9]|2[0-3],[01]?[0-9]|2[0-3](,[01]?[0-9]|2[0-3])*)|((\\*/)?([01]?[0-9]|2[0-3])(/[01]?[0-9]|2[0-3])?))\\s+(\\*|([01-2]?[0-9]|3[01])|([01-2]?[0-9]|3[01])-([01-2]?[0-9]|3[01])|([01-2]?[0-9]|3[01],[01-2]?[0-9]|3[01](,[01-2]?[0-9]|3[01])*)|((\\*/)?([01-2]?[0-9]|3[01])(/[01-2]?[0-9]|3[01])?))\\s+(\\*|([1-9]|1[012])|([1-9]|1[012])-([1-9]|1[012])|([1-9]|1[012],[1-9]|1[012](,[1-9]|1[012])*)|((\\*/)?([1-9]|1[012])(/[1-9]|1[012])?))\\s+(\\*|([0-7])|([0-7])-([0-7])|([0-7],[0-7](,[0-7])*)|((\\*/)?[0-7](/[0-7])?))$");
+
+        // Check if the given cron expression matches the pattern
+        return std::regex_match(cron_expression, pattern);
     }
 
     bool get_previous_log_read_time(log_entity &entity)
@@ -212,10 +264,13 @@ private: // member functions
     }
 
 private:
+    config_table_type config_table;
     bool thread_handler;
     std::unique_ptr<log_service> service;
     config config_s;
     entity_parser parser;
+    rest_entity r_entity;
+    log_repository db;
     // vector<std::future<int>> async_syslog_tasks;
     cron::cronexpr schedular;
 };
