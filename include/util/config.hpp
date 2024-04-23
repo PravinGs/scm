@@ -160,7 +160,7 @@ public: // private
         catch (exception &e)
         {
             digit = -1;
-            LOG_ERROR(e.what());
+            //LOG_ERROR(e.what());
         }
         return digit;
     }
@@ -466,7 +466,7 @@ public: // private
             root = doc.child("group");
             extract_rule_attributes(root, table);
         }
-        LOG("XML parsing success");
+        // LOG("XML parsing success");
         // agent_utils::write_log("config: read_aconfig: XML parsing success for " + file_name, DEBUG);
         return Audit::SUCCESS;
     }

@@ -7,6 +7,7 @@ string os::host_name = "platform";
 
 int os::compress_file(const string &log_file)
 {
+	DEBUG("Backup started for log_file: ", log_file, " size: ", std::to_string(os::get_file_size(log_file)));
 	int result = Audit::SUCCESS;
 	string line;
 	string new_file_path = log_file;
@@ -25,7 +26,6 @@ int os::compress_file(const string &log_file)
 	if (!file.is_open())
 	{
 		LOG_ERROR("Permission denied to read : ", log_file);
-		// common::write_log("common: compress_file: no file exist for backup ( " + log_file + " )", Audit::FAILED);
 		return Audit::FAILED;
 	}
 #if __linux
@@ -34,7 +34,7 @@ int os::compress_file(const string &log_file)
 	z_log = gzopen(zip_file.c_str(), "w");
 	if (!z_log)
 	{
-		common::write_log("common: compress_file: " + Audit::FCREATION_FAILED + zip_file, Audit::FAILED);
+		LOG_ERROR(Audit::FCREATION_FAILED , zip_file);
 		file.close();
 		return Audit::FAILED;
 	}
@@ -46,7 +46,6 @@ int os::compress_file(const string &log_file)
 		if (gzwrite(z_log, line.c_str(), static_cast<unsigned int>(line.size())) != (int)line.size())
 		{
 			LOG_ERROR(Audit::FWRITE_FAILED + zip_file);
-			// common::write_log("common: compress_file: " + Audit::FWRITE_FAILED + zip_file, Audit::FAILED);
 			result = Audit::FAILED;
 			break;
 		}
@@ -60,7 +59,6 @@ int os::compress_file(const string &log_file)
 	else
 	{
 		LOG_ERROR(Audit::FDELETE_FAILED + new_file_path);
-		// common::write_log("common: compress_file: " + Audit::FDELETE_FAILED + new_file_path, Audit::FAILED);
 	}
 #else
 	DEBUG("archive not supported fot this platform");
@@ -73,7 +71,6 @@ string os::sign(const string &file, const string &sign_key)
 	/*if (!os::is_file_exist(file))
 	{
 		LOG_ERROR(Audit::FILE_ERROR, file);
-		//common::write_log("os: sign: file not exist: " + file, Audit::FAILED);
 		return "";
 	}*/
 	// Redundant check
@@ -82,7 +79,6 @@ string os::sign(const string &file, const string &sign_key)
 	if (!file_data.is_open())
 	{
 		LOG_ERROR(Audit::FILE_ERROR, file);
-		// common::write_log("os: sign: unable to open file: " + file, Audit::FAILED);
 		return "";
 	}
 	string data((std::istreambuf_iterator<char>(file_data)), std::istreambuf_iterator<char>());
@@ -120,7 +116,7 @@ string os::get_path_or_backup_file_path(const string &filename)
 	string non_empty_path;
 	if (is_file_exist(filename))
 	{
-		auto file_size = common::get_file_size(filename);
+		auto file_size = os::get_file_size(filename);
 
 		non_empty_path = (file_size > 0L) ? filename : filename + ".1";
 	}
@@ -226,7 +222,6 @@ int os::create_log_archive_file(int curr_day, int curr_month, int curr_year, str
 	else
 	{
 		LOG_ERROR(Audit::FCREATION_FAILED, file_path);
-		// common::write_log("os: create_log_archive_file: " + Audit::FCREATION_FAILED + file_path, Audit::FAILED);
 	}
 	return Audit::FAILED;
 }
@@ -247,7 +242,6 @@ int os::delete_file(const string &file_name)
 		{
 			string error(e.what());
 			LOG_ERROR(error);
-			// common::write_log("os: delete_file: " + error, Audit::FAILED);
 		}
 	}
 	return Audit::FAILED;
@@ -268,7 +262,6 @@ int os::create_dir(const string &dir_name)
 	catch (const std::exception &e)
 	{
 		DEBUG(e.what());
-		// common::write_log("os: create_dir: " + error, Audit::FAILED);
 	}
 	return Audit::FAILED;
 }
@@ -290,7 +283,6 @@ int os::create_file(const string &file_path)
 		if (file.is_open())
 		{
 			DEBUG("New file createad at: " + path);
-			// common::write_log("os: create_file: new file creation: " + file_path, DEBUG);
 			file.close();
 			return Audit::SUCCESS;
 		}
@@ -298,7 +290,6 @@ int os::create_file(const string &file_path)
 	catch (const std::exception &e)
 	{
 		LOG_ERROR(e.what());
-		// common::write_log("os: create_file: " + error, Audit::FAILED);
 	}
 	return Audit::FAILED;
 }
@@ -326,7 +317,6 @@ int os::get_regular_files(const string &directory, vector<string> &files)
 	{
 		result = Audit::FAILED;
 		LOG_ERROR(e.what());
-		// common::write_log("os: get_regular_files: " + except, Audit::FAILED);
 	}
 	return result;
 }
@@ -381,7 +371,6 @@ string os::create_json_file(const string &type)
 	if (!file)
 	{
 		LOG_ERROR(Audit::FILE_ERROR + file_path);
-		// common::write_log("os: create_json_file: " + FILE_ERROR + file_path, Audit::FAILED);
 		return "";
 	}
 	file.close();
@@ -397,4 +386,41 @@ bool os::validate_path(const string &file_path)
 	}
 	auto pos = file_path.find_last_of(Audit::Config::SEP);
 	return (!is_file_exist(file_path.substr(0, pos)) && create_dir(file_path.substr(0, pos)) != Audit::SUCCESS) ? false : true;
+}
+
+string os::read_json_file(const string &json_file_path)
+{
+	if (!is_file_exist(json_file_path)) { return "" ;}
+	std::ifstream jsonFile(json_file_path);
+	if (!jsonFile.is_open())
+	{
+		LOG_ERROR(Audit::FILE_ERROR, json_file_path);
+		return "";
+	}
+	Json::Value root; 
+	Json::CharReaderBuilder builder;
+	std::string errs;
+	if (!parseFromStream(builder, jsonFile, &root, &errs))
+	{
+		LOG_ERROR("Failed to parse JSON file ", json_file_path, errs);
+		return "";
+	}
+	Json::StreamWriterBuilder writer_builder;
+	return Json::writeString(writer_builder, root);
+}
+
+std::uintmax_t os::get_file_size(const string &file_name)
+{
+    std::uintmax_t size;
+    try
+    {
+        size = std::filesystem::file_size(file_name);
+    }
+    catch (std::exception &ex)
+    {
+        DEBUG(ex.what());
+        std::cerr << ex.what() << '\n';
+    }
+
+    return size;
 }

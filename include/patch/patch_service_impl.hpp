@@ -54,7 +54,7 @@ private:
             return Audit::FAILED;
         }
  
-        entity.size = common::get_file_size(entity.download_path);
+        entity.size = os::get_file_size(entity.download_path);
  
         if (curl == NULL)
         {

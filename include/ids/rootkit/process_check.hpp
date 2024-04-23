@@ -43,7 +43,7 @@ class process_check
 
             {
 
-                cerr<< e.what() << "\n";
+                std::cerr<< e.what() << "\n";
 
             }
 
@@ -150,274 +150,129 @@ class process_check
         }
  
         int read_proc_dir(string dir_name, string pid, int position)
-
         {
-
             int result = SUCCESS;
-
             if (dir_name.empty() || dir_name.length() > PATH_MAX) 
-
             {
-
                 string error = dir_name;
-
-                agent_utils::write_log("process_check: read_proc_dir: " + INVALID_PATH + error, FAILED);
-
-                return -1;
-
+                DEBUG(INVALID_PATH + error);
+                return FAILED;
             }
-
             for (const auto& entry : std::filesystem::directory_iterator(dir_name)) 
-
             {
-
                 const auto& entry_name = entry.path().filename().string();
- 
-                // Ignore . and ..
-
                 if (strcmp(entry_name.c_str(), ".") == 0 || strcmp(entry_name.c_str(),"..")) {
-
                     continue;
-
                 }
- 
                 if (position == PROC_)
-
                 {   
-
-                    cout << entry_name << "\n";
-
                     if (!to_int(entry_name)) continue;
-
                     string fileName = dir_name +  "/" + entry_name;
-
                     result = read_proc_file(fileName, pid, position + 1);
-
                 }else if (position == PID) {
-
                     if (strcmp(entry_name.c_str(), "task") == 0) {
-
                         string fileName = dir_name + "/" + entry_name;
-
                         read_proc_file(fileName, pid, position + 1);
-
                     }
-
                 } else if (position == TASK) {
-
                     /* Check under proc/pid/task/lwp */
-
                     if (strcmp(entry_name.c_str(), pid.c_str()) == 0) {
-
                         proc_pid_found = 1;
-
                         break;
-
                     }
-
                 } else {
-
                     break;
-
                 }
-
             }
-
             return result;
-
         }
  
         int check_rc_readproc(int pid)
-
         {
-
             char char_pid[32];
- 
             proc_pid_found = 0;
- 
             /* NL threads */
-
             snprintf(char_pid, 31, "/proc/.%d", pid);
-
             fstream file(char_pid, std::ios::in);
-
             if (!file) return 1;
-
             else { file.close(); }
- 
             snprintf(char_pid, 31, "%d", pid);
-
             read_proc_dir("/proc", char_pid, PROC_);
-
             return (proc_pid_found);
-
         }
+        
         int loopAllPids(string ps)
-
         {
-
             int _kill0 = 0; 
-
             int _kill1 = 0;
-
             int _gsid0 = 0;
-
             int _gsid1 = 0;
-
             int _gpid0 = 0;
-
             int _gpid1 = 0;
-
             int _ps0 = -1;
-
             int _proc_stat  = 0;
-
             int _proc_read  = 0;
-
             int _proc_chdir = 0;
- 
             pid_t i = 1;
-
             pid_t my_pid;
- 
             char command[OS_SIZE_1024 + 1];
- 
             my_pid = getpid();
- 
             for (;; i++) 
-
             {
-
-                cout << i << "\n";
-
                 if ((i <= 0) || (i > max_pid)) {
-
                     break;
-
                 }
- 
                 total++;
- 
                 _kill0 = 0;
-
                 _kill1 = 0;
-
                 _gsid0 = 0;
-
                 _gsid1 = 0;
-
                 _gpid0 = 0;
-
                 _gpid1 = 0;
-
                 _ps0 = -1;
- 
-                /* kill test */
-
                 if (!((kill(i, 0) == -1) && (errno == ESRCH))) {
-
                     _kill0 = 1;
-
                 }
- 
-                /* getsid test */
-
                 if (!((getsid(i) == -1) && (errno == ESRCH))) {
-
                     _gsid0 = 1;
-
                 }
- 
-                /* getpgid test */
-
                 if (!((getpgid(i) == -1) && (errno == ESRCH))) {
-
                     _gpid0 = 1;
-
                 }
- 
-                /* /proc test */
-
                 _proc_stat = proc_stat(i);
-
                 _proc_read = proc_read(i);
-
                 _proc_chdir = proc_chdir(i);
- 
-                /* If PID does not exist, move on */
-
                 if (!_kill0     && !_gsid0     && !_gpid0 &&
-
                         !_proc_stat && !_proc_read && !_proc_chdir) {
-
                     continue;
-
                 }
- 
-                /* Ignore our own pid */
-
                 if (i == my_pid) {
-
                     continue;
-
                 }
- 
-                /* Check the number of errors */
-
                 if (error > 15) {
-
                     string error_msg = "Excessive number of hidden processes. It maybe a false-positive or something really bad is going on.";
-
                     LOG_ERROR(error_msg);
-
-                    //agent_utils::write_log("process_check: loopAllPids: " + error_msg, CRITICAL);
-
                     return FAILED;
-
                 }
- 
-                /* Check if the process appears in ps(1) output */
-
                 if (!ps.empty()) {
-
                     snprintf(command, OS_SIZE_1024, "%s -p %d > /dev/null 2>&1", ps.c_str(), (int)i);
-
                     _ps0 = 0;
-
                     if (system(command) == 0) {
-
                         _ps0 = 1;
-
                     }
-
                 }
- 
-                /* Everything fine, move on */
-
                 if (_ps0 && _kill0 && _gsid0 && _gpid0 && _proc_stat && _proc_read) {
-
                     continue;
-
                 }
- 
                 /*
-
                 * If our kill or getsid system call got the PID but ps(1) did not,
-
                 * find out if the PID is deleted (not used anymore)
-
                 */
-
                 if (!((getsid(i) == -1) && (errno == ESRCH))) {
-
                     _gsid1 = 1;
-
                 }
-
                 if (!((kill(i, 0) == -1) && (errno == ESRCH))) {
-
                     _kill1 = 1;
-
                 }
 
                 if (!((getpgid(i) == -1) && (errno == ESRCH))) {
@@ -466,7 +321,6 @@ class process_check
 
                         LOG_ERROR(op_msg);
 
-                        //agent_utils::write_log("process_check: loopAllPids: " + op_msg, CRITICAL);
 
                         error++;
 
@@ -490,7 +344,7 @@ class process_check
 
                                 "kernel-level rootkit.", (int)i, _kill1, _gsid1);
 
-                        agent_utils::write_log("process_check: loopAllPids: " + op_msg, CRITICAL);
+                        LOG_ERROR( op_msg);
 
                         error++;
 
@@ -514,7 +368,6 @@ class process_check
 
                         LOG_ERROR(op_msg);
 
-                        //agent_utils::write_log("process_check: loopAllPids: " + op_msg, CRITICAL);
 
                         error++;
 
@@ -536,7 +389,6 @@ class process_check
 
                         LOG_ERROR(op_msg);
 
-                        //agent_utils::write_log("process_check: loopAllPids: " + op_msg, CRITICAL);
 
                         error++;
 
@@ -582,7 +434,7 @@ class process_check
 
             {
 
-                agent_utils::write_log("process_check: check: successfully process check completed.", INFO);
+                DEBUG("successfully process check completed.");
 
             }
 
@@ -592,7 +444,7 @@ class process_check
 
                 string op_msg = "No hidden process by Kernel-level rootkits." + location + " is not trojaned. Analyzed " + std::to_string(total) + " processes.";
 
-                agent_utils::write_log("process_check: check: " + op_msg, SUCCESS);
+                DEBUG(op_msg);
 
             }
 

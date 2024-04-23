@@ -36,7 +36,7 @@ private:
         std::ofstream file(file_path);
         if (!file)
         {
-            common::write_log("monitor_repository: get_json_write_path: " + FILE_ERROR + file_path, FAILED);
+            DEBUG(FILE_ERROR + file_path);
             return FAILED;
         }
         file.close();
@@ -61,8 +61,8 @@ public:
         Json::StreamWriterBuilder writerBuilder;
         if (!file)
         {
-            common::write_log("process_repository: save:" + FWRITE_FAILED + path, FAILED);
-            return FAILED;
+            LOG_ERROR(FWRITE_FAILED + path);
+            return Audit::FAILED;
         }
         jsonData["DeviceTotalSpace"] = props;
         jsonData["DeviceUsedSpace"] = availed_props;
@@ -88,10 +88,10 @@ public:
         std::this_thread::sleep_for(std::chrono::seconds(3));
         if (!security.verify_signature(path, key))
         {
-            common::write_log("process_repository: save: verify_signature: failed", WARNING);
+            DEBUG("verify_signature: failed");
         }
-        common::write_log("process_repository: save: " + FWRITE_SUCCESS + path, SUCCESS);
-        return SUCCESS;
+        DEBUG(FWRITE_SUCCESS + path);
+        return Audit::SUCCESS;
     }
 };
 

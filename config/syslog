@@ -1,4 +1,20 @@
-Sep  4 09:56:03 kali gpg-agent[1203]: gpg-agentuPG
-Sep  4 09:56:03 kali gpg-agent[1203]: using fd 3 for browser socket (/run/user/1000/gnupg/S.gpg-agent.browser)
-Sep  4 09:56:03 kali gpg-agent[1203]: using fd 4 for ssh socket (/run/user/1000/gnupg/S.gpg-agent.ssh)
-Sep  4 09:56:03 kali gpg-agent[1203]: using fd 5 for extra socket (/run/user/1000/gnupg/S.gpg-agent.extra)
+Apr 23 17:34:49 linux gnome-shell[1892]: Window manager warning: Overwriting existing binding of keysym 38 with keysym 38 (keycode 11).
+Apr 23 17:34:49 linux gnome-shell[1892]: Window manager warning: Overwriting existing binding of keysym 32 with keysym 32 (keycode b).
+Apr 23 17:34:49 linux gnome-shell[1892]: Window manager warning: Overwriting existing binding of keysym 36 with keysym 36 (keycode f).
+Apr 23 17:34:49 linux gnome-shell[1892]: Window manager warning: Overwriting existing binding of keysym 37 with keysym 37 (keycode 10).
+Apr 23 17:35:15 linux systemd[1]: fprintd.service: Succeeded.
+Apr 23 17:35:31 linux org.freedesktop.FileManager1[2377]: #033[91m[main 2024-04-23T12:05:31.230Z]#033[0m update#isLatestVersion(): failed to check for updates
+Apr 23 17:35:31 linux org.freedesktop.FileManager1[2377]: #033[91m[main 2024-04-23T12:05:31.232Z]#033[0m Error: net::ERR_INTERNET_DISCONNECTED
+Apr 23 17:35:31 linux org.freedesktop.FileManager1[2377]:     at SimpleURLLoaderWrapper.<anonymous> (node:electron/js2c/browser_init:2:49312)
+Apr 23 17:35:31 linux org.freedesktop.FileManager1[2377]:     at SimpleURLLoaderWrapper.emit (node:events:513:28)
+Apr 23 17:37:12 linux org.freedesktop.FileManager1[2377]: #033[90m[main 2024-04-23T12:07:12.440Z]#033[0m Extension host with pid 31192 exited with code: 0, signal: unknown.
+Apr 23 11:41:59 linux rsyslogd: [origin software="rsyslogd" swVersion="8.2001.0" x-pid="650" x-info="https://www.rsyslog.com"] rsyslogd was HUPed
+Apr 23 11:41:59 linux networkd-dispatcher[829]: WARNING: systemd-networkd is not running, output will be incomplete.
+Apr 23 11:41:59 linux systemd[1]: logrotate.service: Succeeded.
+Apr 23 11:41:59 linux systemd[1]: Finished Rotate log files.
+Apr 23 11:41:59 linux udisksd[668]: Acquired the name org.freedesktop.UDisks2 on the system message bus
+Apr 23 11:41:59 linux systemd[1]: Started Disk Manager.
+Apr 23 11:41:59 linux systemd[1]: Created slice User Slice of UID 125.
+Apr 23 11:41:59 linux systemd[1]: Starting User Runtime Directory /run/user/125...
+Apr 23 11:41:59 linux kernel: [  185.764805] r8169 0000:01:00.0 enp1s0: Link is Down
+Apr 23 11:41:59 linux NetworkManager[632]: <info>  [1713852719.6389] manager: (enp2s0): new Ethernet device (/org/freedesktop/NetworkManager/Devices/3)

@@ -4,6 +4,14 @@ fstream common::logfp;
 std::mutex logfile_mutex;
 bool common::debug = false;
 
+bool debug_enabled = false;
+bool console_log_enabled = false;
+
+void write_to_file(const string &log)
+{
+    common::write_log(log);
+}
+
 int common::setup_logger(const string &log_file)
 {
     int result = Audit::SUCCESS;
@@ -56,9 +64,9 @@ int common::backup_log_file(const string &file_path)
 
 bool common::is_file_greater_than_max_size(const string &log_file)
 {
-    std::uintmax_t file_size = get_file_size(log_file);
+    std::uintmax_t file_size = os::get_file_size(log_file);
     double max_file_size = static_cast<double>(file_size) / (1024 * 1024);
-    return max_file_size < 5.0;
+    return max_file_size > 5.0;
 }
 
 string common::to_lower_case(string &str)
@@ -159,9 +167,52 @@ string common::get_hostname()
     return host;
 }
 
+int common::convert_to_utc(const string &sys_time, string &utc_time)
+{
+    if (!is_valid_syslog_time_string(sys_time))
+    {
+        return Audit::FAILED;
+    }
+    std::stringstream ss(sys_time);
+    string year, month, day, time;
+    std::tm tm = {};
+    int m = 0, d;
+    month = trim(sys_time.substr(0, 4));
+    for (; m < (int)Audit::MONTHS.size(); m++)
+    {
+        if (Audit::MONTHS[m] == month)
+        {
+            m++;
+            break;
+        }
+    }
+    month = "";
+    if (m <= 9 && m > 0)
+    {
+        month = "0";
+    }
+    month += std::to_string(m);
+    day = trim(sys_time.substr(4, 6));
+    d = std::stoi(day);
+    day = "";
+    if (d <= 9 && d > 0)
+    {
+        day = "0";
+    }
+    day += std::to_string(d);
+    time = trim(sys_time.substr(6, 15));
+    std::time_t current_time = std::time(nullptr);
+    std::tm *currentTm = std::localtime(&current_time);
+    tm.tm_year = currentTm->tm_year;
+    tm.tm_year += 1900;
+
+    utc_time = std::to_string(tm.tm_year) + "-" + month + "-" + day + " " + time;
+    return Audit::SUCCESS;
+}
+
 int common::convert_syslog_to_utc_format(const string &sys_time, string &utc_time)
 {
-        // Assuming the syslog time format is like "Jul 21 00:43:35"
+    // Assuming the syslog time format is like "Jul 21 00:43:35"
     std::tm tm = {};
     std::stringstream ss(sys_time);
 
@@ -169,9 +220,11 @@ int common::convert_syslog_to_utc_format(const string &sys_time, string &utc_tim
     ss >> month_str >> day_str >> time_str;
 
     // Convert month abbreviation to month number
-    const char* const month_names[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-    for (int i = 0; i < 12; ++i) {
-        if (month_str == month_names[i]) {
+    const char *const month_names[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    for (int i = 0; i < 12; ++i)
+    {
+        if (month_str == month_names[i])
+        {
             tm.tm_mon = i;
             break;
         }
@@ -183,7 +236,7 @@ int common::convert_syslog_to_utc_format(const string &sys_time, string &utc_tim
 
     // Get current year
     std::time_t current_time = std::time(nullptr);
-    std::tm* current_tm = std::localtime(&current_time);
+    std::tm *current_tm = std::localtime(&current_time);
     tm.tm_year = current_tm->tm_year; // Current year
     tm.tm_year += 1900;
 
@@ -198,7 +251,8 @@ int common::convert_syslog_to_utc_format(const string &sys_time, string &utc_tim
     return Audit::SUCCESS;
 }
 
-std::string common::convert_dpkg_time_to_utc_format(const std::string& local_time_str) {
+std::string common::convert_dpkg_time_to_utc_format(const std::string &local_time_str)
+{
     // Parse the given local time string
     std::tm tm = {};
     std::istringstream ss(local_time_str);
@@ -206,7 +260,7 @@ std::string common::convert_dpkg_time_to_utc_format(const std::string& local_tim
 
     // Convert local time to UTC time
     std::time_t local_time = std::mktime(&tm);
-    std::tm* utc_tm = std::gmtime(&local_time);
+    std::tm *utc_tm = std::gmtime(&local_time);
 
     // Format UTC time in the desired format
     std::ostringstream oss;
@@ -217,14 +271,16 @@ std::string common::convert_dpkg_time_to_utc_format(const std::string& local_tim
 
 void common::write_log(const string &log)
 {
-    string time = os::get_current_time();
-    string line = time + " " + log + "\n";
     std::lock_guard<std::mutex> lm(logfile_mutex);
-    if (common::logfp.is_open())
     {
-        common::logfp.write(line.c_str(), line.size());
+        if (!common::logfp.is_open())
+        {
+            common::logfp.open(Audit::Config::LOG_PATH, std::ios::app);
+        }
+        common::logfp.write(log.c_str(), log.size());
+
+        common::backup_log_file(Audit::Config::LOG_PATH);
     }
-    common::backup_log_file(Audit::Config::LOG_PATH);
     return;
 }
 
@@ -294,7 +350,6 @@ void common::print_next_execution_time(std::tm next_time_info)
     std::strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", &next_time_info);
     std::string next_time_str(buffer);
     DEBUG(" next execution time: " + next_time_str);
-    // common::write_log("common: print_next_execution_time: next execution time: " + next_time_str, DEBUG);
 }
 
 void common::print_duration(const std::chrono::duration<double> &duration)
@@ -305,23 +360,6 @@ void common::print_duration(const std::chrono::duration<double> &duration)
     remaining_duration -= std::chrono::minutes(minutes);
     int seconds = static_cast<int>(std::chrono::duration_cast<std::chrono::seconds>(remaining_duration).count());
     DEBUG("duration until next execution: " + std::to_string(hours) + " hours, " + std::to_string(minutes) + " minutes, " + std::to_string(seconds) + " seconds.");
-    // common::write_log("common: print_duration: duration until next execution: " + std::to_string(hours) + " hours, " + std::to_string(minutes) + " minutes, " + std::to_string(seconds) + " seconds.", DEBUG);
-}
-
-std::uintmax_t common::get_file_size(const string &file_name)
-{
-    std::uintmax_t size;
-    try
-    {
-        size = std::filesystem::file_size(file_name);
-    }
-    catch (std::exception &ex)
-    {
-        DEBUG(ex.what());
-        std::cerr << ex.what() << '\n';
-    }
-
-    return size;
 }
 
 void common::pause_till_next_execution(const cron::cronexpr &cron)
@@ -339,5 +377,16 @@ void common::pause_till_next_execution(const cron::cronexpr &cron)
     return;
 }
 
-
+void common::parse_arguments(int argc, char *argv[])
+{
+    std::vector<std::string> args(argv, argv + argc);
+    if (std::find(args.begin(), args.end(), "--debug") != args.end() || std::find(args.begin(), args.end(), "-d") != args.end())
+    {
+        debug_enabled = true;
+    }
+    if (std::find(args.begin(), args.end(), "--console") != args.end() || std::find(args.begin(), args.end(), "-c") != args.end())
+    {
+        console_log_enabled = true;
+    }
+}
 // common.cpp

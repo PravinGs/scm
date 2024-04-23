@@ -38,12 +38,12 @@ private:
         {
             file << entity.file_name << " " << entity.signature << '\n';
             file.close();
-            common::write_log("file_security: write_signature_to_file: " + entity.file_name + " success.", DEBUG);
+            DEBUG(entity.file_name + " success.");
             return SUCCESS;
         }
         else
         {
-            common::write_log("file_security: write_signature_to_file: failed to write to " + entity.file_name, FAILED);
+           LOG_ERROR("failed to write to " + entity.file_name, FAILED);
             return FAILED;
         }
     }
@@ -68,7 +68,7 @@ public:
 
         if (signature_data.empty())
         {
-            common::write_log("file_security: sign_and_store_signature: signed data is empty", FAILED);
+            LOG_ERROR("signed data is empty");
             return FAILED;
         }
 
@@ -88,7 +88,7 @@ public:
             std::cout << entity.file_name << " " << file_name << '\n' << "old size: " << entity.signature.length() << '\t' << "new size: " << new_signature.length();
             if (entity.file_name == file_name &&  new_signature == entity.signature)
             {
-                common::write_log("file_security: verify_and_remove_signature: signature verification successfull. removing entry.", DEBUG);
+                DEBUG("signature verification successfull. removing entry.");
                 return true;
             }
             return false; });

@@ -20,7 +20,6 @@ public:
     int get_app_resource_details(const process_entity &entity, vector<process_data> &logs)
     {
         DEBUG("request for collecting process details");
-        // common::write_log("monitor_service: get_monitor_data: request for collecting process details", Audit::DEBUG);
         vector<int> process_ids = get_all_process_id();
         for (const int process_id : process_ids)
         {
@@ -36,7 +35,6 @@ public:
             logs.push_back(p);
         }
         DEBUG("process information collected");
-        // common::write_log("monitor_service: get_monitor_data: process information collected", DEBUG);
         return Audit::SUCCESS;
     }
 
@@ -45,7 +43,6 @@ public:
     sys_properties get_system_properties()
     {
         DEBUG("request for collecting system properties");
-        // common::write_log("monitor_service: get_system_properties: request for collecting system properties started...", INFO);
         sys_properties properties;
         struct statvfs buffer;
         if (statvfs("/", &buffer) == 0)
@@ -151,7 +148,6 @@ public:
         if (dir == nullptr)
         {
             DEBUG(INVALID_PATH, PROC);
-            // common::write_log("monitor_service: get_processes_id: " + Audit::Config::INVALID_PATH + PROC, Audit::FAILED);
             return process_ids;
         }
         while ((entry = readdir(dir)) != nullptr)
@@ -195,14 +191,14 @@ public:
         std::ifstream file(path);
         if (!file)
         {
-            common::write_log("monitor_service: get_memory_usage: " + FILE_ERROR + path, FAILED);
+            LOG_ERROR(FILE_ERROR, path);
             return memory_percentage;
         }
         std::getline(file, line);
         std::istringstream iss(line);
         if (!(iss >> size >> resident >> shared >> text >> lib >> data >> dt))
         {
-            common::write_log("monitor_service: get_memory_usage: failed to parse memory statistics.", FAILED);
+            LOG_ERROR("failed to parse memory statistics.");
             return memory_percentage;
         }
         memory_percentage = 100.0 * resident * page_size / total_memory;
@@ -219,7 +215,7 @@ public:
         std::fstream file(path, std::ios::in);
         if (!file.is_open())
         {
-            common::write_log("monitor_service: get_disk_usage: process does not exist with this id : " + std::to_string(process_id), FAILED);
+            LOG_ERROR("process does not exist with this id : " + std::to_string(process_id));
             return disk_usage;
         }
         disk_usage = 0.0;
@@ -274,7 +270,6 @@ public:
         {
             cpu_table emptyTable;
             DEBUG(FILE_ERROR + path);
-            // common::write_log("monitor_service: read_processing_time_id: " + FILE_ERROR + path, FAILED);
             return emptyTable;
         }
         std::getline(file, line);

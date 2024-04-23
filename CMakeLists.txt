@@ -10,6 +10,8 @@ endif()
 include_directories(
     include
     include/config
+    include/ids
+    include/ids/rootkit
     include/log_collector
     include/monitor
     include/mqtt
@@ -18,6 +20,7 @@ include_directories(
     include/tpm
     include/test
     include/util
+    
 )
 
 # Project name (without spaces)

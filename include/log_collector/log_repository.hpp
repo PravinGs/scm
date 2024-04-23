@@ -13,7 +13,7 @@ using namespace Audit::Config;
 class log_repository
 {
 private:
-    int get_json_write_path(string &timestamp)
+    string get_json_write_path(const string &timestamp, const string &name)
     {
         string file_path = BASE_LOG_DIR;
 
@@ -22,30 +22,36 @@ private:
             os::create_dir(file_path);
         }
 
-        file_path += "json";
+        file_path += "json/";
 
         if (!os::is_dir_exist(file_path))
         {
             os::create_dir(file_path);
         }
 
-        file_path += "/" + timestamp + ".json";
+        file_path += name;
+
+        if (!os::is_dir_exist(file_path))
+        {
+            os::create_dir(file_path);
+        }
+
+        file_path += "/" + timestamp + "-" + name + ".json";
 
         std::ofstream file(file_path);
         if (!file)
         {
-            common::write_log("log_repository: get_json_write_path: " + FILE_ERROR + file_path, FAILED);
-            return FAILED;
+            LOG_ERROR(FILE_ERROR, file_path);
+            return "";
         }
         file.close();
-        timestamp = file_path;
-        return SUCCESS;
+        return file_path;
     }
 
     int save_syslog(log_entity &entity, const vector<string> &logs, Json::Value &json)
     {
-        string json_write_path = entity.current_read_time + "-" + entity.name;
-        if (get_json_write_path(json_write_path) == FAILED)
+        string json_write_path = get_json_write_path(entity.current_read_time, entity.name);
+        if (json_write_path.empty())
         {
             return FAILED;
         }
@@ -86,7 +92,7 @@ private:
         Json::Value json;
         if (entity.format == "syslog")
         {
-            json["OrgId"] = 234225;
+            json["OrgId"] = Audit::Rest::ORG_ID;
             json["AppName"] = entity.name;
             json["Source"] = os::host_name;
             return save_syslog(entity, logs, json);
@@ -122,7 +128,7 @@ private:
         }
         file.close();
 
-        common::write_log("log_repository: save_as_archive: " + FWRITE_SUCCESS + file_path, DEBUG);
+        DEBUG(FWRITE_SUCCESS, file_path);
 
         return SUCCESS;
     }

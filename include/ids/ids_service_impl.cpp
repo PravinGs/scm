@@ -6,6 +6,16 @@ const string AFTER_PCRE2 = "after_pcre2";
 
 ids_service_impl::ids_service_impl() : is_valid_config(false) {}
 
+int ids_service_impl::rootkit_analysis()
+{
+    string json = r_check.start();
+    if (!json.empty())
+    {
+        return db.save_root_analysis(json);
+    }
+    return Audit::FAILED;
+}
+
 void ids_service_impl::read_config_files(const string &decoder_path, const string &rule_path)
 {
     is_valid_config = db.read_config_files(decoder_path, rule_path);
@@ -119,14 +129,10 @@ log_event ids_service_impl::decode_log(const string &log, const string &format)
 {
     log_event log_info;
     string timestamp, user, program, message, group;
-
     const string &logToParse = (std::count(log.begin(), log.end(), '|') >= 2) ? log : format_syslog(log, format);
-
     if (logToParse.empty())
         return log_info;
-
     std::istringstream ss(logToParse);
-
     std::getline(ss, timestamp, '|');
     std::getline(ss, user, '|');
     std::getline(ss, program, '|');
@@ -311,464 +317,274 @@ void ids_service_impl::add_matched_rule(const id_rule &rule, const string &log)
 }
 
 void ids_service_impl::match(log_event &log_info, std::unordered_map<int, aconfig> &ruleSet)
-
 {
-
     for (const auto &r : matched_rules)
-
     {
-
         aconfig rule = db.get_rule(r.group, r.id);
-
         match(log_info, rule);
-
         if (log_info.is_matched == 1)
-
             break;
     }
-
     for (auto &r : ruleSet)
-
     {
-
         aconfig rule = r.second;
-
         match(log_info, rule);
-
         if (log_info.is_matched == 1)
-
             break;
     }
-
     return;
 }
 
 void ids_service_impl::match(log_event &log_info, aconfig &rule_info)
-
 {
-
     bool is_parent_rule_matching = false;
-
     string match_data;
-
     size_t position;
-
     id_rule matched_rule = {rule_info.group, rule_info.id};
-
-    // cout << matched_rule.group << "\t" << matched_rule.id << "\n";
-
     p_rule pRule;
-
     {
-
         std::set<int> processed_rules_id;
-
         for (int i : this->processed_rules)
-
         {
-
             processed_rules_id.insert(i);
         }
-
         processing_rules.erase(
-
             std::remove_if(
-
                 processing_rules.begin(),
-
                 processing_rules.end(),
-
                 [&processed_rules_id](const p_rule &s)
-
                 {
                     // Return true if the p_rule.id is in processed_rules_id
-
                     return processed_rules_id.find(s.id) != processed_rules_id.end();
                 }),
-
             processing_rules.end());
     }
-
+    
     if (!rule_info.decoded_as.empty() && rule_info.decoded_as == log_info.decoded)
-
     {
-
         log_info.is_matched = 1;
-
         log_info.rule_id = rule_info.id;
-
         log_info.group = rule_info.group;
-
         is_parent_rule_matching = true;
-
         add_matched_rule(matched_rule, log_info.log);
-
         return;
     }
 
     if (!rule_info.regex.empty()) /* Checking the regex patterns if exists in the rule */
-
     {
-
         int result = regex_match(log_info.log, rule_info.regex, match_data);
-
         if (result == 1)
-
         {
-
             log_info.is_matched = 1;
-
             log_info.rule_id = rule_info.id;
-
             log_info.group = rule_info.group;
-
             is_parent_rule_matching = true;
-
             add_matched_rule(matched_rule, log_info.log);
-
             return;
         }
     }
 
     if (rule_info.pcre2.size() > 0)
-
     {
-
         int result = Audit::SUCCESS;
-
         for (const string &pattern : rule_info.pcre2)
-
         {
-
             result = pcre_match(log_info.log, pattern, match_data, position);
-
             if (result > 0 && !match_data.empty())
-
             {
-
                 log_info.is_matched = 1;
-
                 log_info.rule_id = rule_info.id;
-
                 log_info.group = rule_info.group;
-
                 is_parent_rule_matching = true;
-
                 add_matched_rule(matched_rule, log_info.log);
-
                 return;
             }
         }
-
         if (result > 0 && result > 0 && !match_data.empty())
-
         {
-
             return;
         }
     }
-
     if (!rule_info.program_name_pcre2.empty())
-
     {
-
         int result = pcre_match(log_info.program, rule_info.program_name_pcre2, match_data, position);
-
         if (result > 0 && !match_data.empty())
-
         {
-
             log_info.is_matched = 1;
-
             log_info.rule_id = rule_info.id;
-
             log_info.group = rule_info.group;
-
             is_parent_rule_matching = true;
-
             add_matched_rule(matched_rule, log_info.log);
-
             return;
         }
     }
 
     if (rule_info.max_log_size > 0) /* Validating the syslog size */
-
     {
-
         int result = is_valid_syslog(log_info.size);
-
         if (result == Audit::FAILED)
-
         {
-
             log_info.is_matched = 1;
-
             log_info.rule_id = rule_info.id;
-
             log_info.group = rule_info.group;
-
             add_matched_rule(matched_rule, log_info.log);
-
             return;
         }
     }
 
     if (rule_info.frequency > 0 && rule_info.timeframe > 0) /*Check if the rule has time based matcher, if it is mark this rule as the processing rule.*/
-
     {
-
         pRule.id = rule_info.id;
-
         pRule.start = common::string_to_time_t(log_info.timestamp);
-
         pRule.end = pRule.start + rule_info.timeframe;
-
         pRule.frequency = rule_info.frequency;
-
         // pRule.d_frequency = 1;
-
         pRule.time = rule_info.timeframe;
-
         if (rule_info.same_source_ip == 1) /* Check at the XML pasing. */
-
         {
-
             pRule.same_source_ip = 1;
         }
 
         if (rule_info.same_id == 1)
-
         {
-
             pRule.same_id = 1;
         }
     }
-
     if (rule_info.if_matched_id > 0) /* If matched_sid enabled apply the child rules alert value to this rule. */
-
     {
-
         pRule.if_mid = rule_info.if_matched_id;
-
         if (is_rule_found(rule_info.if_matched_id) == Audit::SUCCESS)
-
         {
-
             pRule.d_frequency++;
-
             log_info.is_matched = 1;
-
             log_info.rule_id = rule_info.id;
-
             log_info.group = rule_info.group;
-
             add_matched_rule(matched_rule, log_info.log);
-
             return;
         }
     }
 
     else if (rule_info.if_matched_id > 0 && rule_info.same_id == 1)
-
     {
-
         pRule.if_mid = rule_info.if_matched_id;
-
         for (p_rule p : processing_rules)
-
         {
-
             if (is_rule_found(p.if_mid) == Audit::SUCCESS)
-
             {
-
                 p.d_frequency++;
             }
         }
     }
 
     if (rule_info.same_source_ip == 1 && !log_info.src_ip.empty()) /* Is is firewall related log. Then check any rules are being in processing state.*/
-
     {
-
         for (p_rule p : processing_rules) /*Processing rule has the src_ip, that frequency will be monitored for the given timeframe in the rule.*/
-
         {
-
             if (strcmp(p.src_ip.c_str(), log_info.src_ip.c_str()) == 0 && p.same_source_ip == 1) /*src_ip matching, if it matches remove increase the helper_varible.*/
-
             {
-
                 p.d_frequency++;
             }
         }
     }
 
     if (rule_info.if_sid > 0 && rule_info.same_id == 1) /*If the child id of this rule exists, then you can set child id to the log*/
-
     {
-
         pRule.if_sid = rule_info.if_sid;
-
         for (p_rule p : processing_rules)
-
         {
-
             if (is_rule_found(p.if_sid == Audit::SUCCESS))
-
             {
-
                 p.d_frequency++;
             }
         }
     }
 
     if (is_parent_rule_matching)
-
     {
-
         log_info.rule_id = rule_info.id;
 
     } /* If the parent, child matched, priority to parent. */
 
     if (pRule.id > 0)
-
     {
-
         processing_rules.push_back(pRule);
     }
 
     if (processing_rules.size() > 0) /* Checking if rules are about to expire or not. */
-
     {
-
         for (int i = 0; i < (int)processing_rules.size(); i++)
-
         {
-
             p_rule pRule = processing_rules[i];
-
             if ((pRule.end < common::string_to_time_t(log_info.timestamp) && pRule.d_frequency != pRule.frequency))
-
             {
-
                 processed_rules.push_back(i); /* The rule expired */
             }
 
             else if ((pRule.end < common::string_to_time_t(log_info.timestamp) && pRule.frequency == pRule.d_frequency) || pRule.frequency <= pRule.d_frequency)
-
             {
-
                 /*The rule ID'd and have to alerted*/
-
                 log_info.is_matched = 1;
-
                 log_info.rule_id = pRule.id;
-
                 log_info.group = pRule.group;
-
                 matched_rule.group = pRule.group;
-
                 matched_rule.id = pRule.id;
-
                 add_matched_rule(matched_rule, log_info.log);
-
                 processed_rules.push_back(i);
-
                 return;
             }
         }
     }
-
     return;
 }
+
 void ids_service_impl::match(log_event &log_info)
 {
     std::unordered_map<string, std::unordered_map<int, aconfig>> rules = db.get_aconfig_rules();
-
     if (log_info.format.empty() || rules.find(log_info.group) == rules.end())
-
     {
-
         for (auto &r : rules)
-
         {
-
             match(log_info, r.second);
-
             if (log_info.is_matched == 1)
-
                 break;
         }
     }
-
     else
-
     {
-
         match(log_info, rules.at(log_info.group));
     }
 }
 
-int ids_service_impl::analyse_file(const string &file)
+string get_log_file_format(const string& file)
 {
-
-    string line, format;
-
-    vector<log_event> alert_logs;
-
-    fstream fp(file, std::ios::in);
-
-    if (!fp)
-
-    {
-
-        LOG_ERROR(Audit::FILE_ERROR + file);
-
-        // agent_utils::write_log("ids_service_impl: analyse_file: " + FILE_ERROR + file, FAILED);
-
-        return Audit::FAILED;
-    }
-
-    if (!is_valid_config) // Validating rules are extracted or not.
-
-    {
-
-        LOG_ERROR("failed to parse XML configuration file, check the file");
-
-        // agent_utils::write_log("ids_service_impl: analyse_file: failed to parse XML configuration file, check the file", FAILED);
-
-        fp.close();
-
-        return Audit::FAILED;
-    }
-
+    string format;
     if (file.find("dpkg") != string::npos)
-
     {
-
         format = "dpkg";
     }
-
     else if (file.find("auth") != string::npos)
-
     {
-
         format = "auth";
     }
-
     else
-
     {
-
         format = "syslog";
     }
+    return format;
+}
 
+int ids_service_impl::analyse_file(const string &file)
+{
+    vector<log_event> matched_logs;
+    fstream fp(file, std::ios::in);
+    if (!fp)
+    {
+        LOG_ERROR(Audit::FILE_ERROR + file);
+        return Audit::FAILED;
+    }
+    string format = get_log_file_format(file);
     DEBUG("log analysis started for " + file);
-
-    // agent_utils::write_log("ids_service_impl: analyse_file: log analysis started for " + file, DEBUG);
-
+    string line;
     while (std::getline(fp, line))
     {
         if (line.empty())
@@ -779,13 +595,12 @@ int ids_service_impl::analyse_file(const string &file)
         match(log_info);
         if (log_info.is_matched == 1)
         {
-            alert_logs.push_back(log_info);
+            matched_logs.push_back(log_info);
         }
     }
     fp.close();
-    DEBUG("total matched logs" + std::to_string(alert_logs.size()));
-    // agent_utils::write_log("ids_service_impl: analyse_file: total matched logs : " + std::to_string(alert_logs.size()), DEBUG);
-    return db.save(alert_logs);
+    DEBUG("total matched logs" + std::to_string(matched_logs.size()));
+    return db.save(matched_logs);
 }
 
 int ids_service_impl::start(analysis_entity &entity)
@@ -793,13 +608,15 @@ int ids_service_impl::start(analysis_entity &entity)
     int result = Audit::SUCCESS;
     vector<string> files;
     read_config_files(entity.decoder_path, entity.rules_path);
+
     if (!is_valid_config)
     {
         return Audit::FAILED;
     }
 
-    int isFile = (os::is_dir_exist(entity.log_path) && std::filesystem::is_regular_file(entity.log_path)) ? 1 : 0;
-    if (isFile)
+    int is_file = (os::is_file_exist(entity.log_path) && std::filesystem::is_regular_file(entity.log_path)) ? 1 : 0;
+
+    if (is_file)
     {
         result = analyse_file(entity.log_path);
     }
@@ -810,33 +627,21 @@ int ids_service_impl::start(analysis_entity &entity)
         {
             current_file = current_file.substr(0, current_file.find_last_of('/'));
         }
-
         result = os::get_regular_files(current_file, files);
-
         if (result == Audit::FAILED)
         {
             return Audit::FAILED;
         }
-
         if (files.size() == 0)
-
         {
-
             LOG_ERROR(Audit::INVALID_PATH + entity.log_path);
-
-            // agent_utils::write_log("ids_service_impl: start: " + INVALID_PATH + entity.log_path, FAILED);
-
             return Audit::FAILED;
         }
-
         for (const string &file : files)
-
         {
-
             result = analyse_file(file);
         }
     }
-
     return result;
 }
 // ids_impl_service.cpp

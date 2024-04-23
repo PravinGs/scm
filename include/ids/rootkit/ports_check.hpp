@@ -20,14 +20,14 @@ class port_check
         int run_net_stat(int protocol, int port)
         {
             int ret;
-            char nt[OS_SIZE_1024 + 1];
+            char nt[Audit::OS_SIZE_1024 + 1];
  
             if (protocol == IPPROTO_TCP) {
-                snprintf(nt, OS_SIZE_1024, NETSTAT, "tcp", port);
+                snprintf(nt, Audit::OS_SIZE_1024, NETSTAT, "tcp", port);
             } else if (protocol == IPPROTO_UDP) {
-                snprintf(nt, OS_SIZE_1024, NETSTAT, "udp", port);
+                snprintf(nt, Audit::OS_SIZE_1024, NETSTAT, "udp", port);
             } else {
-                agent_utils::write_log("ports_check: run_net_stat: netstat error (wrong protocol)", FAILED);
+                LOG_ERROR("netstat error (wrong protocol)");
                 return (0);
             }
  
@@ -129,11 +129,11 @@ class port_check
                     }
  
                     if (!run_net_stat(protocol, i) && connPort(protocol, i)) {
-                        char op_msg[OS_SIZE_1024 + 1];
+                        char op_msg[Audit::OS_SIZE_1024 + 1];
  
                         errors++;
  
-                        snprintf(op_msg, OS_SIZE_1024, "Port '%d'(%s) hidden. "
+                        snprintf(op_msg, Audit::OS_SIZE_1024, "Port '%d'(%s) hidden. "
                                 "Kernel-level rootkit or trojaned "
                                 "version of netstat.", i,
                                 (protocol == IPPROTO_UDP) ? "udp" : "tcp");
@@ -143,14 +143,13 @@ class port_check
                 }
  
                 if ((errors) > 20) {
-                    char op_msg[OS_SIZE_1024 + 1];
+                    char op_msg[Audit::OS_SIZE_1024 + 1];
  
-                    snprintf(op_msg, OS_SIZE_1024, "Excessive number of '%s' ports "
+                    snprintf(op_msg, Audit::OS_SIZE_1024, "Excessive number of '%s' ports "
                             "hidden. It maybe a false-positive or "
                             "something really bad is going on.",
                             (protocol == IPPROTO_UDP) ? "udp" : "tcp" );
                     LOG_ERROR(op_msg);
-                    //agent_utils::write_log("ports_check: test_ports: " + op_msg, CRITICAL);
                     return;
                 }
             }
@@ -172,13 +171,12 @@ class port_check
             test_ports(IPPROTO_UDP);
  
             if (errors == 0) {
-                char op_msg[OS_SIZE_1024 + 1];
+                char op_msg[Audit::OS_SIZE_1024 + 1];
  
-                snprintf(op_msg, OS_SIZE_1024, "No kernel-level rootkit hiding any port."
+                snprintf(op_msg, Audit::OS_SIZE_1024, "No kernel-level rootkit hiding any port."
                         "\n      Netstat is acting correctly."
                         " Analyzed %d ports.", total);
                 LOG(op_msg);
-                //agent_utils::write_log("ports_check: check: " + op_msg, SUCCESS);
             }
  
             for (int port = 0; port < 65535; port++)

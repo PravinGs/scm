@@ -18,6 +18,7 @@
 
 #include "monitor/monitor_controller.hpp"
 #include "util/logger.hpp"
-// #include "ids/ids_controller.hpp"
+#include "ids/ids_controller.hpp"
+#include "ids/ids_proxy.hpp"
 //  #include "test/patch_unit_test.hpp"
 

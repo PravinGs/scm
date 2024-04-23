@@ -27,7 +27,6 @@
 
 #if __linux__
 #include <zlib.h>
-#include <dirent.h>
 #include <pugixml.hpp>
 #include <pcre2.h>
 #include <json/json.h>
@@ -35,14 +34,23 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/hmac.h>
-#include <syslog.h>
 #include <mqtt/async_client.h>
-#include <sys/statvfs.h>
 #include <sys/sysinfo.h>
-// #include <sys/statvfs.h>
-// #include <sys/stat.h>
-// #include <sys/inotify.h>
-// #include <sys/types.h>
+#include <sys/statvfs.h>
+#include <sys/stat.h>
+#include <sys/inotify.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <pwd.h>
+#include <syslog.h>
+
+#include <fcntl.h>
+#include <net/if.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <signal.h>
 #endif
 
 #include "constants.hpp"

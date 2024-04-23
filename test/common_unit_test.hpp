@@ -281,21 +281,21 @@ TEST_F(common_test, ConvertSysLogTimeFormatToUtcTimeFormatWithEmptyInputString)
 // TEST_F(common_test, GetFileSizeWithValidInput)
 // {
 //     const string file_name = "/home/champ/Desktop/sample.txt";
-//     long response = common::get_file_size(file_name);
+//     long response = os::get_file_size(file_name);
 //     EXPECT_EQ(response,Audit::SUCCESS);
 // }
 
 // TEST_F(common_test, GetFileSizeWithInValidInput)
 // {
 //     const string file_name = "/home/chamDeskop/sample.txt";
-//     long response = common::get_file_size(file_name);
+//     long response = os::get_file_size(file_name);
 //     EXPECT_EQ(response,Audit::FAILED);
 // }
 
 // TEST_F(common_test, GetFileSizeWithEmptyInput)
 // {
 //     const string file_name = "";
-//     long response = common::get_file_size(file_name);
+//     long response = os::get_file_size(file_name);
 //     EXPECT_EQ(response,Audit::FAILED);
 // }
 

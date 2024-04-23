@@ -1,11 +1,11 @@
 #ifndef ANALYSIS_REPOSITORY
 #define ANALYSIS_REPOSITORY
- 
+
 #pragma once
- 
+
 #include "util/config.hpp"
 #include "ids/ids_entity.hpp"
- 
+
 class ids_repository
 {
 public:
@@ -17,7 +17,7 @@ public:
     {
         return rules;
     }
-    bool read_config_files(const string& decoder_path, const string& rule_path)
+    bool read_config_files(const string &decoder_path, const string &rule_path)
     {
         int result = config_s.read_decoder_config(decoder_path, decoder_list);
         if (result == Audit::FAILED)
@@ -31,12 +31,30 @@ public:
         }
         return true;
     }
-    int save(const vector<log_event>& alerts)
+
+    int save_root_analysis(const string &json_string)
+    {
+        string filePath = os::create_json_file("root-analysis");
+        Json::Value json;
+        json["OrgId"] = 5268;
+        json["Source"] = os::host_name;
+        json["AppName"] = "Rootkit Analysis and Linux Network commands";
+        json["Alerts"] = Json::Value(Json::arrayValue);
+        std::ofstream ofile(filePath); /*need update*/
+        Json::StreamWriterBuilder writer_builder;
+        std::unique_ptr<Json::StreamWriter> writer(writer_builder.newStreamWriter());
+        writer->write(json_string, &ofile);
+        ofile.close();
+        DEBUG("log written to" + filePath);
+        return Audit::SUCCESS;
+    }
+
+    int save(const vector<log_event> &alerts)
     {
         if (alerts.size() == 0)
         {
             DEBUG("no decoder matched");
-            //agent_utils::write_log("ids_repository: save: no decoder matched", INFO);
+            // agent_utils::write_log("ids_repository: save: no decoder matched", INFO);
             return Audit::SUCCESS;
         }
         string filePath = os::create_json_file("log-analysis-report");
@@ -47,14 +65,14 @@ public:
         json["Alerts"] = Json::Value(Json::arrayValue);
         Json::Value alert;
         Json::StreamWriterBuilder writer_builder;
- 
-        for (const auto& log : alerts)
+
+        for (const auto &log : alerts)
         {
             aconfig config = get_rule(log.group, log.rule_id);
             if (config.id <= 0)
             {
                 DEBUG("unrecognized rule, rule_id=" + std::to_string(log.rule_id) + " RuleGroup=" + log.group);
-                //agent_utils::write_log("ids_repository: save: unrecognized rule, rule_id=" + std::to_string(log.rule_id) + " RuleGroup=" + log.group, WARNING);
+                // agent_utils::write_log("ids_repository: save: unrecognized rule, rule_id=" + std::to_string(log.rule_id) + " RuleGroup=" + log.group, WARNING);
             }
             else
             {
@@ -72,9 +90,9 @@ public:
                 {
                     child = get_rule(log.group, child.if_sid);
                 }
- 
+
                 // group = (config.group.empty()) ? child.group : config.group;
- 
+
                 alert["Section"] = log.group;
                 alert["Description"] = (config.description.empty()) ? child.description : config.description;
                 json["Alerts"].append(alert);
@@ -85,16 +103,16 @@ public:
         writer->write(json, &ofile);
         ofile.close();
         DEBUG("log written to" + filePath);
-        //agent_utils::write_log("ids_repository: save: log written to " + filePath, SUCCESS);
+        // agent_utils::write_log("ids_repository: save: log written to " + filePath, SUCCESS);
         return Audit::SUCCESS;
     }
- 
-    aconfig get_rule(const string& group, const int rule_id)
+
+    aconfig get_rule(const string &group, const int rule_id)
     {
         aconfig config;
-        for (const auto& parent : rules)
+        for (const auto &parent : rules)
         {
-            for (const auto& child : parent.second)
+            for (const auto &child : parent.second)
             {
                 if (child.first == rule_id)
                 {
@@ -105,8 +123,8 @@ public:
         }
         return config;
     }
- 
-    int print_log_details(const aconfig& rule_info, const log_event& log_info)
+
+    int print_log_details(const aconfig &rule_info, const log_event &log_info)
     {
         aconfig child = rule_info;
         string group = log_info.group;
@@ -140,10 +158,11 @@ public:
         }
         return Audit::SUCCESS;
     }
+
 private:
     config config_s;
     std::unordered_map<string, std::unordered_map<int, aconfig>> rules;
     std::unordered_map<string, decoder> decoder_list;
 };
 #endif
-//ids_repository
+// ids_repository

@@ -29,5 +29,8 @@ public:
     static string get_current_time_with_no_space();
     static string get_current_time();
     static bool validate_path(const string& file_path);
+
+    static string read_json_file(const string& json_file_path);
+    static std::uintmax_t get_file_size(const string& file_path);
 };
 #endif //OS_HPP

@@ -7,23 +7,29 @@
 class ids_proxy: public ids_service {
 public:
     ids_proxy() : service(std::make_unique<ids_service_impl>()) {}
+
+    int rootkit_analysis()
+    {
+        return service->rootkit_analysis();
+    }
  
 	int start(analysis_entity& entity) {
-        if (!validate_analysis_entity(entity))
-        {
-            return Audit::FAILED;
-        }
-        if (entity.time_pattern.empty())
-        {
-            return service->start(entity);
-        }
-        // need to update
-        return service->start(entity);
+        // if (!validate_analysis_entity(entity))
+        // {
+        //     return Audit::FAILED;
+        // }
+        // if (entity.time_pattern.empty())
+        // {
+        //     return service->start(entity);
+        // }
+        // // need to update
+        // return service->start(entity);
+        return rootkit_analysis();
 	}
-	int start(config_table_type& config_table) {
+	int start(config_table_type& config_table) 
+    {
         analysis_entity entity = parser.get_analysis_entity(config_table);
         return start(entity);
- 
 	}
 private:
     bool validate_analysis_entity(analysis_entity& entity)

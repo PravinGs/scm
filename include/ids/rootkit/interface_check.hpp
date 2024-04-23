@@ -17,9 +17,9 @@ class interface_check
 public:
     int isInterfaceInPromiscuousMode(const std::string& interfaceName)
     {
-        char nt[OS_SIZE_1024 + 1];
+        char nt[Audit::OS_SIZE_1024 + 1];
  
-        snprintf(nt, OS_SIZE_1024, PROMISCOUS, interfaceName.c_str());
+        snprintf(nt, Audit::OS_SIZE_1024, Audit::PROMISCOUS.c_str(), interfaceName.c_str());
         if (system(nt) == 0) {
             return (1);
         }
@@ -28,12 +28,11 @@ public:
     int check(vector<string> & reports)
     {
         DEBUG("checking network interfaces starting");
-        //agent_utils::write_log("interface_check: check: checking network interfaces starting", INFO);
         fd = socket(AF_INET, SOCK_DGRAM, 0);
  
         if (fd < 0)
         {
-            agent_utils::write_log("interface_check: check: error checking interfaces (socket)", FAILED);
+            LOG_ERROR("error checking interfaces (socket)");
             return Audit::FAILED;
         }
  
@@ -45,7 +44,6 @@ public:
         {
             close(fd);
             LOG_ERROR("error checking interfaces (ioctl)");
-            //agent_utils::write_log("interface_check: check: error checking interfaces (ioctl)", FAILED);
             return Audit::FAILED;
         }
  
@@ -63,22 +61,21 @@ public:
             total++;
  
             if ((_ifr.ifr_flags & IFF_PROMISC)) {
-                char op_msg[OS_SIZE_1024];
+                char op_msg[Audit::OS_SIZE_1024];
                 // Check if the interface is in promiscuous mode
                 if (isInterfaceInPromiscuousMode(_ifr.ifr_name)) {
                     // Assume we have a function to notify about the promiscuous interface.
-                    snprintf(op_msg, OS_SIZE_1024, "Interface '%s' in promiscuous"
+                    snprintf(op_msg, Audit::OS_SIZE_1024, "Interface '%s' in promiscuous"
                          " mode.", _ifr.ifr_name);
                 }
                 else
                 {
-                    snprintf(op_msg, OS_SIZE_1024, "Interface '%s' in promiscuous"
+                    snprintf(op_msg, Audit::OS_SIZE_1024, "Interface '%s' in promiscuous"
                          " mode, but ifconfig is not showing it"
                          "(probably trojaned).", _ifr.ifr_name);
                 }
                 reports.push_back(_ifr.ifr_name);
                 LOG_ERROR(op_msg);
-                //agent_utils::write_log(interface_check: check: op_msg, FAILED);
                 errors++;
             }
         }
@@ -86,7 +83,6 @@ public:
  
         if (errors == 0) {
             DEBUG("no problem detected on ifconfig/ifs. analyzed " + std::to_string(total) + " interfaces");
-            //agent_utils::write_log("interface_check: check: no problem detected on ifconfig/ifs. analyzed " + std::to_string(total) + " interfaces", INFO);
         }
  
         return Audit::SUCCESS;

@@ -25,34 +25,22 @@ public:
     {
         string json_string;
         int res = service->get_app_resource_details(entity, logs);
-
         if (res == Audit::SUCCESS)
         {
-            // for (const process_data &data : logs)
-            // {
-            //     std::cout << "Process ID: " << data.process_id << " "
-            //               << "Process Name: " << data.process_name << " "
-            //               << "CPU Time: " << data.cpu_time << " "
-            //               << "RAM Usage: " << data.ram_usage << " "
-            //               << "Disk Usage: " << data.disk_usage << "\n";
-            // }
-
-           
             sys_properties properties = get_system_properties();
             sys_properties availed_properties = get_availed_system_properties();
-             json_string = process_to_json(logs, properties, availed_properties);
-            // Send to cloud
-            long http_status = rest_service::post(r_entity.resources_post_url, json_string);
-            std::cout << json_string << '\n';
-            DEBUG("Rest Api status: ", std::to_string(http_status));
-            if (http_status == 200L)
-            {
-                LOG("Sent to cloud successfully");
-                http_status = rest_service::start(r_entity, "process"); // see later
-            }
-            if (http_status != 200L && db.save(logs,properties,availed_properties) != Audit::SUCCESS)
+            json_string = process_to_json(logs, properties, availed_properties);
+            rest_response response = rest_service::post(r_entity.resources_post_url, json_string);
+            DEBUG("Rest Api status: ", std::to_string(response.http_code));
+            
+            if (response.http_code != Audit::Rest::POST_SUCCESS && db.save(logs,properties,availed_properties) != Audit::SUCCESS)
             {
                 DEBUG("Failed to store system process details locally");
+            }
+            if (response.http_code == Audit::Rest::POST_SUCCESS)
+            {
+                LOG("Sent to cloud successfully");
+                rest_service::start(r_entity, "process"); // see later
             }
         }
         return res;
@@ -82,7 +70,7 @@ public:
                 if (result == Audit::FAILED)
                     thread_handler = false;
                 result = handle_process_details(logs);
-                common::write_log("log_controller: syslog_manager: thread execution done.", Audit::DEBUG);
+                DEBUG("thread execution done.");
             }
         }
         return Audit::SUCCESS;
@@ -118,7 +106,6 @@ private:
         if (!entity.write_path.empty() && !os::is_dir_exist(entity.write_path))
         {
             LOG_ERROR("configured write directory path not exist " + entity.write_path);
-            // common::write_log("proxy: validate_process_entity: configured write directory path not exist", Audit::FAILED);
             return false;
         }
 

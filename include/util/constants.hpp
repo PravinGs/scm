@@ -25,7 +25,6 @@ namespace Audit
 	namespace Config
 	{
 		const string LOG_PATH = "/etc/scl/log/agent.log";
-		// const string LOG_PATH = "C:/Users/pravinkumar.m/source/repos/Auditing/src/log/log.txt";
 		const string BASE_LOG_DIR = "/etc/scl/log/";
 		const string BASE_LOG_ARCHIVE = "archives";
 		const string BASE_CONFIG_TMP = "tmp/";
@@ -54,11 +53,15 @@ namespace Audit
 		const int START_TIME = 21;
 
 	}
+
 	namespace IDS
 	{
 		const string IDS_DEFAULT_XML_RULES_PATH = "/etc/scl/rules";
 		const string IDS_DEFAULT_DECODER_RULES_PATH = "/etc/scl/decoder/decoder.xml";
+		const string TROJAN_SOURCE_FILE = "/etc/scl/ids/rootkit_trojans.txt";
+		const string SYS_SOURCE_FILE = "/etc/scl/ids/rootkit_files.txt";
 	}
+
 	namespace Patch
 	{
 		const string DEFAULT_DOWNLOAD_LOCATION = "/etc/scl/tmp/";
@@ -70,11 +73,13 @@ namespace Audit
 		const int PATCH_DEFAULT_MIN_DOWNLOAD_SPEED = 1;
 	}
 
-	namespace Rest {
+	namespace Rest
+	{
 		const long POST_SUCCESS = 200L;
-		const string BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJpc3MiOiJzZWN1cml0eS5IY2wuY29tIiwiaWF0IjoxNzEzNzkzMzY1LCJzdWIiOiJxRG9JS0RKMmtWR21ldEYvNTgwbkFqL1VCV3pmOGh3elo5OUFJUFhzSDR3PSIsImV4cCI6MTcxMzg3OTM2NSwianRpIjoiM2thSUozRkRza3NGN0pYdGVUQkpZc0w2TzgvYzBTbEovb0ozbFUvZVF1az0iLCJjbGllbnRfaWQiOiJxRG9JS0RKMmtWR21ldEYvNTgwbkFqL1VCV3pmOGh3elo5OUFJUFhzSDR3PSIsInNjb3BlIjpbInNmLmZpcm13YXJlLmRlbGV0ZSIsInNmLmZpcm13YXJlLm1hbmFnZSIsInNmLmZpcm13YXJlLnJlYWQiLCJzZi5maXJtd2FyZS53cml0ZSIsInNmLmNsaWVudC5kZWxldGUiLCJzZi5jbGllbnQubWFuYWdlIiwic2YuY2xpZW50LnJlYWQiLCJzZi5jbGllbnQud3JpdGUiXSwibmJmIjoxNzEzNzkzMzY1LCJhdWQiOiJzZi5maXJtd2FyZSBzZi5jbGllbnQifQ.QxpAI5v3INRhylirSzZkcBPg1gtxU6nDeCEQiZAtB_E";
-
+		const int ORG_ID = 101;
+		const string BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzY29wZSI6WyJlbWFpbCIsIm9wZW5pZCIsInByb2ZpbGUiLCJzZi5sb2dzLm1hbmFnZSJdLCJyb2xlIjpbIlNGQWRtaW4iLCJTRlVzZXIiXSwicGVybWlzc2lvbiI6WyJzZi5hcGlSZXNvdXJjZS5tYW5hZ2UiLCJzZi5pZGVudGl0eXJlc291cmNlLm1hbmFnZSIsInNmLmNsaWVudC5tYW5hZ2UiLCJzZi5hdWRpdHRyYWlsLm1hbmFnZSIsInNmLnJvbGUubWFuYWdlIiwic2YuYWRtaW51c2VyLm1hbmFnZSIsInNmLnVzZXIubWFuYWdlIiwic2Yuc2VjdXJpdHl0b2tlbi5tYW5hZ2UiLCJzZi5sb2dzLm1hbmFnZSIsInNmLmZpcm13YXJlLm1hbmFnZSJdLCJpc3MiOiJzZWN1cml0eS5IY2wuY29tIiwiaWF0IjoxNzEzODY2MDA5LCJzdWIiOiJkYWJiZmNmNi1mMDNiLTQxZDEtYmE4Mi1iOWUxZWMwZjNhOTEiLCJleHAiOjE3MTM4Njk2MDksImp0aSI6Im1pODR0N0NCWDlrdzdZVkN2b1NVaW80c3hhWmFCYXFiNFJ5dUdWZE82Mm89IiwiY2xpZW50X2lkIjoidm5JUllXTHRlTDFFbEhPcExmNkNEa04yQThVbTBDMXEvVE8xS1JTU0J3QT0iLCJpZHAiOiJsb2NhbCIsIm5iZiI6MTcxMzg2NjAwOSwiYXVkIjoic2YubG9ncyJ9.iZf3me73LYqANlFQ7p31j7Tyf0SK9Tq6NK26CVOaXzg";
 	}
+
 	const int SUCCESS = 1;
 	const int FAILED = -1;
 	const int DEBUG = 0;
@@ -88,6 +93,14 @@ namespace Audit
 
 	const int MAX_CACHE_SIZE = 5;
 
+	const int BUFFER_SIZE = 1024;
+	const int MAX_RK_SYS = 512;
+	const int OS_SIZE_1024 = 1024;
+	const int PROC_ = 0;
+	const int PID = 1;
+	const int TASK = 2;
+	const int MAX_PID = 32768;
+
 	const vector<string> MONTHS = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 	const string FILE_ERROR = "file not found or permission denied: ";
 	const string CLEAN_FILE = "file truncated: ";
@@ -99,6 +112,7 @@ namespace Audit
 	const string FDELETE_FAILED = "failed to delete a file: unable to delete  ";
 	const string FDELETE_SUCCESS = "successfully deleted file: deleted ";
 	const string INVALID_PATH = "path not found: ";
+	const string PROMISCOUS = "ifconfig %s | grep PROMISC > /dev/null 2>&1";
 
 	/*void print_config_table(const config_table_type& config_table) {
 		for (const auto& section : config_table) {

@@ -24,7 +24,7 @@ public:
         std::filesystem::path file_path(file_name);
         if (!std::filesystem::exists(file_path)) 
         {
-            LOG_ERROR(Audit::INVALID_PATH + error);
+            LOG_ERROR(Audit::INVALID_PATH + file_name);
             //agent_utils::write_log("dev_check: read_dev_file: " + INVALID_PATH + file_name, FAILED);
             return Audit::FAILED;
         }
@@ -87,7 +87,7 @@ public:
     int check(vector<string> & reports)
     {
         const char *basedir = "/";
-        char file_path[OS_SIZE_1024 + 1];
+        char file_path[Audit::OS_SIZE_1024 + 1];
  
         dev_total = 0;
         dev_errors = 0;
@@ -123,4 +123,6 @@ private:
         "/dev/gpmctl",
         ""
     };
-}
+};
+
+#endif

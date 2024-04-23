@@ -98,7 +98,6 @@ private:
         if (!file.is_open())
         {
             LOG_ERROR(Audit::FILE_ERROR + entity.read_path);
-            //common::write_log("log_service: read_syslog_file: " + FILE_ERROR + entity.read_path, FAILED);
             return Audit::FAILED;
         }
         while (std::getline(file, line))
@@ -107,16 +106,17 @@ private:
             {
                 continue;
             }
-            common::convert_syslog_to_utc_format(line.substr(0, 15), standard_time_format_string); /* This func convert to standard time format */
+            common::convert_to_utc(line.substr(0, 15), standard_time_format_string); /* This func convert to standard time format */
             std::time_t current_time = common::string_to_time_t(standard_time_format_string); /* Convert string time to time_t format for comparision between time_t objects */
             if (current_time < entity.last_read_time)
             {
                 continue;
             }
             string log, token;
+            
             bool is_required = true;
             int index = 0;
-            log += standard_time_format_string;
+            log += common::convert_dpkg_time_to_utc_format(standard_time_format_string);
             std::stringstream stream(line.substr(16));
             while (std::getline(stream, token, entity.delimeter) && index < 3)
             {
@@ -137,7 +137,6 @@ private:
             }
             if (is_required)
             {
-                std::cout << log << '\n';
                 logs.push_back(log);
                 entity.count += 1;
             }
@@ -167,7 +166,6 @@ private:
         if (!file)
         {
             LOG_ERROR(Audit::FILE_ERROR + entity.read_path);
-            //common::write_log("log_service: read_dpkg_logfile: " + FILE_ERROR + entity.read_path, FAILED);
             return Audit::FAILED;
         }
  

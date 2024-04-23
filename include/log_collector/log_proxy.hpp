@@ -43,7 +43,7 @@ public:
                 result = create_syslog_async_tasks(entity, logs);
                 if (result == Audit::FAILED)
                     thread_handler = false;
-                common::write_log("log_controller: syslog_manager: thread execution done.", Audit::DEBUG);
+                DEBUG("thread execution done");
             }
         }
         return result;
@@ -60,20 +60,17 @@ public:
         int result = service->get_syslog(entity, logs);
         if (result == Audit::SUCCESS && common::update_log_written_time(entity.name, entity.current_read_time) == Audit::SUCCESS)
         {
-            LOG("LOG collected and cache updated");
             json_string = log_to_json(logs, entity.name);
-            std::cout << json_string << '\n';
-            // Send to cloud
-            long http_status = rest_service::post(r_entity.logs_post_url, json_string);
-            DEBUG("Rest Api status: ", std::to_string(http_status));
-            if (http_status == 200L)
-            {
-                http_status = rest_service::start(r_entity, "syslog"); // see later
-            }
-            if (http_status != 200L && db.save(entity, logs) != Audit::SUCCESS)
+            rest_response response = rest_service::post(r_entity.logs_post_url, json_string);
+            DEBUG("Rest Api status: ", std::to_string(response.http_code));
+            if (response.http_code != Audit::Rest::POST_SUCCESS && db.save(entity, logs) != Audit::SUCCESS)
             {
                 DEBUG("Failed to store ", entity.name, " data locally");
             }
+            if (response.http_code == Audit::Rest::POST_SUCCESS)
+            {
+                rest_service::start(r_entity, entity.name); // see later
+            }  
         }
         return result;
     }
@@ -201,7 +198,7 @@ public:
         if (entity.name == "syslog" || entity.name == "auth")
         {
             string timestamp = line.substr(0, 15);
-            common::convert_syslog_to_utc_format(timestamp, last_time);
+            common::convert_to_utc(timestamp, last_time);
         }
         else if (entity.name == "dpkg")
         {
@@ -248,13 +245,6 @@ public:
             // return get_syslog(const_cast<log_entity &>(entity), logs);
             // };
             // async_syslog_tasks.push_back(std::async(std::launch::async, async_task));
-        }
-        if (logs.size() > 0)
-        {
-            for (const string &log : logs)
-            {
-                std::cout << log << '\n';
-            }
         }
         /*
          * do the connection work here.

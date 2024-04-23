@@ -23,11 +23,11 @@ void mqtt_client::mqtt_callback::send_response(const std::string &res_type, cons
     else if (res_type == "RestApiResponse")
     {
         // long http_code = rest_service::post(r_entity, data);
-        long http_code = 0L;
-        if (http_code == 200L)
+        rest_response response;
+        if (response.http_code == Audit::Rest::POST_SUCCESS)
         {
             // check at the default dir if log files been stored temproarily
-            common::write_log("Syslog data sent to rest api", SUCCESS);
+            DEBUG("Syslog data sent to rest api");
         }
     }
 }
@@ -70,13 +70,13 @@ void mqtt_client::mqtt_callback::handle_log(mqtt::const_message_ptr msg)
         if (!request.start_time.empty())
         {
             entity.last_read_time = common::string_to_time_t(request.start_time);
-            //entity.read_path = "/var/log/syslog";
+            // entity.read_path = "/var/log/syslog";
         }
         result = log->get_syslog(entity, logs);
     }
     else if (request.log_type == "applog")
     {
-        result = log->get_applog();//
+        result = log->get_applog(); //
     }
     else
     {
@@ -144,7 +144,7 @@ void mqtt_client::mqtt_callback::handle_tpm(mqtt::const_message_ptr msg)
     {
     case 0:
         config = parser.get_tpm_config(request, msg->get_payload_str());
-        result = TPM2_SUCCESS/*tpm_service.clear_tpm(config.lockout_auth.c_str())*/;
+        result = TPM2_SUCCESS /*tpm_service.clear_tpm(config.lockout_auth.c_str())*/;
         if (result == TPM2_SUCCESS)
         {
             json_string = "Tpm_clear: success";
@@ -174,19 +174,19 @@ void mqtt_client::mqtt_callback::handle_tpm(mqtt::const_message_ptr msg)
 
 void mqtt_client::start()
 {
-    //client = std::make_shared<mqtt::async_client>(entity.conn_string, entity.client_id);
-    //callback = std::make_shared<mqtt_callback>(*this);
-    //client->set_callback(*callback);
+    // client = std::make_shared<mqtt::async_client>(entity.conn_string, entity.client_id);
+    // callback = std::make_shared<mqtt_callback>(*this);
+    // client->set_callback(*callback);
     mqtt::connect_options conn_opts = mqtt::connect_options_builder().clean_session(true).finalize();
     try
     {
 
-        common::write_log("mqtt_client: start: " + client->get_client_id() + " : connecting to the mqtt server", Audit::DEBUG);
+        DEBUG(client->get_client_id() + " : connecting to the mqtt server");
         client->connect(conn_opts)->wait();
         for (const string &topic : entity.topics) // It can be replaced with entity.topics
         {
             client->subscribe(topic, entity.qos)->wait();
-            common::write_log("mqtt_client: start: " + entity.client_id + ": subscribe to " + topic, Audit::DEBUG);
+            DEBUG("mqtt_client: start: " + entity.client_id + ": subscribe to " + topic);
         }
 
         while (true)
@@ -196,7 +196,7 @@ void mqtt_client::start()
 
         if (client->is_connected())
         {
-            common::write_log("mqtt_client: start: " + entity.client_id + " : Shutting down and disconnecting from the MQTT server...", Audit::DEBUG);
+            DEBUG(entity.client_id + " : Shutting down and disconnecting from the MQTT server...");
             for (const auto &topic : entity.topics)
             {
                 client->unsubscribe(topic)->wait();
@@ -206,14 +206,14 @@ void mqtt_client::start()
         }
         else
         {
-            common::write_log("mqtt_client: start: " + entity.client_id + " disconnected", Audit::DEBUG);
+            DEBUG(entity.client_id + " disconnected");
         }
     }
 
     catch (const mqtt::exception &e)
     {
         string error = e.what();
-        common::write_log("mqtt_client: start: mqtt_service excepiton: " + error, ERROR);
+        LOG_ERROR("mqtt_service excepiton: " + error);
         std::cerr << e.what() << '\n';
     }
 }

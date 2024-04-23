@@ -14,4 +14,11 @@ struct rest_entity
     conn_entity connection;
 };
 
+struct rest_response 
+{
+    long http_code;
+    string json_response;
+    rest_response():http_code(0L){}
+};
+
 #endif 

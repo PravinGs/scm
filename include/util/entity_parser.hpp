@@ -158,7 +158,6 @@ public:
             entity.port = 8000;
             std::cerr << e.what() << '\n';
             LOG_ERROR(e.what());
-            //  common::write_log("Mqtt port number not valid", FAILED);
         }
 
         return entity;

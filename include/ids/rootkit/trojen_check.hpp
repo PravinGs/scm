@@ -7,14 +7,14 @@ using namespace Audit;
 class trojan_check
 {
 public:
-    int check(const string filePath, vector<string> & reports)
+    int check(const string& filePath, vector<string> & reports)
     {
         fstream fp(filePath, std::ios::in);
         string line;
         if (!fp)
         {
             LOG_ERROR(FILE_ERROR + filePath);
-            //agent_utils::write_log("trojen_check: check: " + FILE_ERROR + filePath, FAILED);
+            //DEBUG( + FILE_ERROR + filePath, FAILED);
             return FAILED;
         }
         detected = 0;
@@ -35,13 +35,13 @@ public:
                 string path = baseDirectory + folder + "/" + searchBinary;
                 if (!std::filesystem::exists(path))
                     continue;
-                if (patternMatching(path, pattern))
+                if (pattern_matching(path, pattern))
                 {
                     detected = 1;
                     reports.push_back(path+","+pattern);
                     string errorMessage = "Trojaned version of file " + path + " detected. Signature used: " + pattern;
                     LOG_ERROR(errorMessage);
-                    //agent_utils::write_log("trojen_check: check: " + errorMessage, CRITICAL);
+                    //DEBUG( + errorMessage, CRITICAL);
                 }
             }
         }
@@ -50,19 +50,19 @@ public:
         {
             string errorMessage = "No binaries with any trojan detected. Analyzed " + std::to_string(total) + " files.";
             LOG_ERROR(errorMessage);
-            agent_utils::write_log("trojen_check: check: " + errorMessage);
+            DEBUG(errorMessage);
         }
         return SUCCESS;
     }
 private:
-    bool patternMatching(const string file, const string pattern)
+    bool pattern_matching(const string& file, const string& pattern)
     {
         std::ifstream fp(file, std::ios::binary);
  
         if (!fp.is_open())
         {
-            LOG_ERROR(FILE_ERROR + filePath);
-            //agent_utils::write_log("trojan_check: patternMatching: " + FILE_ERROR + file, FAILED);
+            LOG_ERROR(FILE_ERROR + file);
+            //DEBUG("trojan_check: pattern_matching: " + FILE_ERROR + file, FAILED);
             return false;
         }
         char buffer[OS_SIZE_1024];
@@ -73,8 +73,8 @@ private:
         }
         if (fp.bad())
         {
-            LOG_ERROR(FREAD_FAILED + filePath);
-            //agent_utils::write_log("trojen_check: patternMatching: " + FREAD_FAILED + file, FAILED);
+            LOG_ERROR(FREAD_FAILED + file);
+            //DEBUG("trojen_check: pattern_matching: " + FREAD_FAILED + file, FAILED);
             return false;
         }
         std::regex regex(pattern);
