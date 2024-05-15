@@ -3,13 +3,13 @@ cmake_minimum_required (VERSION 3.8)
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
   cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<ConfigService:Debug,RelWithDebInfo>:EditAndContinue>,$<$<ConfigService:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
 # Include directories
 include_directories(
     include
-    include/config
+    include/ConfigService
     include/ids
     include/ids/rootkit
     include/log_collector
@@ -19,6 +19,7 @@ include_directories(
     include/rest
     include/tpm
     include/test
+    include/test/integration_test
     include/util
     
 )
@@ -34,7 +35,7 @@ if(NOT GTest_FOUND)
     include(FetchContent)
     FetchContent_Declare(
       googletest
-      GIT_REPOSITORY https://github.com/google/googletest.git
+      GIT_REPosITORY https://github.com/google/googletest.git
       GIT_TAG        release-1.11.0 # Specify the version tag here
     )
     FetchContent_MakeAvailable(googletest)
@@ -46,10 +47,10 @@ find_package(OpenSSL REQUIRED)
 # Add source to this project's executable.
 add_executable (SCM 
     scm.cpp 
-    include/mqtt/mqtt_service.cpp
+    include/mqtt/MqttService.cpp
     include/util/os.cpp 
-    include/util/common.cpp 
-    include/ids/ids_service_impl.cpp
+    include/util/Common.cpp 
+    include/ids/IdsServiceImpl.cpp
 )
 
 # Define the header file for which precompiled header needs to be created

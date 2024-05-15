@@ -23,11 +23,11 @@ namespace cron
 {
 #ifdef CRONCPP_IS_CPP17
    #define  CRONCPP_STRING_VIEW       std::string_view
-   #define  CRONCPP_STRING_VIEW_NPOS  std::string_view::npos
+   #define  CRONCPP_STRING_VIEW_NPos  std::string_view::npos
    #define  CRONCPP_CONSTEXPTR        constexpr
 #else
    #define  CRONCPP_STRING_VIEW       std::string const &
-   #define  CRONCPP_STRING_VIEW_NPOS  std::string::npos
+   #define  CRONCPP_STRING_VIEW_NPos  std::string::npos
    #define  CRONCPP_CONSTEXPTR
 #endif
 
@@ -334,7 +334,7 @@ namespace cron
 
       CRONCPP_CONSTEXPTR inline bool contains(CRONCPP_STRING_VIEW text, char const ch) noexcept
       {
-         return CRONCPP_STRING_VIEW_NPOS != text.find_first_of(ch);
+         return CRONCPP_STRING_VIEW_NPos != text.find_first_of(ch);
       }
    }
 

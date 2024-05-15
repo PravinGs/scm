@@ -1,0 +1,15 @@
+struct ClientRequest
+{
+    int status;
+    string client_id; //process_name
+    string json_data;
+    ClientRequest() : status(0) {}
+};
+
+struct ServerResponse
+{
+    int client_id;
+    int status;
+    string error;
+    ServerResponse() : status(0) {}
+};

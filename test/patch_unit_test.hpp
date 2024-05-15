@@ -2,12 +2,12 @@
 #define PATCH_UNIT_TEST_HPP
 #pragma once
  
-#include "patch/patch_proxy.hpp"
+#include "patch/PatchProxy.hpp"
 #include <gtest/gtest.h>  
  
 struct PATCH_TEST : public testing::Test
 {
-    patch_proxy patch;
+    PatchProxy patch;
     void setup() {}
     void TearDown() {}
 };
@@ -15,7 +15,7 @@ struct PATCH_TEST : public testing::Test
  
 TEST_F(PATCH_TEST , ValidPatchEntity)
 {
-    patch_entity entity;
+    PatchEntity entity;
     entity.size ;
     entity.max_download_speed = 4096;
     entity.min_download_speed = 1024 ;
@@ -33,7 +33,7 @@ TEST_F(PATCH_TEST , ValidPatchEntity)
     entity.password = "password";
     entity.url = "sftp://test.rebex.net/pub/example/readme.txt";
    
-    bool response = patch.validate_patch_entity(entity);
+    bool response = patch.validatePatchEntity(entity);
     EXPECT_TRUE(response);
 }
 

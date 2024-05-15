@@ -7,6 +7,7 @@
 #include <vector>
 using std::string;
 using std::vector;
+
 struct conn_entity
 {
 	int port;
@@ -18,7 +19,7 @@ struct conn_entity
 	conn_entity() : port(-1) {}
 };
 
-namespace Audit
+namespace SCM
 {
 	static bool is_syslog_enabled = false;
 
@@ -29,7 +30,7 @@ namespace Audit
 		const string BASE_LOG_ARCHIVE = "archives";
 		const string BASE_CONFIG_TMP = "tmp/";
 		const string BASE_CONFIG_DIR = "/etc/scl/config/";
-		const string AGENT_CONFIG_DIR = "/etc/scl/config/agent/agent.config";
+		const string AGENT_CONFIG_DIR = "/etc/scl/Config/agent/agent.config";
 		const string AGENT_TEMP_DIR = "/etc/scl/tmp/";
 		const string SYSLOG_FILE = "/var/log/agent.log";
 		const string SEP = "/";
@@ -51,7 +52,6 @@ namespace Audit
 		const int CSTIME = 16;
 		const int NICETIME = 18;
 		const int START_TIME = 21;
-
 	}
 
 	namespace IDS
@@ -77,7 +77,7 @@ namespace Audit
 	{
 		const long POST_SUCCESS = 200L;
 		const int ORG_ID = 101;
-		const string BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzY29wZSI6WyJlbWFpbCIsIm9wZW5pZCIsInByb2ZpbGUiLCJzZi5sb2dzLm1hbmFnZSJdLCJyb2xlIjpbIlNGQWRtaW4iLCJTRlVzZXIiXSwicGVybWlzc2lvbiI6WyJzZi5hcGlSZXNvdXJjZS5tYW5hZ2UiLCJzZi5pZGVudGl0eXJlc291cmNlLm1hbmFnZSIsInNmLmNsaWVudC5tYW5hZ2UiLCJzZi5hdWRpdHRyYWlsLm1hbmFnZSIsInNmLnJvbGUubWFuYWdlIiwic2YuYWRtaW51c2VyLm1hbmFnZSIsInNmLnVzZXIubWFuYWdlIiwic2Yuc2VjdXJpdHl0b2tlbi5tYW5hZ2UiLCJzZi5sb2dzLm1hbmFnZSIsInNmLmZpcm13YXJlLm1hbmFnZSJdLCJpc3MiOiJzZWN1cml0eS5IY2wuY29tIiwiaWF0IjoxNzEzODY2MDA5LCJzdWIiOiJkYWJiZmNmNi1mMDNiLTQxZDEtYmE4Mi1iOWUxZWMwZjNhOTEiLCJleHAiOjE3MTM4Njk2MDksImp0aSI6Im1pODR0N0NCWDlrdzdZVkN2b1NVaW80c3hhWmFCYXFiNFJ5dUdWZE82Mm89IiwiY2xpZW50X2lkIjoidm5JUllXTHRlTDFFbEhPcExmNkNEa04yQThVbTBDMXEvVE8xS1JTU0J3QT0iLCJpZHAiOiJsb2NhbCIsIm5iZiI6MTcxMzg2NjAwOSwiYXVkIjoic2YubG9ncyJ9.iZf3me73LYqANlFQ7p31j7Tyf0SK9Tq6NK26CVOaXzg";
+		const string BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJzY29wZSI6WyJlbWFpbCIsIm9wZW5pZCIsInByb2ZpbGUiLCJzZi5maXJtd2FyZS5tYW5hZ2UiXSwicm9sZSI6WyJTRkFkbWluIiwiU0ZVc2VyIl0sInBlcm1pc3Npb24iOlsic2YuYXBpUmVzb3VyY2UubWFuYWdlIiwic2YuaWRlbnRpdHlyZXNvdXJjZS5tYW5hZ2UiLCJzZi5jbGllbnQubWFuYWdlIiwic2YuYXVkaXR0cmFpbC5tYW5hZ2UiLCJzZi5yb2xlLm1hbmFnZSIsInNmLmFkbWludXNlci5tYW5hZ2UiLCJzZi51c2VyLm1hbmFnZSIsInNmLnNlY3VyaXR5dG9rZW4ubWFuYWdlIiwic2YubG9ncy5tYW5hZ2UiLCJzZi5maXJtd2FyZS5tYW5hZ2UiXSwiaXNzIjoic2VjdXJpdHkuSGNsLmNvbSIsImlhdCI6MTcxMzkzOTY2NSwic3ViIjoiZGFiYmZjZjYtZjAzYi00MWQxLWJhODItYjllMWVjMGYzYTkxIiwiZXhwIjoxNzEzOTQzMjY1LCJqdGkiOiJpUXhTTStPQnZIRCs2cTRDOTl6Wk5rNEk0SGpieW90ZFJpeWc4alJYWDlrPSIsImNsaWVudF9pZCI6InZuSVJZV0x0ZUwxRWxIT3BMZjZDRGtOMkE4VW0wQzFxL1RPMUtSU1NCd0E9IiwiaWRwIjoibG9jYWwiLCJuYmYiOjE3MTM5Mzk2NjUsImF1ZCI6InNmLmZpcm13YXJlIn0.SFZuUeeSAR9xCfYiMyxWzmLs9R7SzKuEvh9Rv0faRBY";
 	}
 
 	const int SUCCESS = 1;
@@ -112,10 +112,10 @@ namespace Audit
 	const string FDELETE_FAILED = "failed to delete a file: unable to delete  ";
 	const string FDELETE_SUCCESS = "successfully deleted file: deleted ";
 	const string INVALID_PATH = "path not found: ";
-	const string PROMISCOUS = "ifconfig %s | grep PROMISC > /dev/null 2>&1";
+	const string PROMISCOUS = "ifConfig %s | grep PROMISC > /dev/null 2>&1";
 
-	/*void print_config_table(const config_table_type& config_table) {
-		for (const auto& section : config_table) {
+	/*void print_Config_table(const Config_table_type& Config_table) {
+		for (const auto& section : Config_table) {
 			std::cout << "[" << section.first << "]\n";
 			for (const auto& line : section.second) {
 				std::cout << line.first << " = " << line.second << '\n';

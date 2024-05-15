@@ -9,7 +9,7 @@ extern "C"
 #include <tpm/sealservice.h>
 #include <tpm/encryptservice.h>
 }
-#include "util/common.hpp"
+#include "util/Common.hpp"
 class tpm
 {
 private:

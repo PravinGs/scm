@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include "util/common.hpp"
+#include "util/Common.hpp"
 
 // ANSI color escape codes
 #define ANSI_COLOR_RED "\x1b[31m"
