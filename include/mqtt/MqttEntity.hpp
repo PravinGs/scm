@@ -100,35 +100,37 @@ struct MqttLogResponse
  
 struct BaseRequest
 {
-    std::string source_id;
-    int ActionType;
-    int is_ack_required;
-    int ResponseType;
+    std::string id;
+    std::string sourceId;
+    std::string targetId;
+    int actionType;
+    int isAckRequired;
+    int responseType;
  
-    BaseRequest() : ActionType(0), is_ack_required(0), ResponseType(-1) {}
-    BaseRequest(const std::string &source_id, int ActionType, int is_ack_required, int ResponseType)
-        : source_id(source_id), ActionType(ActionType), is_ack_required(is_ack_required), ResponseType(ResponseType) {}
+    BaseRequest() : actionType(0), isAckRequired(0), responseType(-1) {}
+    BaseRequest(const std::string &sourceId, int actionType, int isAckRequired, int responseType)
+        : sourceId(sourceId), actionType(actionType), isAckRequired(isAckRequired), responseType(responseType) {}
 };
  
 struct PatchRequest : BaseRequest
 {
-    int distribution_type;
+    int distributionType;
     std::string url;
-    std::string patch_version;
+    std::string patchVersion;
     std::string username;
     std::string password;
-    PatchRequest() : distribution_type(0) {}
+    PatchRequest() : distributionType(0) {}
 
 };
  
 struct LogRequest : BaseRequest
 {
-    std::string log_type;
-    int log_level;
-    std::string start_time;
-    std::string end_time;
+    std::string logType;
+    int logLevel;
+    std::string startDate;
+    std::string endDate;
  
-    LogRequest() : log_level(0)
+    LogRequest() : logLevel(0)
     {
     }
 };
@@ -151,16 +153,16 @@ struct TpmRequest : BaseRequest
 {
     int command;
     TpmRequest(){}
-    TpmRequest(const std::string &source_id, int ActionType, int is_ack_required, int ResponseType, int command)
-        : BaseRequest{source_id, ActionType, is_ack_required, ResponseType}, command(command) {}
+    TpmRequest(const std::string &sourceId, int actionType, int isAckRequired, int responseType, int command)
+        : BaseRequest{sourceId, actionType, isAckRequired, responseType}, command(command) {}
 };
  
 struct TpmConfig : TpmRequest
 {
     string lockout_auth;
     TpmConfig(){}
-    TpmConfig(const std::string &source_id, int ActionType, int is_ack_required, int ResponseType, int command, const std::string &lockout_auth)
-        : TpmRequest{source_id, ActionType, is_ack_required, ResponseType, command}, lockout_auth(lockout_auth) {}
+    TpmConfig(const std::string &sourceId, int actionType, int isAckRequired, int responseType, int command, const std::string &lockout_auth)
+        : TpmRequest{sourceId, actionType, isAckRequired, responseType, command}, lockout_auth(lockout_auth) {}
 };
  
 struct SealConfig : TpmRequest
@@ -171,8 +173,8 @@ struct SealConfig : TpmRequest
     string fileName;
     string objectName;
     SealConfig() {}
-    SealConfig(const std::string &source_id, int ActionType, int is_ack_required, int ResponseType, int command, const string &ownerAuth, const string &srkAuth, const string &dekAuth, const string &fileName, const string& objectName)
-        : TpmRequest{source_id, ActionType, is_ack_required, ResponseType, command}, ownerAuth(ownerAuth), srkAuth(srkAuth), dekAuth(dekAuth), fileName(fileName), objectName(objectName) {}
+    SealConfig(const std::string &sourceId, int actionType, int isAckRequired, int responseType, int command, const string &ownerAuth, const string &srkAuth, const string &dekAuth, const string &fileName, const string& objectName)
+        : TpmRequest{sourceId, actionType, isAckRequired, responseType, command}, ownerAuth(ownerAuth), srkAuth(srkAuth), dekAuth(dekAuth), fileName(fileName), objectName(objectName) {}
 };
  
 struct PersistConfig : TpmRequest
@@ -184,8 +186,8 @@ struct PersistConfig : TpmRequest
     string indexPassword; 
     int dataSize; 
     PersistConfig() {}
-    PersistConfig(const std::string &source_id, int ActionType, int is_ack_required, int ResponseType, int command, const string &indexName, const string &ownerPassword, const string &fileName, const int indexValue, const string &indexPassword, const int dataSize)
-        : TpmRequest{source_id, ActionType, is_ack_required, ResponseType, command}, indexName(indexName),ownerPassword(ownerPassword), fileName(fileName), indexValue(indexValue), indexPassword(indexPassword), dataSize(dataSize) {}
+    PersistConfig(const std::string &sourceId, int actionType, int isAckRequired, int responseType, int command, const string &indexName, const string &ownerPassword, const string &fileName, const int indexValue, const string &indexPassword, const int dataSize)
+        : TpmRequest{sourceId, actionType, isAckRequired, responseType, command}, indexName(indexName),ownerPassword(ownerPassword), fileName(fileName), indexValue(indexValue), indexPassword(indexPassword), dataSize(dataSize) {}
 };
  
 struct TpmDataResponse

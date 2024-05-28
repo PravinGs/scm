@@ -5,50 +5,162 @@
 #include <gmock/gmock.h>
 #include "MqttController.hpp"
 
-class MockMqttClient : public MqttClient 
+struct MQTT_INTEGRATION_TEST : public testing::Test
 {
-public:
-    MOCK_METHOD(void, start, (), (override));
+    ConfigService configService;
+    entity_parser entityParser;
+    MqttService mqttService;
+    void SetUp() { }
+    void TearDown() { }
 };
 
-class MqttIntegrationTest : public ::testing::Test 
+TEST_F(MQTT_INTEGRATION_TEST, START_MQTT_SERVICE)
 {
-protected:
-    void SetUp() override {
-        mockMqttClient = std::make_unique<MockMqttClient>();
-    }
+    /*
+        Input
+        1. config file
 
-    void TearDown() override {
-        mockMqttClient.reset();
-    }
-
-    std::string configFile = "/home/champ/scm/config/schedule.config";
-    std::unique_ptr<MockMqttClient> mockMqttClient;
-};
-
-TEST_F(MqttControllerIntegrationTest, StartValidConfig) 
-{
-    config_table_type configTable = {{"key", "value"}};
-
-    EXPECT_CALL(*mockMqttClient, start())
-        .WillOnce(testing::Return());
-
-    MqttController mqttController(configTable);
-    mqttController.setMqttClient(std::move(mockMqttClient));
-
-    int result = mqttController.start();
-    EXPECT_EQ(result, SCM::SUCCESS); 
+        steps
+        1. Read and build config table
+        2. Validate config table
+        3. Create Mqtt entity
+        4. Validate Mqtt entity
+        5. Start mqtt service 
+    */
+    const string configFilePath = "/home/champ/scm/config/schedule.config";
+    config_table_type configTable;
+    int result = SCM::SUCCESS;
+    //1.Read and build the config table
+    result = configService.readIniConfigFile(configFilePath, configTable);
+    // 2. Validate config table
+    ASSERT_EQ(result, SCM::SUCCESS); // Abbor the flow if it fails.
+    // 3. Create Mqtt entity
+    MqttEntity mqttEntity = entityParser.getMqttEntity(configTable);
+    //  4. Validate Mqtt entity
+    MqttProxy mqttProxy(configTable);
+    bool validationResponse = mqttProxy.validateMqttEntity(mqttEntity);
+    ASSERT_TRUE(validationResponse);
+    // 5. Start mqtt service 
+    result = mqttService.start();
+    ASSERT_EQ(result, SCM::SUCCESS);
+    //output
 }
 
-TEST_F(MqttControllerIntegrationTest, StartInvalidConfig) 
+TEST_F(MQTT_INTEGRATION_TEST, INVALID_CONFIG_FILE)
 {
-    config_table_type invalidConfigTable = {{"", ""}};
+    const string configFilePath = "/home/champ/scm/config/schedu.fig";
+    config_table_type configTable;
+    int result = SCM::SUCCESS;
+    result = configService.readIniConfigFile(configFilePath, configTable);
+    ASSERT_EQ(result, SCM::SUCCESS); 
+    MqttEntity mqttEntity = entityParser.getMqttEntity(configTable);
+    MqttProxy mqttProxy(configTable);
+    bool validationResponse = mqttProxy.validateMqttEntity(mqttEntity);
+    ASSERT_TRUE(validationResponse);
+    result = mqttService.start();
+    ASSERT_EQ(result, SCM::SUCCESS);
+}
 
-    MqttController mqttController(configFile);
-    mqttController.setMqttClient(std::move(mockMqttClient));
+TEST_F(MQTT_INTEGRATION_TEST, CONNECTION_STRING_EMPTY)
+{
+    const string configFilePath = "/home/champ/scm/config/schedule.config";
+    config_table_type configTable;
+    int result = SCM::SUCCESS;
+    result = configService.readIniConfigFile(configFilePath, configTable);
+    ASSERT_EQ(result, SCM::SUCCESS); 
+    MqttEntity mqttEntity;
+    mqttEntity.conn_string = "";
+    mqttEntity = entityParser.getMqttEntity(configTable);
+    MqttProxy mqttProxy(configTable);
+    bool validationResponse = mqttProxy.validateMqttEntity(mqttEntity);
+    ASSERT_TRUE(validationResponse);
+    result = mqttService.start();
+    ASSERT_EQ(result, SCM::SUCCESS);
+}
 
-    int result = mqttController.start();
-    EXPECT_EQ(result, SCM::FAILED); 
+TEST_F(MQTT_INTEGRATION_TEST, EMPTY_TOPICS)
+{
+    const string configFilePath = "/home/champ/scm/config/schedule.config";
+    config_table_type configTable;
+    int result = SCM::SUCCESS;
+    result = configService.readIniConfigFile(configFilePath, configTable);
+    ASSERT_EQ(result, SCM::SUCCESS); 
+    MqttEntity mqttEntity;
+    mqttEntity.topics = "";
+    mqttEntity = entityParser.getMqttEntity(configTable);
+    MqttProxy mqttProxy(configTable);
+    bool validationResponse = mqttProxy.validateMqttEntity(mqttEntity);
+    ASSERT_TRUE(validationResponse);
+    result = mqttService.start();
+    ASSERT_EQ(result, SCM::SUCCESS);
+}
+
+TEST_F(MQTT_INTEGRATION_TEST, INVALID_CA_CERTIFICATE_PATH)
+{
+    const string configFilePath = "/home/champ/scm/config/schedule.config";
+    config_table_type configTable;
+    int result = SCM::SUCCESS;
+    result = configService.readIniConfigFile(configFilePath, configTable);
+    ASSERT_EQ(result, SCM::SUCCESS); 
+    MqttEntity mqttEntity;
+    mqttEntity.ca_cert_path = "/etc/zkeepository/keys/ca/ca_ce.em";
+    mqttEntity = entityParser.getMqttEntity(configTable);
+    MqttProxy mqttProxy(configTable);
+    bool validationResponse = mqttProxy.validateMqttEntity(mqttEntity);
+    ASSERT_TRUE(validationResponse);
+    result = mqttService.start();
+    ASSERT_EQ(result, SCM::SUCCESS);
+}
+
+TEST_F(MQTT_INTEGRATION_TEST, CA_CERTIFICATE_PATH_EMPTY)
+{
+    const string configFilePath = "/home/champ/scm/config/schedule.config";
+    config_table_type configTable;
+    int result = SCM::SUCCESS;
+    result = configService.readIniConfigFile(configFilePath, configTable);
+    ASSERT_EQ(result, SCM::SUCCESS); 
+    MqttEntity mqttEntity;
+    mqttEntity.ca_cert_path = "";
+    mqttEntity = entityParser.getMqttEntity(configTable);
+    MqttProxy mqttProxy(configTable);
+    bool validationResponse = mqttProxy.validateMqttEntity(mqttEntity);
+    ASSERT_TRUE(validationResponse);
+    result = mqttService.start();
+    ASSERT_EQ(result, SCM::SUCCESS);
+}
+
+TEST_F(MQTT_INTEGRATION_TEST, INVALID_CLIENT_CERTIFICATE_PATH)
+{
+    const string configFilePath = "/home/champ/scm/config/schedule.config";
+    config_table_type configTable;
+    int result = SCM::SUCCESS;
+    result = configService.readIniConfigFile(configFilePath, configTable);
+    ASSERT_EQ(result, SCM::SUCCESS); 
+    MqttEntity mqttEntity;
+    mqttEntity.client_cert_path = "/etc/zkey/pository/key/client/cl_cer.em";
+    mqttEntity = entityParser.getMqttEntity(configTable);
+    MqttProxy mqttProxy(configTable);
+    bool validationResponse = mqttProxy.validateMqttEntity(mqttEntity);
+    ASSERT_TRUE(validationResponse);
+    result = mqttService.start();
+    ASSERT_EQ(result, SCM::SUCCESS);
+}
+
+TEST_F(MQTT_INTEGRATION_TEST, CLIENT_CERTIFICATE_PATH_EMPTY)
+{
+    const string configFilePath = "/home/champ/scm/config/schedule.config";
+    config_table_type configTable;
+    int result = SCM::SUCCESS;
+    result = configService.readIniConfigFile(configFilePath, configTable);
+    ASSERT_EQ(result, SCM::SUCCESS); 
+    MqttEntity mqttEntity;
+    mqttEntity.client_cert_path = "";
+    mqttEntity = entityParser.getMqttEntity(configTable);
+    MqttProxy mqttProxy(configTable);
+    bool validationResponse = mqttProxy.validateMqttEntity(mqttEntity);
+    ASSERT_TRUE(validationResponse);
+    result = mqttService.start();
+    ASSERT_EQ(result, SCM::SUCCESS);
 }
 
 #endif

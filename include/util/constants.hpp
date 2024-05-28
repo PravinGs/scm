@@ -23,6 +23,13 @@ namespace SCM
 {
 	static bool is_syslog_enabled = false;
 
+	namespace Default
+	{
+		const string SYSLOG_READ_PATH = "/var/log/syslog";
+		const string AUTHLOG_READ_PATH = "/var/log/auth.log";
+		const string DPKGLOG_READ_PATH = "/var/log/dpkg.log";
+	}
+
 	namespace Config
 	{
 		const string LOG_PATH = "/etc/scl/log/agent.log";

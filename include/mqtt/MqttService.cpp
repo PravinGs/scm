@@ -1,15 +1,17 @@
 #include "MqttService.hpp"
 const std::vector<std::string> TOPICS = {"log", "process", "patch", "tpm", "ids"};
 
-void MqttClient::MqttCallback::messageArrived(mqtt::const_message_ptr msg)
+void MqttClient::MqttCallback::message_arrived(mqtt::const_message_ptr msg)
 {
+    DEBUG("Message received at callback");
     std::string payload = msg->get_payload_str();
-    std::cout << "Received message: " << payload << '\n';
+    DEBUG(payload.c_str());
     onMessageReceived(msg);
 }
 
 void MqttClient::MqttCallback::publishMqttResponse(const std::string &topic, const std::string &message)
 {
+    DEBUG("Response is about to publish to topic " + topic);
     mqtt::message_ptr response_msg = mqtt::make_message(topic, message);
     client->client->publish(response_msg);
 }
@@ -55,33 +57,71 @@ void MqttClient::MqttCallback::onMessageReceived(const mqtt::const_message_ptr &
 
 void MqttClient::MqttCallback::handleLog(mqtt::const_message_ptr msg)
 {
+    DEBUG("Handle Log");
     vector<std::string> logs;
-    string json_string = "";
+    string json = "";
     int result = SUCCESS;
-
-    LogRequest request = parser.extractLogRequest(msg->get_payload_str()); /* Extract json string and converted to respective request*/
-
-    LogEntity entity = e_parser.getLogEntity(client->config_table, request.log_type); /*Create entity for log collection */
-
-    if (request.log_type == "syslog")
+    try
     {
-        if (!request.start_time.empty())
+        LogRequest request = parser.extractLogRequest(msg->get_payload_str()); /* Extract json string and converted to respective request*/
+
+        if (!proxy->validateLogRequest(request))
         {
-            entity.last_read_time = Common::stringToTime(request.start_time);
+            return;
         }
-        result = log->getSysLog(entity, logs);
-    }
-    else if (request.log_type == "applog")
-    {
-        result = log->getAppLog();
-    }
-    else
-    {
-        result = INVALID_MQTT_REQUEST;
-    }
-    json_string = parser.logToJSON(logs, entity.name);
 
-    sendResponse(parser.responseTypeToString(request.ResponseType), json_string, request.source_id);
+        LogEntity entity = e_parser.getLogEntity(configTable, request.logType); /*Create entity for log collection */
+        entity.name = request.logType;
+        if (request.logType == "syslog")
+        {
+            entity.read_path = SCM::Default::SYSLOG_READ_PATH;
+            if (!request.startDate.empty())
+            {
+                entity.last_read_time = Common::parseDateTime(request.startDate); // Todo This check have not added there
+            }
+            result = log->getSysLog(entity, logs);
+        }
+        else if (request.logType == "auth")
+        {
+            entity.read_path = SCM::Default::AUTHLOG_READ_PATH;
+            if (!request.startDate.empty())
+            {
+                entity.last_read_time = Common::parseDateTime(request.startDate); // Todo This check have not added there
+            }
+            result = log->getSysLog(entity, logs);
+        }
+        else if (request.logType == "dpkg")
+        {
+            entity.read_path = SCM::Default::DPKGLOG_READ_PATH;
+            if (!request.startDate.empty())
+            {
+                entity.last_read_time = Common::parseDateTime(request.startDate); // Todo This check have not added there
+            }
+            result = log->getSysLog(entity, logs);
+            for (const std::string& log: logs)
+            {
+                std::cout << log << '\n';
+            }
+        }
+        else if (request.logType == "applog")
+        {
+            result = log->getAppLog();
+        }
+        else
+        {
+            LOG_ERROR("INVALID_MQTT_REQUEST");
+            result = INVALID_MQTT_REQUEST;
+        }
+        if (result == SCM::SUCCESS)
+        {
+            json = parser.logToJSON(logs, entity.name);
+            sendResponse(parser.responseTypeToString(request.responseType), json, request.sourceId);
+        }
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << '\n';
+    }
 }
 
 void MqttClient::MqttCallback::handleProcess(mqtt::const_message_ptr msg)
@@ -96,7 +136,7 @@ void MqttClient::MqttCallback::handleProcess(mqtt::const_message_ptr msg)
 
     json_string = parser.ProcessToJSON(logs);
 
-    sendResponse(parser.responseTypeToString(request.ResponseType), json_string, request.source_id);
+    sendResponse(parser.responseTypeToString(request.responseType), json_string, request.sourceId);
 }
 
 void MqttClient::MqttCallback::handlePatch(mqtt::const_message_ptr msg)
@@ -109,7 +149,7 @@ void MqttClient::MqttCallback::handlePatch(mqtt::const_message_ptr msg)
 
     patch.start(entity);
 
-    sendResponse(parser.responseTypeToString(request.ResponseType), json_string, request.source_id);
+    sendResponse(parser.responseTypeToString(request.responseType), json_string, request.sourceId);
 }
 
 void MqttClient::MqttCallback::handleTpm(mqtt::const_message_ptr msg)
@@ -148,7 +188,7 @@ void MqttClient::MqttCallback::handleTpm(mqtt::const_message_ptr msg)
         break;
     }
 
-    sendResponse(parser.responseTypeToString(request.ResponseType), json_string, request.source_id);
+    sendResponse(parser.responseTypeToString(request.responseType), json_string, request.sourceId);
 }
 
 void MqttClient::start()
@@ -156,18 +196,25 @@ void MqttClient::start()
     mqtt::connect_options conn_opts = mqtt::connect_options_builder().clean_session(true).finalize();
     try
     {
-
         DEBUG(client->get_client_id() + " : connecting to the mqtt server");
-        client->connect(conn_opts)->wait();
+        client->connect(conn_opts); //->wait();
+
+        while (!client->is_connected())
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+        DEBUG(client->get_client_id() + " : connected to the mqtt server");
+
+        // client->subscribe(entity.topics, entity.qos); // qos=1
         for (const string &topic : entity.topics) // It can be replaced with entity.topics
         {
-            client->subscribe(topic, entity.qos)->wait();
-            DEBUG("MqttClient: start: " + entity.client_id + ": subscribe to " + topic);
+            client->subscribe(topic, entity.qos); // wait();
+            DEBUG(entity.client_id + ": subscribe to " + topic);
         }
 
-        while (true)
+        while (client->is_connected())
         {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
 
         if (client->is_connected())
@@ -185,7 +232,6 @@ void MqttClient::start()
             DEBUG(entity.client_id + " disconnected");
         }
     }
-
     catch (const mqtt::exception &e)
     {
         string error = e.what();

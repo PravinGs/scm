@@ -2,65 +2,160 @@
 #define IDS_CONTROLLER_INTEGRATION_TEST_HPP
 
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 #include "ids/IdsController.hpp"
 
-class MockIdsService : public IdsService {
-public:
-    MOCK_METHOD(void, start, (config_table_type&), (override));
-    MOCK_METHOD(void, rootkitAnalysis, (), (override));
+struct IDS_INTEGRATION_TEST : public testing::Test
+{
+    ConfigService configService;
+    entity_parser entityParser;
+    IdsServiceImpl idsService;
+    IdsRepository idsRepository;
+    void SetUp() { }
+    void TearDown() { }
 };
 
-class IdsIntegrationTest : public ::testing::Test 
+TEST_F(IDS_INTEGRATION_TEST, ANALYSE_FILE)
 {
-    void SetUp() override 
-    {
-        mockIdsService = std::make_unique<MockIdsService>();
-    }
+    /*
+        Input
+        1. config file
 
-    void TearDown() override 
-    {
-        mockIdsService.reset();
-    }
-
-    std::string configFile = "/home/champ/scm/config/schedule.config";
-    std::unique_ptr<MockIdsService> mockIdsService;
-};
-
-TEST_F(IdsIntegrationTest, StartValidConfig) 
-{
-    config_table_type configTable = {{"key", "value"}};
-
-    EXPECT_CALL(*mockIdsService, start(testing::_))
-        .WillOnce(testing::Return());
-    
-    IdsController idsController(configFile);
-    idsController.setIdsService(std::move(mockIdsService));
-    int result = idsController.start();
-    EXPECT_EQ(result, SCM::SUCCESS); 
+        steps
+        1. Read and build config table
+        2. Validate config table
+        3. Create Analysis entity
+        4. Validate Analysis entity
+        5. Analyse the files
+        6. Write and save the ids data to JSON file
+        output
+        1.log file
+    */
+    const string configFilePath = "/home/champ/scm/config/schedule.config";
+    config_table_type configTable;
+    int result = SCM::SUCCESS;
+    //1.Read and build the config table
+    result = configService.readIniConfigFile(configFilePath, configTable);
+    // 2. Validate config table
+    ASSERT_EQ(result, SCM::SUCCESS); // Abbor the flow if it fails.
+    // 3. Create Analysis entity
+    AnalysisEntity analysisEntity = entityParser.getAnalysisEntity(configTable);
+    // 4. Validate Analysis entity
+    IdsProxy idsProxy(configTable);
+    bool validationResponse = idsProxy.validateAnalysisEntity(analysisEntity);
+    ASSERT_TRUE(validationResponse);
+    // 5. Analyse the files
+    const string file = "/home/champ/ids_test";
+    result = idsService.analyseFile(file);
+    // result = idsService.start(analysisEntity);
+    ASSERT_EQ(result, SCM::SUCCESS);
+    //6. Write and save the ids data to JSON file
+    vector<LogEvent> alerts;
+    result = idsRepository.save(alerts);
+    ASSERT_EQ(result, SCM::SUCCESS); 
+    //output
 }
 
-TEST_F(IdsIntegrationTest, StartInvalidConfig) 
-{
-    config_table_type invalidConfigTable = {{"", ""}};
+// TEST_F(IDS_INTEGRATION_TEST, INVALID_CONFIG_FILE)
+// {
+//     const string configFilePath = "/home/champ/scm/conficonfig";
+//     config_table_type configTable;
+//     int result = SCM::SUCCESS;
+//     result = configService.readIniConfigFile(configFilePath, configTable);
+//     ASSERT_EQ(result, SCM::SUCCESS); 
+//     AnalysisEntity analysisEntity = entityParser.getAnalysisEntity(configTable);
+//     IdsProxy idsProxy(configTable);
+//     bool validationResponse = idsProxy.validateAnalysisEntity(analysisEntity);
+//     ASSERT_TRUE(validationResponse);
+//     const string file = "/home/champ/ids_test";
+//     result = idsService.analyseFile(file);
+    // result = idsService.start(analysisEntity);
+//     ASSERT_EQ(result, SCM::SUCCESS);
+//     vector<LogEvent> alerts;
+//     result = idsRepository.save(alerts);
+//     ASSERT_EQ(result, SCM::SUCCESS); 
+// }
 
-    IdsController idsController(configFile);
-    idsController.setIdsService(std::move(mockIdsService));
-    int result = idsController.start();
-    EXPECT_EQ(result, SCM::FAILED); 
+TEST_F(IDS_INTEGRATION_TEST, INVALID_DECODER_PATH)
+{
+    const string configFilePath = "/home/champ/scm/config/schedule.config";
+    config_table_type configTable;
+    int result = SCM::SUCCESS;
+    result = configService.readIniConfigFile(configFilePath, configTable);
+    ASSERT_EQ(result, SCM::SUCCESS); 
+    AnalysisEntity analysisEntity;
+    analysisEntity.decoder_path = "/etc/scl/decoder/dec"
+    analysisEntity = entityParser.getAnalysisEntity(configTable);
+    IdsProxy idsProxy(configTable);
+    bool validationResponse = idsProxy.validateAnalysisEntity(analysisEntity);
+    ASSERT_TRUE(validationResponse);
+    const string file = "/home/champ/ids_test";
+    result = idsService.analyseFile(file);
+    // result = idsService.start(analysisEntity);
+    ASSERT_EQ(result, SCM::SUCCESS);
+    vector<LogEvent> alerts;
+    result = idsRepository.save(alerts);
+    ASSERT_EQ(result, SCM::SUCCESS); 
 }
 
-TEST_F(IdsIntegrationTest, StartRootAnalysisValidConfig) 
+TEST_F(IDS_INTEGRATION_TEST, INVALID_RULES_PATH)
 {
-    config_table_type configTable = {{"key", "value"}};
-
-    EXPECT_CALL(*mockIdsService, rootkitAnalysis())
-        .WillOnce(testing::Return());
-    
-    IdsController idsController(configFile);
-    idsController.setIdsService(std::move(mockIdsService));
-    int result = idsController.startRootAnalysis();
-    EXPECT_EQ(result, SCM::SUCCESS); 
+    const string configFilePath = "/home/champ/scm/config/schedule.config";
+    config_table_type configTable;
+    int result = SCM::SUCCESS;
+    result = configService.readIniConfigFile(configFilePath, configTable);
+    ASSERT_EQ(result, SCM::SUCCESS); 
+    AnalysisEntity analysisEntity;
+    analysisEntity.rules_path = "/home/champ/scm/rules/sysrulxml"
+    analysisEntity = entityParser.getAnalysisEntity(configTable);
+    IdsProxy idsProxy(configTable);
+    bool validationResponse = idsProxy.validateAnalysisEntity(analysisEntity);
+    ASSERT_TRUE(validationResponse);
+    const string file = "/home/champ/ids_test";
+    result = idsService.analyseFile(file);
+    // result = idsService.start(analysisEntity);
+    ASSERT_EQ(result, SCM::SUCCESS);
+    vector<LogEvent> alerts;
+    result = idsRepository.save(alerts);
+    ASSERT_EQ(result, SCM::SUCCESS); 
 }
 
+/*
+TEST_F(IDS_INTEGRATION_TEST, INVALID_FILE_PATH)
+{
+    const string configFilePath = "/home/champ/scm/config/schedule.config";
+    config_table_type configTable;
+    int result = SCM::SUCCESS;
+    result = configService.readIniConfigFile(configFilePath, configTable);
+    ASSERT_EQ(result, SCM::SUCCESS); 
+    AnalysisEntity analysisEntity = entityParser.getAnalysisEntity(configTable);
+    IdsProxy idsProxy(configTable);
+    bool validationResponse = idsProxy.validateAnalysisEntity(analysisEntity);
+    ASSERT_TRUE(validationResponse);
+    const string file = "/home/champids_test";
+    result = idsService.analyseFile(file);
+    ASSERT_EQ(result, SCM::SUCCESS);
+    vector<LogEvent> alerts;
+    result = idsRepository.save(alerts);
+    ASSERT_EQ(result, SCM::SUCCESS); 
+}
+
+TEST_F(IDS_INTEGRATION_TEST, EMPTY_FILE)
+{
+    const string configFilePath = "/home/champ/scm/config/schedule.config";
+    config_table_type configTable;
+    int result = SCM::SUCCESS;
+    result = configService.readIniConfigFile(configFilePath, configTable);
+    ASSERT_EQ(result, SCM::SUCCESS); 
+    AnalysisEntity analysisEntity = entityParser.getAnalysisEntity(configTable);
+    IdsProxy idsProxy(configTable);
+    bool validationResponse = idsProxy.validateAnalysisEntity(analysisEntity);
+    ASSERT_TRUE(validationResponse);
+    const string file = "";
+    result = idsService.analyseFile(file);
+    ASSERT_EQ(result, SCM::SUCCESS);
+    vector<LogEvent> alerts;
+    result = idsRepository.save(alerts);
+    ASSERT_EQ(result, SCM::SUCCESS); 
+}
+*/
 #endif

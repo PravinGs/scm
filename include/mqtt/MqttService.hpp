@@ -8,6 +8,7 @@
 #include "patch/PatchProxy.hpp"
 #include "tpm/tpm_service.hpp"
 #include "MqttParser.hpp"
+#include "MqttProxy.hpp"
 
 #define INVALID_MQTT_REQUEST 101
 
@@ -23,7 +24,7 @@ class MqttClient : public MqttService
 public:
     MqttClient() {}
     
-    MqttClient(const MqttEntity &entity, config_table_type &config_table)
+    MqttClient(const MqttEntity &entity,const config_table_type &config_table)
         : entity(entity),
           config_table(config_table)
     {
@@ -37,6 +38,11 @@ public:
     class MqttCallback : public mqtt::callback
     {
     public:
+        MqttCallback(config_table_type& config_table): configTable(config_table)
+        {
+            log = std::make_unique<LogProxy>(config_table);
+            r_entity = e_parser.getRestEntity(config_table);
+        }
         MqttCallback(MqttClient* client)
             : client(client)
         {
@@ -44,7 +50,7 @@ public:
             r_entity = e_parser.getRestEntity(client->config_table);
         }
 
-        void messageArrived(mqtt::const_message_ptr msg);
+        void message_arrived(mqtt::const_message_ptr msg);
 
     private:
         void publishMqttResponse(const std::string &topic, const std::string &message);
@@ -55,7 +61,9 @@ public:
         void handlePatch(mqtt::const_message_ptr msg);
         void handleTpm(mqtt::const_message_ptr msg);
 
+        config_table_type configTable;
         MqttClient* client;
+        std::unique_ptr<MqttProxy> proxy;
         std::unique_ptr<LogProxy> log;
         MonitorProxy monitor;
         PatchProxy patch;
@@ -70,6 +78,7 @@ private:
     MqttEntity entity;
     std::map<std::string, std::map<std::string, std::string>> config_table;
     std::shared_ptr<MqttCallback> callback = nullptr;
+    
 };
 
 #endif

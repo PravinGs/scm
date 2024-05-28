@@ -5,8 +5,6 @@
 // #include "test/monitor_test.hpp"
 // #include "test/ids_test.hpp"
 // #include "test/log_unit_test.hpp"
-
-// #include "mqtt/mqtt_service.hpp"
 // #include "rest/RestService.hpp"
 // #include "tpm/tpm_service.hpp"
 
@@ -24,6 +22,8 @@
 //  #include "test/patch_unit_test.hpp"
 
 
-#include "test/integration_test/log_test.hpp"
-// #include "integration_test/monitor_test.hpp"
+// #include "test/integration_test/log_test.hpp"
+#include "test/integration_test/monitor_test.hpp"
 // #include "integration_test/patch_test.hpp"
+
+// #include "mqtt/MqttController.hpp"

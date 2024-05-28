@@ -18,10 +18,7 @@ public:
 
     ~LogProxy()
     {
-        // for (auto &async_task : async_syslog_tasks)
-        //         {
-        // async_task.get();
-        // }
+
     }
 
     int getSysLog()
@@ -52,7 +49,11 @@ public:
     int getSysLog(LogEntity &entity, vector<string> &logs)
     {
         string json_string;
-        if (!getPreviousLogReadTime(entity) || !validateLogEntity(entity))
+        if (entity.last_read_time == std::numeric_limits<time_t>::min() && !getPreviousLogReadTime(entity))
+        {   
+            return SCM::FAILED;
+        }   
+        if (!validateLogEntity(entity))
         {
             return SCM::FAILED;
         }
@@ -62,18 +63,18 @@ public:
                 Common::updateLogWrittenTime(entity.name, entity.current_read_time) == SCM::SUCCESS && 
                     !logs.empty())
         {
-            json_string = logToJSON(logs, entity.name);
+            // json_string = logToJSON(logs, entity.name);
 
-            RestResponse response = RestService::http_post(r_entity.logs_post_url, json_string);
-            DEBUG("Rest Api status: ", std::to_string(response.http_code));
-            if (response.http_code != SCM::Rest::POST_SUCCESS && db.save(entity, logs) != SCM::SUCCESS)
-            {
-                DEBUG("Failed to store ", entity.name, " data locally");
-            }
-            if (response.http_code == SCM::Rest::POST_SUCCESS)
-            {
-                RestService::start(r_entity, entity.name);
-            }  
+            // RestResponse response = RestService::http_post(r_entity.logs_post_url, json_string);
+            // DEBUG("Rest Api status: ", std::to_string(response.http_code));
+            // if (response.http_code != SCM::Rest::POST_SUCCESS && db.save(entity, logs) != SCM::SUCCESS)
+            // {
+            //     DEBUG("Failed to store ", entity.name, " data locally");
+            // }
+            // if (response.http_code == SCM::Rest::POST_SUCCESS)
+            // {
+            //     RestService::start(r_entity, entity.name);
+            // }  
         }
         return result;
     }

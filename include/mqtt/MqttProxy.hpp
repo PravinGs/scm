@@ -3,15 +3,19 @@
 
 #include "MqttService.hpp"
 
-class MqttProxy : public MqttService
+class MqttProxy 
 {
 public:
-    MqttProxy(config_table_type& config_table) : mqttService(std::make_unique<MqttClient>())
-    void start() 
+    bool validateLogRequest(const LogRequest& logRequest)
     {
-
+        if (logRequest.id.empty() || logRequest.actionType < 0 || logRequest.responseType < 0 || logRequest.sourceId.empty())
+        {
+            LOG_ERROR("logRequest.id | logRequest.actionType | logRequest.responseType | logRequest.sourceId");
+            return false;
+        }
+        return true;
     }
-private:
+    
     bool validateMqttEntity(MqttEntity &entity)
     {
         if (entity.conn_string.empty())
@@ -48,10 +52,6 @@ private:
         }
         return true;
     }
-
-private:
-    config_table_type config_table;
-    std::unique_ptr<MqttService> mqttService;
 
 };
 

@@ -62,6 +62,9 @@ public:
 
 	static std::time_t stringToTime(const string &datetime);
 
+	static std::time_t parseDateTime(const std::string &datetime);
+
+
 	static void printNextExecutionTime(std::tm next_time_info);
 
 	static void printDuration(const std::chrono::duration<double> &duration);

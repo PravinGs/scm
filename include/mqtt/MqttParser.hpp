@@ -22,7 +22,47 @@ public:
             std::cerr << "Error: Failed to parse JSON: " << errs << "\n";
             return -1;
         }
-        return root["ActionType"].asInt();
+        return actionTypeToInt(root["ActionType"].asString());
+    }
+
+    int actionTypeToInt(const string &actionType)
+    {
+        if (actionType == "LogRequest")
+        {
+            return 0;
+        }
+        else if (actionType == "FirmwareUpdate")
+        {
+            return 1;
+        }
+        else if (actionType == "ProcessRequest")
+        {
+            return 2;
+        }
+        else if (actionType == "TpmConfigServiceuration")
+        {
+            return 3;
+        }
+        else
+        {
+            return -1;
+        }
+    }
+
+    int responseTypeToInt(const string &responseType)
+    {
+        if (responseType == "MqttResponse")
+        {
+            return 0;
+        }
+        else if (responseType == "RestApiResponse")
+        {
+            return 1;
+        }
+        else
+        {
+            return -1;
+        }
     }
 
     std::string actionValueToString(ActionType value)
@@ -62,17 +102,21 @@ public:
 
     std::string responseTypeToString(int value)
     {
-        switch (static_cast<ResponseType>(value))
+        if (value == 0)
         {
-        case ResponseType::MqttResponse:
             return "MqttResponse";
-        case ResponseType::RestApiResponse:
+        }
+        else if (value == 1)
+        {
             return "RestApiResponse";
         }
-        return ""; // Handle default case
+        else
+        {
+            return "";
+        }
     }
 
-    std::string logToJSON(const vector<std::string> &logs, const string& name)
+    std::string logToJSON(const vector<std::string> &logs, const string &name)
     {
         Json::Value json;
         json["OrgId"] = 234225;
@@ -99,6 +143,7 @@ public:
 
     std::string ProcessToJSON(const vector<ProcessData> &logs)
     {
+        DEBUG("Preparing Log response string.");
         Json::Value json;
         json["OrgId"] = 234225;
         json["AppName"] = "system_resources";
@@ -139,7 +184,7 @@ public:
     //     json["status"] = "success";
     //     return json.toStyledString();
     // }
-    LogRequest extractLogRequest(string json_string)
+    LogRequest extractLogRequest(const string &json_string)
     {
         LogRequest request;
         Json::Value root;
@@ -155,15 +200,17 @@ public:
             return request;
         }
 
-        request.ActionType = root["ActionType"].asInt();
-        request.source_id = root["source_id"].asString(); // Response topic // targetId-Publish
-        request.is_ack_required = root["is_ack_required"].asInt();
-        request.ResponseType = root["ResponseType"].asInt();
+        request.startDate = root["FromDate"].asString();
+        request.endDate = root["EndDate"].asString();
+        request.actionType = actionTypeToInt(root["ActionType"].asString());
+        request.id = root["Id"].asString();
+        request.sourceId = root["SourceId"].asString();
+        request.targetId = root["TargetId"].asString();
+        request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
+        request.responseType = responseTypeToInt(root["ResponseType"].asString());
+        request.logType = root["logType"].asString();
+        // request.log_level = root["log_level"].asInt();
 
-        request.log_type = root["log_type"].asString();
-        request.log_level = root["log_level"].asInt();
-        request.start_time = root["start_time"].asString();
-        request.end_time = root["end_time"].asString();
         return request;
     }
 
@@ -182,10 +229,10 @@ public:
             std::cerr << "Error: Failed to parse JSON: " << errs << "\n";
             return request;
         }
-        request.ActionType = root["ActionType"].asInt();
-        request.source_id = root["source_id"].asString();
-        request.is_ack_required = root["is_ack_required"].asInt();
-        request.ResponseType = root["ResponseType"].asInt();
+        request.actionType = actionTypeToInt(root["ActionType"].asString());
+        request.sourceId = root["SourceId"].asString();
+        request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
+        request.responseType = responseTypeToInt(root["ResponseType"].asString());
 
         request.process_name = root["process_name"].asString();
         request.is_SystemProperties_required = root["system_properties"].asInt();
@@ -207,14 +254,14 @@ public:
             std::cerr << "Error: Failed to parse JSON: " << errs << "\n";
             return request;
         }
-        request.ActionType = root["ActionType"].asInt();
-        request.source_id = root["source_id"].asString();
-        request.is_ack_required = root["is_ack_required"].asInt();
-        request.ResponseType = root["ResponseType"].asInt();
+        request.actionType = actionTypeToInt(root["ActionType"].asString());
+        request.sourceId = root["SourceId"].asString();
+        request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
+        request.responseType = responseTypeToInt(root["ResponseType"].asString());
 
-        request.distribution_type = root["distribution_type"].asInt();
+        request.distributionType = root["distribution_type"].asInt();
         request.url = root["url"].asString();
-        request.patch_version = root["patch_version"].asString();
+        request.patchVersion = root["patch_version"].asString();
         request.username = root["username"].asString();
         request.password = root["password"].asString();
         return request;
@@ -236,10 +283,10 @@ public:
             return ConfigService;
         }
 
-        ConfigService.ActionType = root["ActionType"].asInt();
-        ConfigService.source_id = root["source_id"].asString();
-        ConfigService.is_ack_required = root["is_ack_required"].asInt();
-        ConfigService.ResponseType = root["ResponseType"].asInt();
+        ConfigService.actionType = actionTypeToInt(root["ActionType"].asString());
+        ConfigService.sourceId = root["SourceId"].asString();
+        ConfigService.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
+        ConfigService.responseType = responseTypeToInt(root["ResponseType"].asString());
         ConfigService.command = root["command"].asInt();
 
         // switch (static_cast<TpmCommand>(ConfigService.command))
@@ -266,7 +313,7 @@ public:
 
         Json::parseFromStream(builder, iss, &root, &errs);
         string lockout_auth = root["lockout_auth"].asString();
-        TpmConfig ConfigService(request.source_id, request.ActionType, request.is_ack_required, request.ResponseType, request.command, lockout_auth);
+        TpmConfig ConfigService(request.sourceId, request.actionType, request.isAckRequired, request.responseType, request.command, lockout_auth);
         return ConfigService; // Return as TpmRequest
     }
 
@@ -284,7 +331,7 @@ public:
         string fileName = root["fileName"].asString();
         string objectName = root["objectName"].asString();
 
-        SealConfig ConfigService(request.source_id, request.ActionType, request.is_ack_required, request.ResponseType, request.command, ownerAuth, srkAuth, dekAuth, fileName, objectName);
+        SealConfig ConfigService(request.sourceId, request.actionType, request.isAckRequired, request.responseType, request.command, ownerAuth, srkAuth, dekAuth, fileName, objectName);
         return ConfigService; // Return as TpmRequest
     }
 
@@ -304,10 +351,10 @@ public:
         int dataSize = root["dataSize"].asInt();
 
         PersistConfig ConfigService(
-            request.source_id,
-            request.ActionType,
-            request.is_ack_required,
-            request.ResponseType,
+            request.sourceId,
+            request.actionType,
+            request.isAckRequired,
+            request.responseType,
             request.command,
             indexName,
             ownerPassword,

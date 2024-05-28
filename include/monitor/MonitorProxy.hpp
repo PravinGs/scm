@@ -86,7 +86,7 @@ public:
         return service->getAvailedSystemProperties();
     }
 
-private:
+// private:
 
     int handleProcessDetails(const vector<ProcessData> &logs)
     {

@@ -247,13 +247,6 @@ TEST_F(IDS_TEST, CheckRuleIdWithEmptyInput)
     EXPECT_EQ(response, SCM::FAILED);
 }
  
-TEST_F(IDS_TEST, DecodeGroupWithValidInput)
-{
-    LogEvent logEvent;
-    logEvent.group = " ";
-    string decodeGroup()
-}
- 
 TEST_F(IDS_TEST, RegexMatchWithValidInput)
 {
     const string log = " ";

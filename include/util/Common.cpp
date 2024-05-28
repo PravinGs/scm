@@ -344,6 +344,25 @@ std::time_t Common::stringToTime(const string &datetime)
     return std::mktime(&tm);
 }
 
+std::time_t Common::parseDateTime(const std::string &datetime)
+{
+    // Structure to hold the parsed time components
+    std::tm tm = {};
+    // Create a stringstream from the input string
+    std::istringstream ss(datetime);
+    // Read the datetime components into the tm structure
+    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
+    // Check if parsing succeeded
+    if (ss.fail())
+    {
+        throw std::invalid_argument("Failed to parse datetime string");
+    }
+    // Convert tm structure to std::time_t
+    std::time_t time = std::mktime(&tm);
+    // Adjust for UTC (mktime assumes local time)
+    return time - timezone;
+}
+
 void Common::printNextExecutionTime(std::tm next_time_info)
 {
     char buffer[80];
