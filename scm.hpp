@@ -23,7 +23,44 @@
 
 
 // #include "test/integration_test/log_test.hpp"
-#include "test/integration_test/monitor_test.hpp"
+// #include "test/integration_test/monitor_test.hpp"
 // #include "integration_test/patch_test.hpp"
 
 // #include "mqtt/MqttController.hpp"
+
+#include "log_collector/LogServiceImpl.hpp"
+
+static void read_gz_file(const std::string& gzFilePath)
+{
+    gzFile file = gzopen(gzFilePath.c_str(), "rb");
+    if (!file)
+    {
+        std::cerr << "Cannot open gzip file: " << gzFilePath << std::endl;
+        return;
+    }
+ 
+    char buffer[8192];
+    int bytesRead;
+ 
+    while ((bytesRead = gzread(file, buffer, sizeof(buffer) - 1)) > 0)
+    {
+        buffer[bytesRead] = '\0'; // Null-terminate the buffer
+        std::cout << buffer;
+    }
+ 
+    if (bytesRead < 0)
+    {
+        int err;
+        const char *errorString = gzerror(file, &err);
+        if (err == Z_ERRNO)
+        {
+            perror("Error reading file");
+        }
+        else
+        {
+            std::cerr << "Error reading gzip file: " << errorString << std::endl;
+        }
+    }
+ 
+    gzclose(file);
+}

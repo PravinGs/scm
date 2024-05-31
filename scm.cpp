@@ -1,6 +1,7 @@
 #include "scm.hpp"
 #include "util/constants.hpp"
-
+#include "util/ConfigService.hpp"
+#include "util/entity_parser.hpp"
 // void testMqtt()
 // {
 
@@ -17,8 +18,8 @@
 //         return;
 //     }
 //     Json::Value root;
-//     root["FromDate"] = "2024-05-21T11:52:01Z"; //May 21 11:52:01
-//     root["EndDate"] = "2024-05-20T23:59:59Z";
+//     root["FromDate"] = "2024-05-29T19:33:40Z"; //May 29 19:33:40
+//     root["EndDate"] = "2024-05-29T17:43:19Z"; //May 29 17:43:19
 //     root["Id"] = "123e4567-e89b-12d3-a456-426614174000";
 //     root["SourceId"] = "source-456";
 //     root["TargetId"] = "target-123";
@@ -53,10 +54,45 @@
 //     closelog();
 // }
 
-int main(int argc, char **argv)
+// int main(int argc, char **argv)
+// {
+//     // std::cout << "build completed\n";
+//     Common::parseArguments(argc, argv);
+//     testing::InitGoogleTest(&argc, argv);
+//     return RUN_ALL_TESTS();
+// }
+
+int main(int argc, char** argv)
 {
-    // std::cout << "build completed\n";
     Common::parseArguments(argc, argv);
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+    ConfigService config;
+    config_table_type config_table;
+    int response = config.readIniConfigFile("/home/champ/scm/config/schedule.config", config_table);
+    if (response != SCM::SUCCESS)
+    {
+        return -1;
+    }
+    std::string zipFilePath = "/var/log/syslog.2.gz";
+    // std::string fileNameInZip = "syslog.2";
+
+    // read_gz_file(zipFilePath);
+
+    LogServiceImpl logCheck;
+    
+    entity_parser parser;
+    LogEntity entity = parser.getLogEntity(config_table, "syslog");
+    entity.last_read_time = Common::stringToTime("2024-05-29 11:40:00"); 
+    vector<string> logs;
+    std::time_t end_time = Common::stringToTime("2024-05-29 11:50:00");
+    int counter = 0;
+    logCheck.readSysLogFile(entity, logs, end_time, counter);
+    std::cout<< logs.size() << std::endl;
+    if (logs.size() > 0)
+    {
+        for (size_t i = 0; i < logs.size(); i++)
+        {
+            std::cout << logs[i] << '\n';
+        }
+    }
+    return 0;
 }

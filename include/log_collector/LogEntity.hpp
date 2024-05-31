@@ -10,6 +10,8 @@ struct LogEntity
     int count;
     char remote = 'n'; 
     bool is_empty;     
+    bool start_filter;
+    bool end_filter;
     char delimeter = ',';
     string format; 
     string name;   
@@ -22,7 +24,7 @@ struct LogEntity
     std::time_t last_read_time;
     string current_read_time;
     conn_entity connection;
-    LogEntity() : count(0), is_empty(true), last_read_time(std::time(nullptr)) {}
+    LogEntity() : count(0), is_empty(true), start_filter(true), end_filter(true), last_read_time(std::time(nullptr)) {}
 };
 
 typedef struct standardLogAttrs standardLogAttrs;

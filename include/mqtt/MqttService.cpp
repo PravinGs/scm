@@ -114,6 +114,8 @@ void MqttClient::MqttCallback::handleLog(mqtt::const_message_ptr msg)
         }
         if (result == SCM::SUCCESS)
         {
+            //if logs size should 100
+            
             json = parser.logToJSON(logs, entity.name);
             sendResponse(parser.responseTypeToString(request.responseType), json, request.sourceId);
         }

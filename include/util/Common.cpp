@@ -251,22 +251,17 @@ int Common::convertSysLogToUtcFormat(const string &sys_time, string &utc_time)
     return SCM::SUCCESS;
 }
 
-std::string Common::convertDpkgTimeToUtcFormat(const std::string &local_time_str)
-{
-    // Parse the given local time string
-    std::tm tm = {};
-    std::istringstream ss(local_time_str);
-    ss >> std::get_time(&tm, "%Y-%m-%d %H:%M:%S");
+std::string Common::convertDpkgTimeToUtcFormat(const std::string& local_time_str) {
+// Regular expression to match the local time format
+    std::string utc_time_str = local_time_str;
+    
+    // Replace space with 'T'
+    utc_time_str[10] = 'T';
 
-    // Convert local time to UTC time
-    std::time_t local_time = std::mktime(&tm);
-    std::tm *utc_tm = std::gmtime(&local_time);
-
-    // Format UTC time in the desired format
-    std::ostringstream oss;
-    oss << std::put_time(utc_tm, "%Y-%m-%dT%H:%M:%S") << ".3785938+00:00";
-
-    return oss.str();
+    // Append ".3785938+00:00" to the end of the string
+    utc_time_str += ".3785938+00:00";
+    
+    return utc_time_str;
 }
 
 void Common::writeLog(const string &log)
