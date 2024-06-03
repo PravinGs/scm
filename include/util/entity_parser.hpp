@@ -8,7 +8,6 @@
 #include "rest/RestEntity.hpp"
 #include "mqtt/MqttEntity.hpp"
 #include "patch/PatchEntity.hpp"
-#include "util/ConfigService.hpp"
 class entity_parser
 {
 public:
@@ -30,7 +29,7 @@ public:
         string json_attributes = Common::trim(config_table[name]["json_attributes"]);
         if (!json_attributes.empty())
         {
-            entity.json_attributes = configService.toVector(json_attributes, ',');
+            entity.json_attributes = Common::toVector(json_attributes, ',');
         }
         else
         {
@@ -40,7 +39,7 @@ public:
         string log_levels = Common::trim(config_table[name]["log_levels"]);
         if (!log_levels.empty())
         {
-            entity.log_levels = configService.toVector(log_levels, ',');
+            entity.log_levels = Common::toVector(log_levels, ',');
         }
         else
         {
@@ -146,7 +145,7 @@ public:
         MqttEntity entity;
         entity.client_id = config_table["mqtt"]["client_id"];
         entity.conn_string = config_table["mqtt"]["address"];
-        entity.topics = configService.toVector(config_table["mqtt"]["topics"], ',');
+        entity.topics = Common::toVector(config_table["mqtt"]["topics"], ',');
         entity.ca_cert_path = config_table["mqtt"]["ca_cert_path"];
         entity.client_cert_path = config_table["mqtt"]["client_cert_path"];
         try
@@ -176,8 +175,6 @@ public:
         return entity;
     }
 
-private:
-    ConfigService configService;
 };
 
 #endif // !ENTITY_PARSER_HPP

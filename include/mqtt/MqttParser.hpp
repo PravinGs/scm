@@ -123,6 +123,7 @@ public:
         json["AppName"] = name;
         json["Source"] = os::host_name;
         json["LogObjects"] = Json::Value(Json::arrayValue);
+         json["TimeGenerated"] = os::getCurrentTime();
         for (auto log : logs)
         {
             Json::Value jsonLog;
@@ -149,6 +150,7 @@ public:
         json["AppName"] = "system_resources";
         json["Source"] = os::host_name;
         json["ProcessObjects"] = Json::Value(Json::arrayValue);
+        json["TimeGenerated"] = os::getCurrentTime();
         for (auto log : logs)
         {
             Json::Value json_log;
@@ -208,9 +210,8 @@ public:
         request.targetId = root["TargetId"].asString();
         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
         request.responseType = responseTypeToInt(root["ResponseType"].asString());
-        request.logType = root["logType"].asString();
-        // request.log_level = root["log_level"].asInt();
-
+        request.logType = root["LogType"].asString();
+        request.logLevels = Common::toVector(root["LogLevels"].asString(), ',');
         return request;
     }
 
@@ -233,9 +234,8 @@ public:
         request.sourceId = root["SourceId"].asString();
         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
         request.responseType = responseTypeToInt(root["ResponseType"].asString());
-
-        request.process_name = root["process_name"].asString();
-        request.is_SystemProperties_required = root["system_properties"].asInt();
+        request.process_names = Common::toVector(root["ProcessNames"].asString(),',');
+        request.is_SystemProperties_required = root["SystemProperties"].asInt();
         return request;
     }
 

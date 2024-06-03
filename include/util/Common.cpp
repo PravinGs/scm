@@ -251,16 +251,17 @@ int Common::convertSysLogToUtcFormat(const string &sys_time, string &utc_time)
     return SCM::SUCCESS;
 }
 
-std::string Common::convertDpkgTimeToUtcFormat(const std::string& local_time_str) {
-// Regular expression to match the local time format
+std::string Common::convertDpkgTimeToUtcFormat(const std::string &local_time_str)
+{
+    // Regular expression to match the local time format
     std::string utc_time_str = local_time_str;
-    
+
     // Replace space with 'T'
     utc_time_str[10] = 'T';
 
     // Append ".3785938+00:00" to the end of the string
     utc_time_str += ".3785938+00:00";
-    
+
     return utc_time_str;
 }
 
@@ -338,24 +339,32 @@ std::time_t Common::stringToTime(const string &datetime)
     ss >> std::get_time(&tm, STANDARD_TIME_FORMAT);
     return std::mktime(&tm);
 }
-
-std::time_t Common::parseDateTime(const std::string &datetime)
+std::time_t Common::utcStringToTime(const string &str)
 {
-    // Structure to hold the parsed time components
-    std::tm tm = {};
-    // Create a stringstream from the input string
-    std::istringstream ss(datetime);
-    // Read the datetime components into the tm structure
-    ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
-    // Check if parsing succeeded
-    if (ss.fail())
-    {
-        throw std::invalid_argument("Failed to parse datetime string");
-    }
-    // Convert tm structure to std::time_t
-    std::time_t time = std::mktime(&tm);
-    // Adjust for UTC (mktime assumes local time)
-    return time - timezone;
+    struct tm timeinfo;
+    std::istringstream ss(str);
+
+    // Extract date and time components
+    ss >> timeinfo.tm_year;
+    timeinfo.tm_year -= 1900; // Adjust for tm_year offset
+    ss.ignore(1);             // Skip '-'
+    ss >> timeinfo.tm_mon;
+    timeinfo.tm_mon -= 1; // Adjust for tm_mon offset
+    ss.ignore(1);         // Skip '-'
+    ss >> timeinfo.tm_mday;
+    ss.ignore(1); // Skip 'T'
+
+    ss >> timeinfo.tm_hour;
+    ss.ignore(1); // Skip ':'
+    ss >> timeinfo.tm_min;
+    ss.ignore(1); // Skip ':'
+    ss >> timeinfo.tm_sec;
+
+    // Set remaining timeinfo fields
+    timeinfo.tm_isdst = 0; // Daylight Saving Time not specified
+    timeinfo.tm_sec = 0;
+
+    return mktime(&timeinfo);
 }
 
 void Common::printNextExecutionTime(std::tm next_time_info)
@@ -402,5 +411,23 @@ void Common::parseArguments(int argc, char *argv[])
     {
         console_log_enabled = true;
     }
+}
+
+vector<string> Common::toVector(const string &line, const char sep)
+{
+    vector<string> names;
+    if (line.find(sep) == string::npos)
+    {
+        DEBUG("Seperator not found in string: ", std::to_string(sep));
+        names.push_back(Common::trim(line));
+        return names;
+    }
+    std::stringstream iss(line);
+    string name;
+    while (std::getline(iss, name, sep))
+    {
+        names.push_back(Common::trim(name));
+    }
+    return names;
 }
 // Common.cpp

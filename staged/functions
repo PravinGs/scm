@@ -1,0 +1,81 @@
+int readSysLogFile(LogEntity &entity, vector<string> &logs)
+    {
+        if (entity.end_time > 1)
+        {
+            int counter = 0;
+            return readSysLogFile(entity, logs, counter);
+        }
+        string standard_time_format_string, line;
+        fstream file(entity.read_path, std::ios::in);
+        if (!file.is_open())
+        {
+            LOG_ERROR(SCM::FILE_ERROR + entity.read_path);
+            return SCM::FAILED;
+        }
+        DEBUG("reading regular file " + entity.read_path);
+        while (std::getline(file, line))
+        {
+            // Add it to temproary location
+            if (line.empty())
+            {
+                continue;
+            }
+            Common::convertToUtc(line.substr(0, 15), standard_time_format_string);        /* This func convert to standard time format */
+            std::time_t current_time = Common::stringToTime(standard_time_format_string); /* Convert string time to time_t format for comparision between time_t objects */
+            if (current_time < entity.last_read_time)
+            {
+                continue;
+            }
+            // if (current_time > entity.end_time)
+            // {
+            //     break;
+            // }
+            string log, token;
+
+            bool is_required = true;
+            int index = 0;
+            log += Common::convertDpkgTimeToUtcFormat(standard_time_format_string);
+            std::stringstream stream(line.substr(16));
+            while (std::getline(stream, token, entity.delimeter) && index < 3)
+            {
+                if (index == 2)
+                {
+                    string message = token;
+                    while (std::getline(stream, token, entity.delimeter))
+                    {
+                        message += entity.delimeter + token;
+                    }
+                    log += "|" + message;
+                    is_required = parseLogCategory(log, entity.log_levels);
+                    index = 4;
+                    continue;
+                }
+                log += "|" + token;
+                index++;
+            }
+            if (is_required)
+            {
+                logs.push_back(log);
+                entity.count += 1;
+            }
+            std::time_t current_reading_time = Common::stringToTime(entity.current_read_time);
+            if (current_time > current_reading_time)
+            {
+                entity.current_read_time = standard_time_format_string;
+            }
+            if (current_time == entity.last_read_time)
+            {
+                entity.is_empty = false;
+            }
+        }
+        file.close();
+
+        // if (both start and endtime should be found )
+        if (entity.is_empty && entity.read_path.find_last_of('1') != string::npos) // read path should not endswoth .1
+        {
+            entity.read_path += ".1";
+            readSysLogFile(entity, logs);
+        } // segmentation fault.
+
+        return SCM::SUCCESS;
+    }

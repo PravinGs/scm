@@ -113,23 +113,7 @@ public:
         }
         return result;
     }
-    vector<string> toVector(const string &columns, const char sep)
-    {
-        vector<string> names;
-        if (columns.find(sep) == string::npos)
-        {
-            DEBUG("Seperator not found in string: ", std::to_string(sep));
-            names.push_back(Common::trim(columns));
-            return names;
-        }
-        std::stringstream iss(columns);
-        string name;
-        while (std::getline(iss, name, sep))
-        {
-            names.push_back(Common::trim(name));
-        }
-        return names;
-    }
+    
 
 public: // private
     bool validateIniFormat(string &line)

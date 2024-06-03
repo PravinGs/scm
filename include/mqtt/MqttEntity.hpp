@@ -126,19 +126,15 @@ struct PatchRequest : BaseRequest
 struct LogRequest : BaseRequest
 {
     std::string logType;
-    int logLevel;
     std::string startDate;
     std::string endDate;
- 
-    LogRequest() : logLevel(0)
-    {
-    }
+    vector<string> logLevels;
 };
  
 struct ProcessRequest : public BaseRequest
 {
     int process_id;
-    std::string process_name;
+    vector<string> process_names;
     int is_SystemProperties_required;
     double ram_memory;
     double disk_memory;

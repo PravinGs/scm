@@ -62,8 +62,7 @@ public:
 
 	static std::time_t stringToTime(const string &datetime);
 
-	static std::time_t parseDateTime(const std::string &datetime);
-
+	static std::time_t utcStringToTime(const string& timeString);
 
 	static void printNextExecutionTime(std::tm next_time_info);
 
@@ -73,6 +72,8 @@ public:
 
 	static void parseArguments(int argc, char *argv[]);
 	static int convertToUtc(const string &sys_time, string &utc_time);
+
+	static vector<string> toVector(const string& line, const char sep);
 
 
 	~Common()

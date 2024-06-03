@@ -24,10 +24,13 @@ void MqttClient::MqttCallback::sendResponse(const std::string &res_type, const s
     }
     else if (res_type == "RestApiResponse")
     {
-        RestResponse response;
+        RestResponse response = RestService::http_post(topic, data);
+        DEBUG("Rest Api status: ", std::to_string(response.http_code));
         if (response.http_code == SCM::Rest::POST_SUCCESS)
         {
-            DEBUG("Syslog data sent to rest api");
+            DEBUG("Data sent to rest api");
+        }else {
+            LOG_ERROR("Failed to send to rest API");
         }
     }
 }
@@ -72,12 +75,27 @@ void MqttClient::MqttCallback::handleLog(mqtt::const_message_ptr msg)
 
         LogEntity entity = e_parser.getLogEntity(configTable, request.logType); /*Create entity for log collection */
         entity.name = request.logType;
+
         if (request.logType == "syslog")
         {
             entity.read_path = SCM::Default::SYSLOG_READ_PATH;
             if (!request.startDate.empty())
             {
-                entity.last_read_time = Common::parseDateTime(request.startDate); // Todo This check have not added there
+                entity.last_read_time = Common::utcStringToTime(request.startDate); // Todo This check have not added there
+            }
+            
+            if (!request.endDate.empty())
+            {
+                entity.end_time = Common::utcStringToTime(request.endDate); // Todo This check have not added there
+            }
+            else
+            {
+                entity.end_filter = true;
+            }
+
+            if (!request.logLevels.empty())
+            {
+                entity.log_levels = request.logLevels;
             }
             result = log->getSysLog(entity, logs);
         }
@@ -86,7 +104,12 @@ void MqttClient::MqttCallback::handleLog(mqtt::const_message_ptr msg)
             entity.read_path = SCM::Default::AUTHLOG_READ_PATH;
             if (!request.startDate.empty())
             {
-                entity.last_read_time = Common::parseDateTime(request.startDate); // Todo This check have not added there
+                entity.last_read_time = Common::utcStringToTime(request.startDate);
+            }
+
+            if (!request.endDate.empty())
+            {
+                entity.end_time = Common::utcStringToTime(request.endDate);
             }
             result = log->getSysLog(entity, logs);
         }
@@ -95,10 +118,10 @@ void MqttClient::MqttCallback::handleLog(mqtt::const_message_ptr msg)
             entity.read_path = SCM::Default::DPKGLOG_READ_PATH;
             if (!request.startDate.empty())
             {
-                entity.last_read_time = Common::parseDateTime(request.startDate); // Todo This check have not added there
+                entity.last_read_time = Common::utcStringToTime(request.startDate); // Todo This check have not added there
             }
             result = log->getSysLog(entity, logs);
-            for (const std::string& log: logs)
+            for (const std::string &log : logs)
             {
                 std::cout << log << '\n';
             }
@@ -114,10 +137,19 @@ void MqttClient::MqttCallback::handleLog(mqtt::const_message_ptr msg)
         }
         if (result == SCM::SUCCESS)
         {
-            //if logs size should 100
-            
-            json = parser.logToJSON(logs, entity.name);
-            sendResponse(parser.responseTypeToString(request.responseType), json, request.sourceId);
+            const int batch_size = 100;
+            if (logs.size() == 0)
+            {
+                json = parser.logToJSON(logs, entity.name);
+                sendResponse(parser.responseTypeToString(request.responseType), json, request.sourceId); return;
+            }
+            for (size_t i = 0; i < logs.size(); i += batch_size)
+            {
+                size_t end = std::min(i + batch_size, logs.size());
+                std::vector<std::string> batch(logs.begin() + i, logs.begin() + end);
+                json = parser.logToJSON(batch, entity.name);
+                sendResponse(parser.responseTypeToString(request.responseType), json, request.sourceId);
+            }
         }
     }
     catch (const std::exception &e)
@@ -134,7 +166,13 @@ void MqttClient::MqttCallback::handleProcess(mqtt::const_message_ptr msg)
 
     ProcessEntity entity = e_parser.getProcessEntity(client->config_table);
 
-    int result = monitor.getAppResourceDetails(entity, logs);
+    int result = monitor.getAppResourceDetails(entity, logs); 
+
+    // while ()
+    // {
+       
+    // }
+    
 
     json_string = parser.ProcessToJSON(logs);
 

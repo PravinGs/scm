@@ -26,7 +26,6 @@ public:
     static string createJSONFile(const string& type);
     static string sign(const string& file, const string& sign_key);
     static bool verifySignature(const string& file, const string& sign_key, const string& signed_data);
-    static string getCurrentTimeWithNoSpace();
     static string getCurrentTime();
     static bool validatePath(const string& file_path);
 

@@ -34,7 +34,7 @@ int os::compressFile(const string &log_file)
 	z_log = gzopen(zip_file.c_str(), "w");
 	if (!z_log)
 	{
-		LOG_ERROR(SCM::FCREATION_FAILED , zip_file);
+		LOG_ERROR(SCM::FCREATION_FAILED, zip_file);
 		file.close();
 		return SCM::FAILED;
 	}
@@ -328,19 +328,16 @@ std::string os::getCurrentTime()
 	time(&now);
 
 	struct tm *timeinfo = gmtime(&now); // Get UTC time
+	timeinfo->tm_hour += 5;
+	timeinfo->tm_min += 30;
 
-	// Format time as string
-	oss << std::put_time(timeinfo, "%Y-%m-%dT%H:%M:%S.") << std::setfill('0') << std::setw(7) << (now % 10000000) << "+00:00"; // Append microseconds and timezone offset
+	// Format time with two-digit seconds and 'Z' for UTC (discard microseconds)
+	oss << std::put_time(timeinfo, "%Y-%m-%dT%H:%M:")
+		<< std::setfill('0') << std::setw(2) << (timeinfo->tm_sec % 100) << 'Z';
 
 	return oss.str();
 }
 
-string os::getCurrentTimeWithNoSpace()
-{
-	string time = os::getCurrentTime();
-	auto mid = time.find_first_of(' ');
-	return time.substr(0, mid) + "_" + time.substr(mid + 1);
-}
 
 string os::createJSONFile(const string &type)
 {
@@ -366,7 +363,7 @@ string os::createJSONFile(const string &type)
 	{
 		return "";
 	}
-	file_path += SCM::Config::SEP + os::getCurrentTimeWithNoSpace() + ".json";
+	file_path += SCM::Config::SEP + os::getCurrentTime() + ".json";
 	std::ofstream file(file_path);
 	if (!file)
 	{
@@ -390,14 +387,17 @@ bool os::validatePath(const string &file_path)
 
 string os::readJSONFile(const string &json_file_path)
 {
-	if (!isFileExist(json_file_path)) { return "" ;}
+	if (!isFileExist(json_file_path))
+	{
+		return "";
+	}
 	std::ifstream jsonFile(json_file_path);
 	if (!jsonFile.is_open())
 	{
 		LOG_ERROR(SCM::FILE_ERROR, json_file_path);
 		return "";
 	}
-	Json::Value root; 
+	Json::Value root;
 	Json::CharReaderBuilder builder;
 	std::string errs;
 	if (!parseFromStream(builder, jsonFile, &root, &errs))
@@ -411,16 +411,16 @@ string os::readJSONFile(const string &json_file_path)
 
 std::uintmax_t os::getFileSize(const string &file_name)
 {
-    std::uintmax_t size;
-    try
-    {
-        size = std::filesystem::file_size(file_name);
-    }
-    catch (std::exception &ex)
-    {
-        DEBUG(ex.what());
-        std::cerr << ex.what() << '\n';
-    }
+	std::uintmax_t size;
+	try
+	{
+		size = std::filesystem::file_size(file_name);
+	}
+	catch (std::exception &ex)
+	{
+		DEBUG(ex.what());
+		std::cerr << ex.what() << '\n';
+	}
 
-    return size;
+	return size;
 }

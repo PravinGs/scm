@@ -48,8 +48,8 @@ public:
 
     int getSysLog(LogEntity &entity, vector<string> &logs)
     {
-        string json_string;
-        if (entity.last_read_time == std::numeric_limits<time_t>::min() && !getPreviousLogReadTime(entity))
+        // string json_string;
+        if (entity.last_read_time == 1 && !getPreviousLogReadTime(entity))
         {   
             return SCM::FAILED;
         }   
@@ -59,6 +59,7 @@ public:
         }
         DEBUG("reading " + entity.name + " log file.");
         int result = service->getSysLog(entity, logs);
+        LOG("Collected logs size : " + std::to_string(logs.size()));
         if (result == SCM::SUCCESS && 
                 Common::updateLogWrittenTime(entity.name, entity.current_read_time) == SCM::SUCCESS && 
                     !logs.empty())
@@ -78,6 +79,7 @@ public:
         }
         return result;
     }
+
 
     int getAppLog() { return SCM::SUCCESS; }
 
@@ -138,6 +140,11 @@ public:
 
     bool getPreviousLogReadTime(LogEntity &entity)
     {
+        if (entity.last_read_time > 1)
+        {
+            DEBUG("last read configured, skipping this function");
+            return true;
+        }
         string file_path = os::getPathOrBackupFilePath(entity.read_path);
         if (file_path.size() == 0)
         {
@@ -206,7 +213,7 @@ public:
     int createSysLogAsyncTasks(LogEntity &entity, vector<string> &logs)
     {
         int result;
-        vector<string> syslog_files = configService.toVector(entity.read_path, ',');
+        vector<string> syslog_files = Common::toVector(entity.read_path, ',');
         for (const string &file : syslog_files)
         {
             string app_name;
