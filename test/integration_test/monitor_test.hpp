@@ -7,7 +7,7 @@
 struct MONITOR_INTEGRATION_TEST : public testing::Test
 {
     ConfigService configService;
-    entity_parser entityParser;
+    EntityParser entityParser;
     MonitorServiceImpl monitorService;
     MonitorRepository monitorRepository;
     void SetUp() { }

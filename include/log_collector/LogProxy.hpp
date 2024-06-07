@@ -5,7 +5,7 @@
 #include "util/ConfigService.hpp"
 #include "LogServiceImpl.hpp"
 #include "LogRepository.hpp"
-#include "util/entity_parser.hpp"
+#include "util/EntityParser.hpp"
 #include "rest/RestService.hpp"
 
 class LogProxy : public LogService
@@ -13,7 +13,7 @@ class LogProxy : public LogService
 public:
     LogProxy(config_table_type &config_table) : config_table(config_table), thread_handler(true), service(std::make_unique<LogServiceImpl>())
     {
-        r_entity = parser.getRestEntity(config_table);
+        r_entity = entity_parser.getRestEntity(config_table);
     }
 
     ~LogProxy()
@@ -24,7 +24,7 @@ public:
     int getSysLog()
     {
         int result = SCM::SUCCESS;
-        LogEntity entity = parser.getLogEntity(config_table, "syslog");
+        LogEntity entity = entity_parser.getLogEntity(config_table, "syslog");
         std::vector<std::string> logs;
 
         if (entity.time_pattern.empty())
@@ -257,7 +257,7 @@ private:
     bool thread_handler;
     std::unique_ptr<LogService> service;
     ConfigService configService;
-    entity_parser parser;
+    EntityParser entity_parser;
     RestEntity r_entity;
     LogRepository db;
     // vector<std::future<int>> async_syslog_tasks;

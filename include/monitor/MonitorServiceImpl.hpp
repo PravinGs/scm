@@ -17,6 +17,33 @@ public:
         // }
     }
 
+    int getAppResourceDetails(ProcessEntity &entity, vector<ProcessData> &logs, vector<string> &processNames)
+    {
+
+        vector<ProcessData> filter_process_name;
+        int result = getAppResourceDetails(entity, logs);
+
+        if (processNames.empty())
+        {
+            return result;
+        }
+
+        for (string &name : processNames)
+        {
+            for (auto &log : logs)
+            {
+                if (Common::toLowerCase(log.process_name).find(Common::toLowerCase(name)) != string::npos)
+                {
+                    std::cout << "Requested process name's details: " << result;
+                    filter_process_name.push_back(log);
+                }
+            }
+        }
+        logs.clear();
+        logs = filter_process_name;
+        return result;
+    }
+
     int getAppResourceDetails(const ProcessEntity &entity, vector<ProcessData> &logs)
     {
         DEBUG("request for collecting process details");
@@ -214,7 +241,7 @@ public:
         std::fstream file(path, std::ios::in);
         if (!file.is_open())
         {
-            LOG_ERROR("process does not exist with this id : " + std::to_string(process_id));
+            // LOG_ERROR("process does not exist with this id : " + std::to_string(process_id));
             return disk_usage;
         }
         disk_usage = 0.0;

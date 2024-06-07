@@ -6,10 +6,13 @@
 
 struct ProcessEntity
 {
+    int status;
     string write_path;
     string time_pattern;
     string storage_type;
     conn_entity connection;
+    string err_msg;
+    ProcessEntity(): status(0) {}
 };
 
 struct ProcessData

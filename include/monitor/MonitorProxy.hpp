@@ -2,7 +2,7 @@
 #define MONITOR_PROXXY_HPP
 #pragma once
 #include "util/ConfigService.hpp"
-#include "util/entity_parser.hpp"
+#include "util/EntityParser.hpp"
 #include "monitor/MonitorServiceImpl.hpp"
 #include "rest/RestService.hpp"
 #include "MonitorRepository.hpp"
@@ -10,15 +10,23 @@
 class MonitorProxy : public MonitorService
 {
 public:
-    MonitorProxy(): thread_handler(true), service(std::make_unique<MonitorServiceImpl>()) 
+    MonitorProxy() : thread_handler(true), service(std::make_unique<MonitorServiceImpl>())
     {
-
     }
 
-    MonitorProxy(config_table_type &config_table) 
+    MonitorProxy(config_table_type &config_table)
     {
         MonitorProxy();
-        r_entity = parser.getRestEntity(config_table);
+        r_entity = entity_parser.getRestEntity(config_table);
+    }
+
+    int getAppResourceDetails(ProcessEntity &entity, vector<ProcessData> &logs, vector<string> &processNames)
+    {
+        if (!validateProcessEntity(entity))
+        {
+            return SCM::FAILED;
+        }
+        return service->getAppResourceDetails(entity, logs, processNames);
     }
 
     int getAppResourceDetails(const ProcessEntity &entity, vector<ProcessData> &logs)
@@ -32,8 +40,8 @@ public:
             json_string = ProcessToJSON(logs, properties, availed_properties);
             RestResponse response = RestService::http_post(r_entity.resources_post_url, json_string);
             DEBUG("Rest Api status: ", std::to_string(response.http_code));
-            
-            if (response.http_code != SCM::Rest::POST_SUCCESS && db.save(logs,properties,availed_properties) != SCM::SUCCESS)
+
+            if (response.http_code != SCM::Rest::POST_SUCCESS && db.save(logs, properties, availed_properties) != SCM::SUCCESS)
             {
                 DEBUG("Failed to store system process details locally");
             }
@@ -50,8 +58,8 @@ public:
     {
         int result = SCM::SUCCESS;
         vector<ProcessData> logs;
-        ProcessEntity entity = parser.getProcessEntity(config_table);
-        r_entity = parser.getRestEntity(config_table);
+        ProcessEntity entity = entity_parser.getProcessEntity(config_table);
+        r_entity = entity_parser.getRestEntity(config_table);
         if (!validateProcessEntity(entity))
         {
             return SCM::FAILED;
@@ -86,7 +94,7 @@ public:
         return service->getAvailedSystemProperties();
     }
 
-// private:
+    // private:
 
     int handleProcessDetails(const vector<ProcessData> &logs)
     {
@@ -95,11 +103,11 @@ public:
 
     bool validateProcessEntity(ProcessEntity &entity)
     {
-        if (!entity.write_path.empty() && !os::isDirExist(entity.write_path))
-        {
-            LOG_ERROR("ConfigServiceured write directory path not exist " + entity.write_path);
-            return false;
-        }
+        // if (!entity.write_path.empty() && !os::isDirExist(entity.write_path))
+        // {
+        //     LOG_ERROR("ConfigServiceured write directory path not exist " + entity.write_path);
+        //     return false;
+        // }
 
         if (entity.storage_type.empty())
         {
@@ -109,7 +117,7 @@ public:
     }
 
 private:
-    entity_parser parser;
+    EntityParser entity_parser;
     cron::cronexpr schedular;
     bool thread_handler;
     std::unique_ptr<MonitorService> service;

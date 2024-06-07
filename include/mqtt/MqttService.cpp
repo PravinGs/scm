@@ -29,7 +29,9 @@ void MqttClient::MqttCallback::sendResponse(const std::string &res_type, const s
         if (response.http_code == SCM::Rest::POST_SUCCESS)
         {
             DEBUG("Data sent to rest api");
-        }else {
+        }
+        else
+        {
             LOG_ERROR("Failed to send to rest API");
         }
     }
@@ -37,7 +39,7 @@ void MqttClient::MqttCallback::sendResponse(const std::string &res_type, const s
 
 void MqttClient::MqttCallback::onMessageReceived(const mqtt::const_message_ptr &msg)
 {
-    int act_type = parser.extractRequestype(msg->get_payload_str());
+    int act_type = mqtt_parser.extractRequestype(msg->get_payload_str());
 
     switch (static_cast<ActionType>(act_type))
     {
@@ -60,71 +62,60 @@ void MqttClient::MqttCallback::onMessageReceived(const mqtt::const_message_ptr &
 
 void MqttClient::MqttCallback::handleLog(mqtt::const_message_ptr msg)
 {
-    DEBUG("Handle Log");
     vector<std::string> logs;
-    string json = "";
     int result = SUCCESS;
+    int status = SCM::SUCCESS;
+    string error;
     try
     {
-        LogRequest request = parser.extractLogRequest(msg->get_payload_str()); /* Extract json string and converted to respective request*/
+        LogRequest request = mqtt_parser.extractLogRequest(msg->get_payload_str(), status, error); /* Extract json string and converted to respective request*/
 
+        // if(status != SCM::SUCCESS)
+        // {
+        //     sendErrorResponse(request, status, error);
+        // }
         if (!proxy->validateLogRequest(request))
         {
             return;
         }
 
-        LogEntity entity = e_parser.getLogEntity(configTable, request.logType); /*Create entity for log collection */
+        LogEntity entity = entity_parser.getLogEntity(configTable, request.logType); /*Create entity for log collection */
+
         entity.name = request.logType;
+
+        if (!request.startDate.empty())
+        {
+            entity.last_read_time = Common::utcStringToTime(request.startDate); // Todo This check have not added there
+        }
+
+        if (!request.endDate.empty())
+        {
+            entity.end_time = Common::utcStringToTime(request.endDate); // Todo This check have not added there
+        }
+        else
+        {
+            entity.end_filter = true;
+        }
+
+        if (!request.logLevels.empty())
+        {
+            entity.log_levels = request.logLevels;
+        }
 
         if (request.logType == "syslog")
         {
             entity.read_path = SCM::Default::SYSLOG_READ_PATH;
-            if (!request.startDate.empty())
-            {
-                entity.last_read_time = Common::utcStringToTime(request.startDate); // Todo This check have not added there
-            }
-            
-            if (!request.endDate.empty())
-            {
-                entity.end_time = Common::utcStringToTime(request.endDate); // Todo This check have not added there
-            }
-            else
-            {
-                entity.end_filter = true;
-            }
-
-            if (!request.logLevels.empty())
-            {
-                entity.log_levels = request.logLevels;
-            }
             result = log->getSysLog(entity, logs);
         }
         else if (request.logType == "auth")
         {
             entity.read_path = SCM::Default::AUTHLOG_READ_PATH;
-            if (!request.startDate.empty())
-            {
-                entity.last_read_time = Common::utcStringToTime(request.startDate);
-            }
-
-            if (!request.endDate.empty())
-            {
-                entity.end_time = Common::utcStringToTime(request.endDate);
-            }
             result = log->getSysLog(entity, logs);
         }
         else if (request.logType == "dpkg")
         {
             entity.read_path = SCM::Default::DPKGLOG_READ_PATH;
-            if (!request.startDate.empty())
-            {
-                entity.last_read_time = Common::utcStringToTime(request.startDate); // Todo This check have not added there
-            }
             result = log->getSysLog(entity, logs);
-            for (const std::string &log : logs)
-            {
-                std::cout << log << '\n';
-            }
         }
         else if (request.logType == "applog")
         {
@@ -140,15 +131,16 @@ void MqttClient::MqttCallback::handleLog(mqtt::const_message_ptr msg)
             const int batch_size = 100;
             if (logs.size() == 0)
             {
-                json = parser.logToJSON(logs, entity.name);
-                sendResponse(parser.responseTypeToString(request.responseType), json, request.sourceId); return;
+                string json = mqtt_parser.logToJSON(logs, entity.name);
+                sendResponse(mqtt_parser.responseTypeToString(request.responseType), json, request.sourceId);
+                return;
             }
             for (size_t i = 0; i < logs.size(); i += batch_size)
             {
                 size_t end = std::min(i + batch_size, logs.size());
                 std::vector<std::string> batch(logs.begin() + i, logs.begin() + end);
-                json = parser.logToJSON(batch, entity.name);
-                sendResponse(parser.responseTypeToString(request.responseType), json, request.sourceId);
+                string json = mqtt_parser.logToJSON(batch, entity.name);
+                sendResponse(mqtt_parser.responseTypeToString(request.responseType), json, request.sourceId);
             }
         }
     }
@@ -162,41 +154,48 @@ void MqttClient::MqttCallback::handleProcess(mqtt::const_message_ptr msg)
 {
     vector<ProcessData> logs;
     string json_string = "";
-    ProcessRequest request = parser.extractProcessRequest(msg->get_payload_str());
+    int status = SCM::SUCCESS;
+    string error;
+    ProcessRequest request = mqtt_parser.extractProcessRequest(msg->get_payload_str(), status, error);
 
-    ProcessEntity entity = e_parser.getProcessEntity(client->config_table);
+    ProcessEntity entity = entity_parser.getProcessEntity(client->config_table);
 
-    int result = monitor.getAppResourceDetails(entity, logs); 
+    int result = monitor.getAppResourceDetails(entity, logs, request.process_names);
 
-    // while ()
-    // {
-       
-    // }
-    
+    json_string = mqtt_parser.ProcessToJSON(logs);
 
-    json_string = parser.ProcessToJSON(logs);
-
-    sendResponse(parser.responseTypeToString(request.responseType), json_string, request.sourceId);
+    sendResponse(mqtt_parser.responseTypeToString(request.responseType), json_string, request.sourceId);
 }
 
 void MqttClient::MqttCallback::handlePatch(mqtt::const_message_ptr msg)
 {
     string json_string = "";
 
-    PatchRequest request = parser.extractPatchRequest(msg->get_payload_str());
+    PatchRequest request = mqtt_parser.extractPatchRequest(msg->get_payload_str());
 
-    PatchEntity entity = e_parser.getPatchEntity(client->config_table);
+    PatchEntity entity = entity_parser.getPatchEntity(client->config_table);
 
+    if (!request.url.empty())
+    {
+        entity.url = request.url;
+    }
+    if (!request.username.empty())
+    {
+        entity.username = request.username;
+    }
+    if (!request.password.empty())
+    {
+        entity.password = request.password;
+    }
     patch.start(entity);
-
-    sendResponse(parser.responseTypeToString(request.responseType), json_string, request.sourceId);
+    // sendResponse(mqtt_parser.responseTypeToString(request.responseType), json_string, request.sourceId);
 }
 
 void MqttClient::MqttCallback::handleTpm(mqtt::const_message_ptr msg)
 {
     string json_string = "";
     TPM2_RC result = TPM2_SUCCESS;
-    TpmRequest request = parser.extractTpmRequest(msg->get_payload_str());
+    TpmRequest request = mqtt_parser.extractTpmRequest(msg->get_payload_str());
     TpmConfig ConfigService;
     SealConfig s_ConfigService;
     PersistConfig p_ConfigService;
@@ -204,7 +203,7 @@ void MqttClient::MqttCallback::handleTpm(mqtt::const_message_ptr msg)
     switch (request.command)
     {
     case 0:
-        ConfigService = parser.getTpmConfig(request, msg->get_payload_str());
+        ConfigService = mqtt_parser.getTpmConfig(request, msg->get_payload_str());
         result = TPM2_SUCCESS /*tpm_service.clear_tpm(ConfigService.lockout_auth.c_str())*/;
         if (result == TPM2_SUCCESS)
         {
@@ -212,23 +211,23 @@ void MqttClient::MqttCallback::handleTpm(mqtt::const_message_ptr msg)
         }
         break;
     case 1:
-        s_ConfigService = parser.getSealConfig(request, msg->get_payload_str());
+        s_ConfigService = mqtt_parser.getSealConfig(request, msg->get_payload_str());
         break;
     case 2:
-        s_ConfigService = parser.getSealConfig(request, msg->get_payload_str());
+        s_ConfigService = mqtt_parser.getSealConfig(request, msg->get_payload_str());
         break;
     case 3:
-        p_ConfigService = parser.getTpmPersistContext(request, msg->get_payload_str());
+        p_ConfigService = mqtt_parser.getTpmPersistContext(request, msg->get_payload_str());
         break;
     case 4:
-        p_ConfigService = parser.getTpmPersistContext(request, msg->get_payload_str());
+        p_ConfigService = mqtt_parser.getTpmPersistContext(request, msg->get_payload_str());
         break;
     default:
         LOG_ERROR("Unexpected TpmCommand value: ", request.command);
         break;
     }
 
-    sendResponse(parser.responseTypeToString(request.responseType), json_string, request.sourceId);
+    sendResponse(mqtt_parser.responseTypeToString(request.responseType), json_string, request.sourceId);
 }
 
 void MqttClient::start()

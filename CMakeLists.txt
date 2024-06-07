@@ -96,7 +96,7 @@ target_link_libraries(SCM
     jsoncpp
     pcre2-8
     tss2-esys
-    tss2-tctildr
+    tss2-tcti-device
     tss2-rc
     sw-tpm
     paho-mqttpp3 

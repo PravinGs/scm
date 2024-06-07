@@ -8,7 +8,7 @@
 struct MQTT_INTEGRATION_TEST : public testing::Test
 {
     ConfigService configService;
-    entity_parser entityParser;
+    EntityParser entityParser;
     MqttService mqttService;
     void SetUp() { }
     void TearDown() { }

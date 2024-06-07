@@ -5,7 +5,7 @@
 #include "monitor/MonitorEntity.hpp"
 #include "MqttEntity.hpp"
 
-class mq
+class MqttParser
 {
 public:
     int extractRequestype(const std::string &json_string)
@@ -83,7 +83,6 @@ public:
 
     std::string tpmCommandToString(TpmCommand command)
     {
-
         switch (command)
         {
         case TpmCommand::TpmClear:
@@ -166,39 +165,18 @@ public:
         return json.toStyledString();
     }
 
-    // std::string patch_to_json(const vector<download_props> &logs)
-    // {
-    //     Json::Value json;
-    //     json["PatchObjects"] = Json::Value(Json::arrayValue);
-    //     for (auto log : logs)
-    //     {
-    //         Json::Value jsonLog;
-
-    //         download_props p_log = download_props(log);
-    //         jsonLog["Url"] = p_log.url;
-    //         jsonLog["Writepath"] = p_log.writePath;
-    //         jsonLog["RootDirectory"] = p_log.rootDir;
-    //         jsonLog["FileName"] = p_log.fileName;
-    //         jsonLog["DownloadPath"] = p_log.downloadPath;
-
-    //         json["PatchObjects"].append(jsonLog);
-    //     }
-    //     json["status"] = "success";
-    //     return json.toStyledString();
-    // }
-    LogRequest extractLogRequest(const string &json_string)
+    LogRequest extractLogRequest(const string &json_string, int& status, string& error)
     {
         LogRequest request;
         Json::Value root;
         Json::CharReaderBuilder builder;
         std::istringstream iss(json_string);
-        std::string errs;
 
-        Json::parseFromStream(builder, iss, &root, &errs);
+        Json::parseFromStream(builder, iss, &root, &error);
 
-        if (!errs.empty())
+        if (!error.empty())
         {
-            std::cerr << "Error: Failed to parse JSON: " << errs << "\n";
+            status = SCM::StatusCode::MQTT_JSON_REQUEST_PARSER_ERROR;
             return request;
         }
 
@@ -215,27 +193,33 @@ public:
         return request;
     }
 
-    ProcessRequest extractProcessRequest(const string &json_string)
+    ProcessRequest extractProcessRequest(const string &json_string, int& status, string& error)
     {
         ProcessRequest request;
         Json::Value root;
         Json::CharReaderBuilder builder;
         std::istringstream iss(json_string);
-        std::string errs;
+   
+        Json::parseFromStream(builder, iss, &root, &error);
 
-        Json::parseFromStream(builder, iss, &root, &errs);
-
-        if (!errs.empty())
+        if (!error.empty())
         {
-            std::cerr << "Error: Failed to parse JSON: " << errs << "\n";
+            status = SCM::StatusCode::MQTT_JSON_REQUEST_PARSER_ERROR;
             return request;
         }
         request.actionType = actionTypeToInt(root["ActionType"].asString());
+        std::cout << "request.actionType " <<request.actionType;
         request.sourceId = root["SourceId"].asString();
+        std::cout << "request.SourceId " <<request.sourceId;
         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
+        std::cout << "request.isAckRequired " <<request.isAckRequired;
         request.responseType = responseTypeToInt(root["ResponseType"].asString());
+        std::cout << "request.responseType " <<request.responseType;
         request.process_names = Common::toVector(root["ProcessNames"].asString(),',');
-        request.is_SystemProperties_required = root["SystemProperties"].asInt();
+        for(const string &name: request.process_names){
+        std::cout << "request.process_names " << name;
+        }
+        // request.is_SystemProperties_required = root["SystemProperties"].asInt();
         return request;
     }
 
@@ -364,6 +348,7 @@ public:
             dataSize);
         return ConfigService; // Return as TpmRequest
     }
+
 };
 
 #endif

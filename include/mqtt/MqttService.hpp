@@ -1,12 +1,12 @@
 #ifndef MQTT_SERVICE_HPP
 #define MQTT_SERVICE_HPP
 
-#include "util/entity_parser.hpp"
+#include "util/EntityParser.hpp"
 #include "log_collector/LogProxy.hpp"
 #include "rest/RestService.hpp"
 #include "monitor/MonitorProxy.hpp"
 #include "patch/PatchProxy.hpp"
-#include "tpm/tpm_service.hpp"
+#include "tpm/TpmService.hpp"
 #include "MqttParser.hpp"
 #include "MqttProxy.hpp"
 
@@ -41,13 +41,14 @@ public:
         MqttCallback(config_table_type& config_table): configTable(config_table)
         {
             log = std::make_unique<LogProxy>(config_table);
-            r_entity = e_parser.getRestEntity(config_table);
+            r_entity = entity_parser.getRestEntity(config_table);
         }
+        
         MqttCallback(MqttClient* client)
             : client(client)
         {
             log = std::make_unique<LogProxy>(client->config_table);
-            r_entity = e_parser.getRestEntity(client->config_table);
+            r_entity = entity_parser.getRestEntity(client->config_table);
         }
 
         void message_arrived(mqtt::const_message_ptr msg);
@@ -67,10 +68,10 @@ public:
         std::unique_ptr<LogProxy> log;
         MonitorProxy monitor;
         PatchProxy patch;
-        // tpm tpm_service;
+        TpmService tpm_service;
         RestEntity r_entity;
-        entity_parser e_parser;
-        mq parser;
+        EntityParser entity_parser;
+        MqttParser mqtt_parser;
     };
 
 private:

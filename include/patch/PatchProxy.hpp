@@ -4,7 +4,7 @@
 #pragma once
  
 #include "patch/PatchServiceImpl.hpp"
-#include "util/entity_parser.hpp"
+#include "util/EntityParser.hpp"
  
 class PatchProxy : public PatchService{
 public:
@@ -21,7 +21,7 @@ public:
 	void start(config_table_type& config_table) 
 	{
         int result = SCM::SUCCESS;
-		PatchEntity entity = parser.getPatchEntity(config_table);
+		PatchEntity entity = entity_parser.getPatchEntity(config_table);
         result = start(entity);
         while (result == SCM::Patch::SERVER_ERROR)
         {
@@ -126,7 +126,8 @@ public:
  
 private:
 	std::unique_ptr<PatchService> service = nullptr;
-	entity_parser parser;
+	
+    EntityParser entity_parser;
 };
  
 #endif //PatchProxy_HPP

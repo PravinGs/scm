@@ -7,7 +7,7 @@
 struct IDS_INTEGRATION_TEST : public testing::Test
 {
     ConfigService configService;
-    entity_parser entityParser;
+    EntityParser entityParser;
     IdsServiceImpl idsService;
     IdsRepository idsRepository;
     void SetUp() { }

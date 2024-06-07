@@ -7,7 +7,7 @@
 struct PATCH_INTEGRATION_TEST : public testing::Test
 {
     ConfigService configService;
-    entity_parser entityParser;
+    EntityParser entityParser;
     PatchServiceImpl patchService;
     void SetUp() { }
     void TearDown() { }

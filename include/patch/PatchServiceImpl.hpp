@@ -24,7 +24,7 @@ public:
                 count--;
             }
         }
-        if (curl != nullptr)
+        if (curl!=nullptr)
         {
             curl_easy_cleanup(curl);
         }
@@ -40,12 +40,18 @@ private:
     int download(PatchEntity& entity)
     {
         int return_val = SCM::SUCCESS;
-        int retry = entity.retry_time_out;
+        int retry = entity.retry_count;
         FILE* file = NULL;
         CURLcode res;
+
+        // Check and create if download path not exist.
+        if (!os::isFileExist(entity.download_path))
+        {
+            os::createFile(entity.download_path);
+        }
  
         file = fopen(entity.download_path.c_str(), "ab");
-        if (file == NULL)
+        if (!file)
         {
             LOG_ERROR(SCM::FILE_ERROR + entity.download_path);
             return SCM::FAILED;

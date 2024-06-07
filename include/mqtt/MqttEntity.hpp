@@ -22,13 +22,13 @@ enum class ActionType
     ProcessRequest = 2,
     TpmConfigServiceuration = 3
 };
- 
+
 enum class ResponseType
 {
     MqttResponse = 0,
     RestApiResponse = 1
 };
- 
+
 enum class LogPriority
 {
     None = 0,
@@ -37,7 +37,7 @@ enum class LogPriority
     StandardLevel = 3,
     Alarm = 4,
 };
- 
+
 enum class LogLevel
 {
     None = 0,
@@ -47,7 +47,7 @@ enum class LogLevel
     Error = 4,
     Critical = 5,
 };
- 
+
 enum class LogEnumCategory
 {
     Application = 0,
@@ -57,7 +57,7 @@ enum class LogEnumCategory
     Network = 4,
     Other = 5
 };
- 
+
 enum class TpmCommand
 {
     TpmClear = 0,
@@ -66,7 +66,7 @@ enum class TpmCommand
     NvStore = 3,
     NvRead = 4
 };
- 
+
 struct BaseResponse
 {
     std::string guid;
@@ -78,12 +78,12 @@ struct BaseResponse
     std::string row_version;
     BaseResponse() : is_deleted(true) {}
 };
- 
+
 struct LogResponse : BaseResponse
 {
     std::string time_generated;
-    std::string time_wriiten;   
-    std::string org_id;         
+    std::string time_wriiten;
+    std::string org_id;
     std::string app_name;
     std::string source;
     std::string message;
@@ -92,12 +92,12 @@ struct LogResponse : BaseResponse
     LogPriority priority;
     LogLevel level;
 };
- 
+
 struct MqttLogResponse
 {
     std::vector<LogResponse> logs;
 };
- 
+
 struct BaseRequest
 {
     std::string id;
@@ -106,12 +106,12 @@ struct BaseRequest
     int actionType;
     int isAckRequired;
     int responseType;
- 
+
     BaseRequest() : actionType(0), isAckRequired(0), responseType(-1) {}
     BaseRequest(const std::string &sourceId, int actionType, int isAckRequired, int responseType)
         : sourceId(sourceId), actionType(actionType), isAckRequired(isAckRequired), responseType(responseType) {}
 };
- 
+
 struct PatchRequest : BaseRequest
 {
     int distributionType;
@@ -120,9 +120,8 @@ struct PatchRequest : BaseRequest
     std::string username;
     std::string password;
     PatchRequest() : distributionType(0) {}
-
 };
- 
+
 struct LogRequest : BaseRequest
 {
     std::string logType;
@@ -130,7 +129,7 @@ struct LogRequest : BaseRequest
     std::string endDate;
     vector<string> logLevels;
 };
- 
+
 struct ProcessRequest : public BaseRequest
 {
     int process_id;
@@ -139,28 +138,28 @@ struct ProcessRequest : public BaseRequest
     double ram_memory;
     double disk_memory;
     double cpu_time;
- 
+
     ProcessRequest() : process_id(0), is_SystemProperties_required(0), ram_memory(0.0f), disk_memory(0.0f), cpu_time(0.0f)
     {
     }
 };
- 
+
 struct TpmRequest : BaseRequest
 {
     int command;
-    TpmRequest(){}
+    TpmRequest() {}
     TpmRequest(const std::string &sourceId, int actionType, int isAckRequired, int responseType, int command)
         : BaseRequest{sourceId, actionType, isAckRequired, responseType}, command(command) {}
 };
- 
+
 struct TpmConfig : TpmRequest
 {
     string lockout_auth;
-    TpmConfig(){}
+    TpmConfig() {}
     TpmConfig(const std::string &sourceId, int actionType, int isAckRequired, int responseType, int command, const std::string &lockout_auth)
         : TpmRequest{sourceId, actionType, isAckRequired, responseType, command}, lockout_auth(lockout_auth) {}
 };
- 
+
 struct SealConfig : TpmRequest
 {
     string ownerAuth;
@@ -169,25 +168,42 @@ struct SealConfig : TpmRequest
     string fileName;
     string objectName;
     SealConfig() {}
-    SealConfig(const std::string &sourceId, int actionType, int isAckRequired, int responseType, int command, const string &ownerAuth, const string &srkAuth, const string &dekAuth, const string &fileName, const string& objectName)
+    SealConfig(const std::string &sourceId, int actionType, int isAckRequired, int responseType, int command, const string &ownerAuth, const string &srkAuth, const string &dekAuth, const string &fileName, const string &objectName)
         : TpmRequest{sourceId, actionType, isAckRequired, responseType, command}, ownerAuth(ownerAuth), srkAuth(srkAuth), dekAuth(dekAuth), fileName(fileName), objectName(objectName) {}
 };
- 
+
 struct PersistConfig : TpmRequest
 {
     string indexName;
     string ownerPassword;
     string fileName;
-    int indexValue; 
-    string indexPassword; 
-    int dataSize; 
+    int indexValue;
+    string indexPassword;
+    int dataSize;
     PersistConfig() {}
     PersistConfig(const std::string &sourceId, int actionType, int isAckRequired, int responseType, int command, const string &indexName, const string &ownerPassword, const string &fileName, const int indexValue, const string &indexPassword, const int dataSize)
-        : TpmRequest{sourceId, actionType, isAckRequired, responseType, command}, indexName(indexName),ownerPassword(ownerPassword), fileName(fileName), indexValue(indexValue), indexPassword(indexPassword), dataSize(dataSize) {}
+        : TpmRequest{sourceId, actionType, isAckRequired, responseType, command}, indexName(indexName), ownerPassword(ownerPassword), fileName(fileName), indexValue(indexValue), indexPassword(indexPassword), dataSize(dataSize) {}
 };
- 
+
 struct TpmDataResponse
 {
+};
+
+template <typename T1, typename T2>
+struct MqttResponse
+{
+    int status;
+    string err_msg;
+    T1 request;
+    T2 response;
+};
+
+template<typename T>
+struct MqttAck
+{
+    int status;
+    string err_msg;
+    T request;
 };
 
 #endif

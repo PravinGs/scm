@@ -6,6 +6,7 @@
 class MqttProxy 
 {
 public:
+
     bool validateLogRequest(const LogRequest& logRequest)
     {
         if (logRequest.id.empty() || logRequest.actionType < 0 || logRequest.responseType < 0 || logRequest.sourceId.empty())

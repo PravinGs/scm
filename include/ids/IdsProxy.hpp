@@ -2,7 +2,7 @@
 #define IdsProxy_HPP
 #pragma once 
 #include "ids/IdsServiceImpl.hpp"
-#include "util/entity_parser.hpp"
+#include "util/EntityParser.hpp"
  
 class IdsProxy: public IdsService {
 public:
@@ -27,7 +27,7 @@ public:
 	}
 	int start(config_table_type& config_table) 
     {
-        AnalysisEntity entity = parser.getAnalysisEntity(config_table);
+        AnalysisEntity entity = entity_parser.getAnalysisEntity(config_table);
         return start(entity);
 	}
 private:
@@ -71,7 +71,7 @@ private:
         return true;
     }
 private:
-	entity_parser parser;
+	EntityParser entity_parser;
     std::unique_ptr<IdsService> service = nullptr;
 };
  

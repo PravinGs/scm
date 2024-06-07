@@ -9,7 +9,7 @@ struct LOG_TEST : public testing::Test
     const string config_file_path = "/home/champ/scm/ConfigService/schedule.ConfigService";
     std::unique_ptr<LogProxy> log;
     LogEntity g_entity;
-    entity_parser parser;
+    EntityParser parser;
     ConfigService configService;
     config_table_type table;
     

@@ -8,7 +8,7 @@
 #include "rest/RestEntity.hpp"
 #include "mqtt/MqttEntity.hpp"
 #include "patch/PatchEntity.hpp"
-class entity_parser
+class EntityParser
 {
 public:
     LogEntity getLogEntity(config_table_type &config_table, const string &name)

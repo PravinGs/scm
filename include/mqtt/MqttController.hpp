@@ -4,7 +4,7 @@
 #include "MqttService.hpp"
 #include "MqttProxy.hpp"
 #include "util/ConfigService.hpp"
-#include "util/entity_parser.hpp"
+#include "util/EntityParser.hpp"
 class MqttController
 {
 public:
@@ -21,7 +21,7 @@ public:
         {
             return;
         }
-        MqttEntity entity = parser.getMqttEntity(config_table);
+        MqttEntity entity = entity_parser.getMqttEntity(config_table);
         if (!proxy->validateMqttEntity(entity))
         {
             return;
@@ -37,7 +37,7 @@ private:
     std::unique_ptr<MqttService> service = nullptr;
     std::unique_ptr<MqttProxy> proxy;
     ConfigService config;
-    entity_parser parser;
+    EntityParser entity_parser;
     config_table_type config_table;
     bool is_valid_config;
     

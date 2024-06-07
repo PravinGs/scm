@@ -7,6 +7,7 @@ static string logToJSON(const vector<std::string> &logs, const string& app_name)
 
 struct LogEntity
 {
+    int status;
     int count;
     char remote = 'n'; 
     bool is_empty;     
@@ -25,7 +26,8 @@ struct LogEntity
     std::time_t end_time;
     string current_read_time;
     conn_entity connection;
-    LogEntity() : count(0), is_empty(true), start_filter(true), end_filter(true), last_read_time(0), end_time(0) {}
+    string err_msg;
+    LogEntity() : status(0),count(0), is_empty(true), start_filter(true), end_filter(true), last_read_time(0), end_time(0) {}
 };
 
 typedef struct standardLogAttrs standardLogAttrs;

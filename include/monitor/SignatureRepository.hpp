@@ -1,7 +1,6 @@
 #pragma once
 
 #include "util/Common.hpp"
-#include "util/entity_parser.hpp"
 
 #define DEFAULT_SIGNATURE_DATABASE_PATH "/etc/scl/ConfigService/tmp/signature.txt"
 

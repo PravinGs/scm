@@ -8,7 +8,7 @@
 struct LOG_INTEGRATION_TEST : public testing::Test
 {
     ConfigService configService;
-    entity_parser entityParser;
+    EntityParser entityParser;
     LogServiceImpl logService;
     LogRepository logRepository;
     void SetUp() { }

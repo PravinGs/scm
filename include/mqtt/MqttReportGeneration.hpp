@@ -1,0 +1,14 @@
+#ifndef MQTT_REPORT_GENERATION_HPP
+#define MQTT_REPORT_GENERATION_HPP
+
+class MQTT_REPORT_GENERATION
+{
+    
+};
+
+
+
+
+
+
+#endif

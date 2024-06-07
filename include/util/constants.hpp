@@ -23,6 +23,11 @@ namespace SCM
 {
 	static bool is_syslog_enabled = false;
 
+	namespace StatusCode
+	{
+		const int MQTT_JSON_REQUEST_PARSER_ERROR = -1;
+	}
+
 	namespace Default
 	{
 		const string SYSLOG_READ_PATH = "/var/log/syslog";
@@ -78,6 +83,16 @@ namespace SCM
 		const int PATCH_DEFAULT_RETRY_TIMEOUT = 10;
 		const int PATCH_DEFAULT_MAX_DOWNLOAD_SPEED = 10;
 		const int PATCH_DEFAULT_MIN_DOWNLOAD_SPEED = 1;
+	}
+
+	namespace Tpm 
+	{
+		const int TPM2_TEST_SUCCESS = 200;
+		const int TPM2_ABRMD_DEVICE_ACTIVE = 201;
+		const int TPM2_ABRMD_SIMULATOR_ACTIVE = 202;
+		const int TPM2_ABRMD_NOT_ACTIVE = 203;
+		const int TSS2_LIBRARY_NOT_EXIST = 204;
+		const int TPM2_DEVICE_NOT_EXIST = 205;
 	}
 
 	namespace Rest

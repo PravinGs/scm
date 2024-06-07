@@ -5,6 +5,7 @@
  
 struct PatchEntity
 {
+    int status;
     long size;
     int max_download_speed;
     int min_download_speed;
@@ -20,8 +21,9 @@ struct PatchEntity
     string username;
     string password;
     string url;
+    string err_msg;
     conn_entity connection;
  
-    PatchEntity() : size(0L), max_download_speed(0), min_download_speed(0), retry_time_out(0), retry_count(0), is_sftp(true), is_secure(true) {}
+    PatchEntity() : status(0), size(0L), max_download_speed(0), min_download_speed(0), retry_time_out(0), retry_count(0), is_sftp(true), is_secure(true) {}
 };
 #endif //PatchEntity_HPP
