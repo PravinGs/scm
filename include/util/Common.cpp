@@ -416,7 +416,7 @@ void Common::parseArguments(int argc, char *argv[])
 vector<string> Common::toVector(const string &line, const char sep)
 {
     vector<string> names;
-    if (line.find(sep) == string::npos)
+    if (line.find(sep) == string::npos && line.empty())
     {
         DEBUG("Seperator not found in string: ", std::to_string(sep));
         names.push_back(Common::trim(line));
@@ -430,4 +430,26 @@ vector<string> Common::toVector(const string &line, const char sep)
     }
     return names;
 }
-// Common.cpp
+
+string Common::getErrorString(const int errorCode)
+{
+    switch (errorCode)
+    {
+    case SUCCESS:
+        return "SUCCESS";
+    case LOG_REQUEST_INVALID_ACTION_TYPE:
+        return "LOG_REQUEST_INVALID_ACTION_TYPE";
+    case LOG_REQUEST_INVALID_RESPONSE_TYPE:
+        return "LOG_REQUEST_INVALID_RESPONSE_TYPE";
+    case LOG_REQUEST_EMPTY_OR_NULL_SOURCE_ID:
+        return "LOG_REQUEST_EMPTY_OR_NULL_SOURCE_ID";
+    case LOG_REQUEST_EMPTY_OR_NULL_TARGET_ID:
+        return "LOG_REQUEST_EMPTY_OR_NULL_TARGET_ID";
+    case LOG_REQUEST_EMPTY_OR_NULL_REQUEST_ID:
+        return "LOG_REQUEST_EMPTY_OR_NULL_REQUEST_ID";
+    case LOG_REQUEST_INVALID_LOG_TYPE:
+        return "LOG_REQUEST_INVALID_LOG_TYPE";
+    default:
+        return "Unknown Error Code";
+    }
+}

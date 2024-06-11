@@ -63,85 +63,28 @@ void MqttClient::MqttCallback::onMessageReceived(const mqtt::const_message_ptr &
 void MqttClient::MqttCallback::handleLog(mqtt::const_message_ptr msg)
 {
     vector<std::string> logs;
-    int result = SUCCESS;
-    int status = SCM::SUCCESS;
+    int flag = SUCCESS;
     string error;
     try
     {
-        LogRequest request = mqtt_parser.extractLogRequest(msg->get_payload_str(), status, error); /* Extract json string and converted to respective request*/
+        LogRequest request = mqtt_parser.extractLogRequest(msg->get_payload_str(), flag, error); /* Extract json string and converted to respective request*/
 
-        // if(status != SCM::SUCCESS)
-        // {
-        //     sendErrorResponse(request, status, error);
-        // }
-        if (!proxy->validateLogRequest(request))
+        if (flag != SCM::SUCCESS || (flag = proxy->validateLogRequest(request)) != SCM::SUCCESS)
         {
+            publisher->sendErrorResponse(msg->get_payload_str(), flag);
             return;
         }
 
-        LogEntity entity = entity_parser.getLogEntity(configTable, request.logType); /*Create entity for log collection */
+        flag = logHandler->handle(request, logs);
 
-        entity.name = request.logType;
-
-        if (!request.startDate.empty())
+        if (flag == SCM::SUCCESS)
         {
-            entity.last_read_time = Common::utcStringToTime(request.startDate); // Todo This check have not added there
-        }
-
-        if (!request.endDate.empty())
-        {
-            entity.end_time = Common::utcStringToTime(request.endDate); // Todo This check have not added there
+            publisher->sendResponse(request, logs);
         }
         else
         {
-            entity.end_filter = true;
-        }
-
-        if (!request.logLevels.empty())
-        {
-            entity.log_levels = request.logLevels;
-        }
-
-        if (request.logType == "syslog")
-        {
-            entity.read_path = SCM::Default::SYSLOG_READ_PATH;
-            result = log->getSysLog(entity, logs);
-        }
-        else if (request.logType == "auth")
-        {
-            entity.read_path = SCM::Default::AUTHLOG_READ_PATH;
-            result = log->getSysLog(entity, logs);
-        }
-        else if (request.logType == "dpkg")
-        {
-            entity.read_path = SCM::Default::DPKGLOG_READ_PATH;
-            result = log->getSysLog(entity, logs);
-        }
-        else if (request.logType == "applog")
-        {
-            result = log->getAppLog();
-        }
-        else
-        {
-            LOG_ERROR("INVALID_MQTT_REQUEST");
-            result = INVALID_MQTT_REQUEST;
-        }
-        if (result == SCM::SUCCESS)
-        {
-            const int batch_size = 100;
-            if (logs.size() == 0)
-            {
-                string json = mqtt_parser.logToJSON(logs, entity.name);
-                sendResponse(mqtt_parser.responseTypeToString(request.responseType), json, request.sourceId);
-                return;
-            }
-            for (size_t i = 0; i < logs.size(); i += batch_size)
-            {
-                size_t end = std::min(i + batch_size, logs.size());
-                std::vector<std::string> batch(logs.begin() + i, logs.begin() + end);
-                string json = mqtt_parser.logToJSON(batch, entity.name);
-                sendResponse(mqtt_parser.responseTypeToString(request.responseType), json, request.sourceId);
-            }
+            publisher->sendErrorResponse(msg->get_payload_str(), flag);
+            return;
         }
     }
     catch (const std::exception &e)
@@ -153,18 +96,38 @@ void MqttClient::MqttCallback::handleLog(mqtt::const_message_ptr msg)
 void MqttClient::MqttCallback::handleProcess(mqtt::const_message_ptr msg)
 {
     vector<ProcessData> logs;
-    string json_string = "";
-    int status = SCM::SUCCESS;
+    int flag = SCM::SUCCESS;
     string error;
-    ProcessRequest request = mqtt_parser.extractProcessRequest(msg->get_payload_str(), status, error);
+    try
+    {
+        ProcessRequest request = mqtt_parser.extractProcessRequest(msg->get_payload_str(), flag, error);
+        if (flag != SCM::SUCCESS || (flag = proxy->validateProcessRequest(request)) != SCM::SUCCESS)
+        {
+            publisher->sendErrorResponse(msg->get_payload_str(), flag);
+            return;
+        }
 
-    ProcessEntity entity = entity_parser.getProcessEntity(client->config_table);
+        int flag = processHandler->handle(request, logs);
 
-    int result = monitor.getAppResourceDetails(entity, logs, request.process_names);
+        if (flag == SCM::SUCCESS)
+        {
+            publisher->sendResponse(request, logs);
+        }
+        else
+        {
+            publisher->sendErrorResponse(msg->get_payload_str(), flag);
+        }
+    }
+    catch (const std::exception &ex)
+    {
+        std::cerr << ex.what() << '\n';
+    }
 
-    json_string = mqtt_parser.ProcessToJSON(logs);
+    // int result = monitor.getAppResourceDetails(entity, logs, request.process_names);
 
-    sendResponse(mqtt_parser.responseTypeToString(request.responseType), json_string, request.sourceId);
+    // json_string = mqtt_parser.ProcessToJSON(logs);
+
+    // sendResponse(mqtt_parser.responseTypeToString(request.responseType), json_string, request.sourceId);
 }
 
 void MqttClient::MqttCallback::handlePatch(mqtt::const_message_ptr msg)

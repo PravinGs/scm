@@ -32,7 +32,18 @@ public:
             std::this_thread::sleep_for(std::chrono::seconds(waitingTime));
             result = start(entity);
         }
- 
+    // void validNotEMptyOrNull (const string &field , const &fieldName) 
+    //    {
+    //     if (field.empty()) 
+    //    {
+    //     throw invalid_argument(fieldName + " must not be empty or null.");
+    //    }
+    //    }      
+//  void validateAndEnsureNewPatch(const string &patchversion,  const string &url, const string &username , const string &password)
+//  if (version == currentversion){
+//     throw invalid_argument(" the provided patch versionis same as existing version.");
+//  }
+//  }
         /*if (result == SUCCESS && client_connection == SUCCESS)
         {
             client_data data = connection::build_client_data("patch", "publish");

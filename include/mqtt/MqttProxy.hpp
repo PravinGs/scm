@@ -3,20 +3,49 @@
 
 #include "MqttService.hpp"
 
-class MqttProxy 
+class MqttProxy
 {
-public:
-
-    bool validateLogRequest(const LogRequest& logRequest)
+private:
+    int validateBaseRequest(const string& id, const int actionType, const int responseType, const string& sourceId)
     {
-        if (logRequest.id.empty() || logRequest.actionType < 0 || logRequest.responseType < 0 || logRequest.sourceId.empty())
+        if (id.empty())
         {
-            LOG_ERROR("logRequest.id | logRequest.actionType | logRequest.responseType | logRequest.sourceId");
-            return false;
+            return SCM::LOG_REQUEST_EMPTY_OR_NULL_REQUEST_ID;
         }
-        return true;
+        if (actionType < 0 || actionType > 3)
+        {
+            return SCM::LOG_REQUEST_INVALID_ACTION_TYPE;
+        }
+        if (responseType < 0 || responseType > 1)
+        {
+            return SCM::LOG_REQUEST_INVALID_RESPONSE_TYPE;
+        }
+        if (sourceId.empty())
+        {
+            return SCM::LOG_REQUEST_EMPTY_OR_NULL_SOURCE_ID;
+        }
+        else
+        {
+            return SCM::SUCCESS;
+        }
     }
-    
+
+public:
+    int validateLogRequest(const LogRequest &request)
+    {
+        // int isValidBaseRequest =  
+        // if (isValidBaseRequest != SCM::SUCCESS)
+        // {
+        //     return isValidBaseRequest;
+        // }
+        return validateBaseRequest(request.id, request.actionType, request.responseType, request.sourceId);;
+    }
+
+    int validateProcessRequest(const ProcessRequest &request)
+    {
+        return validateBaseRequest(request.id, request.actionType, request.responseType, request.sourceId);;
+    }
+
     bool validateMqttEntity(MqttEntity &entity)
     {
         if (entity.conn_string.empty())
@@ -53,7 +82,6 @@ public:
         }
         return true;
     }
-
 };
 
 #endif

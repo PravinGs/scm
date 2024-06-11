@@ -12,6 +12,7 @@ extern "C"
 }
 #include "util/Common.hpp"
 #include "util/constants.hpp"
+#include "mqtt/MqttEntity.hpp"
 class TpmService
 {
 private:
@@ -50,14 +51,14 @@ private:
 
     bool check_tss2_stack(string &err_msg)
     {
-        bool local_status = std::system("sudo ls /usr/local/bin | grep -i \"tss2\"") == 0 ? true: false;
-        bool status = std::system("sudo ls /usr/bin | grep -i \"tss2\"") == 0 ? true:false;
-        if ((!local_status) && (!status))
+        bool localLibStatus = std::system("sudo ls /usr/local/bin | grep -i \"tss2\"") == 0 ? true: false;
+        bool libStatus = std::system("sudo ls /usr/bin | grep -i \"tss2\"") == 0 ? true:false;
+        if ((!localLibStatus) && (!libStatus))
         {
             err_msg += "TSS2 Stack Library not exist\n";
             return SCM::Tpm::TSS2_LIBRARY_NOT_EXIST;
         }
-        return  local_status || status; 
+        return  localLibStatus || libStatus; 
     }
 
     int check_tpm2_abrmd_service(string &err_msg)

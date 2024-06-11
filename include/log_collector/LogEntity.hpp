@@ -3,11 +3,8 @@
 #pragma once
 #include "util/Common.hpp"
 
-static string logToJSON(const vector<std::string> &logs, const string& app_name);
-
 struct LogEntity
 {
-    int status;
     int count;
     char remote = 'n'; 
     bool is_empty;     
@@ -25,9 +22,9 @@ struct LogEntity
     std::time_t last_read_time;
     std::time_t end_time;
     string current_read_time;
-    conn_entity connection;
+    conn_entity connection;   
     string err_msg;
-    LogEntity() : status(0),count(0), is_empty(true), start_filter(true), end_filter(true), last_read_time(0), end_time(0) {}
+    LogEntity() : count(0), is_empty(true), start_filter(true), end_filter(true), last_read_time(0), end_time(0) {}
 };
 
 typedef struct standardLogAttrs standardLogAttrs;
@@ -73,30 +70,5 @@ struct standardLogAttrs
     
     ~standardLogAttrs() {}
 };
-
-// TODO check for format conversion.
-string logToJSON(const vector<std::string> &logs, const string& app_name)
-{
-    Json::Value json;
-    json["AppName"] = app_name;
-    json["TimeGenerated"] = os::getCurrentTime();
-    json["Source"] = os::host_name;
-    json["OrgId"] = SCM::Rest::ORG_ID;
-    json["LogObjects"] = Json::Value(Json::arrayValue);
-    for (auto log : logs)
-    {
-        Json::Value jsonLog;
-        standardLogAttrs f_log = standardLogAttrs(log);
-        jsonLog["TimeGenerated"] = f_log.timestamp;
-        jsonLog["UserLoginId"] = f_log.user;
-        jsonLog["ServiceName"] = f_log.program;
-        jsonLog["Message"] = f_log.message;
-        jsonLog["LogLevel"] = f_log.level;
-        jsonLog["LogCategory"] = f_log.category;
-
-        json["LogObjects"].append(jsonLog);
-    }
-    return json.toStyledString();
-}
 
 #endif // !LOG_ENTITY_HPP

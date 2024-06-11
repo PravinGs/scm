@@ -29,6 +29,7 @@ public:
         service = std::make_unique<MqttClient>(entity, config_table);
         service->start();
     }
+   
     ~MqttController()
     {
     }

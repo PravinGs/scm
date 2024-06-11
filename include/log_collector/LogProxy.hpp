@@ -127,6 +127,7 @@ public:
         catch (exception &e)
         {
             string error = e.what();
+            entity.err_msg = error;
             LOG_ERROR(error);
         }
         return false;

@@ -72,3 +72,12 @@ namespace TestMethods
         mqttCallback.message_arrived(msg);
     }
 }
+
+// void validNotEMptyOrNull (const string &field , const &fieldName) 
+// {
+//     if (field.empty()) 
+//     {
+//         throw invalid_argument(filedName + " must not be emptyor null.");
+    
+//     }
+// }

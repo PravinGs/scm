@@ -17,10 +17,10 @@ int main(int argc, char **argv)
     }
 
     // testClearTpm();
-
+    // getCurrentPatchVersion();
     // trackMessageArrived();
     startMqtt();
-
+    
     if (Common::logfp.is_open())
     {
         Common::logfp.close();
@@ -34,4 +34,13 @@ int main(int argc, char **argv)
 //     Common::parseArguments(argc, argv);
 //     testing::InitGoogleTest(&argc, argv);
 //     return RUN_ALL_TESTS();
+// }
+
+
+// string validatePatchRequest (const string &patchversion,  const string &url, const string &username , const string &password)
+// {
+//     validateNotEmptyOrNull (patchversion , "patch_version" );
+//     validateNotEmptyOrNull ( url,"url" );
+//     validateNotEmptyOrNull ( username, "username" );
+//     validateNotEmptyOrNull ( password, "Password ");
 // }

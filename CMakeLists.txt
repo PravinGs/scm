@@ -48,6 +48,8 @@ find_package(OpenSSL REQUIRED)
 add_executable (SCM 
     scm.cpp 
     include/mqtt/MqttService.cpp
+    include/mqtt/MqttStringBuilder.cpp
+    include/mqtt/MqttPublisher.cpp
     include/util/os.cpp 
     include/util/Common.cpp 
     include/ids/IdsServiceImpl.cpp

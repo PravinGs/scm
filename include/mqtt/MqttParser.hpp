@@ -4,6 +4,7 @@
 #include "log_collector/LogEntity.hpp"
 #include "monitor/MonitorEntity.hpp"
 #include "MqttEntity.hpp"
+#include "log_collector/LogEntity.hpp"
 
 class MqttParser
 {
@@ -115,32 +116,6 @@ public:
         }
     }
 
-    std::string logToJSON(const vector<std::string> &logs, const string &name)
-    {
-        Json::Value json;
-        json["OrgId"] = 234225;
-        json["AppName"] = name;
-        json["Source"] = os::host_name;
-        json["LogObjects"] = Json::Value(Json::arrayValue);
-         json["TimeGenerated"] = os::getCurrentTime();
-        for (auto log : logs)
-        {
-            Json::Value jsonLog;
-
-            standardLogAttrs f_log = standardLogAttrs(log);
-            jsonLog["TimeGenerated"] = f_log.timestamp;
-            jsonLog["UserLoginId"] = f_log.user;
-            jsonLog["ServiceName"] = f_log.program;
-            jsonLog["Message"] = f_log.message;
-            jsonLog["LogLevel"] = f_log.level;
-            jsonLog["LogCategory"] = f_log.category;
-
-            json["LogObjects"].append(jsonLog);
-        }
-        json["status"] = "success";
-        return json.toStyledString();
-    }
-
     std::string ProcessToJSON(const vector<ProcessData> &logs)
     {
         DEBUG("Preparing Log response string.");
@@ -161,11 +136,10 @@ public:
             json_log["disk_usage"] = std::stod(data.disk_usage);
             json["ProcessObjects"].append(json_log);
         }
-        json["status"] = "success";
         return json.toStyledString();
     }
 
-    LogRequest extractLogRequest(const string &json_string, int& status, string& error)
+    LogRequest extractLogRequest(const string &json_string, int &status, string &error)
     {
         LogRequest request;
         Json::Value root;
@@ -193,13 +167,13 @@ public:
         return request;
     }
 
-    ProcessRequest extractProcessRequest(const string &json_string, int& status, string& error)
+    ProcessRequest extractProcessRequest(const string &json_string, int &status, string &error)
     {
         ProcessRequest request;
         Json::Value root;
         Json::CharReaderBuilder builder;
         std::istringstream iss(json_string);
-   
+
         Json::parseFromStream(builder, iss, &root, &error);
 
         if (!error.empty())
@@ -207,17 +181,19 @@ public:
             status = SCM::StatusCode::MQTT_JSON_REQUEST_PARSER_ERROR;
             return request;
         }
+        request.id = root["Id"].asString();
         request.actionType = actionTypeToInt(root["ActionType"].asString());
-        std::cout << "request.actionType " <<request.actionType;
+        std::cout << "request.actionType " << request.actionType;
         request.sourceId = root["SourceId"].asString();
-        std::cout << "request.SourceId " <<request.sourceId;
+        std::cout << "request.SourceId " << request.sourceId;
         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
-        std::cout << "request.isAckRequired " <<request.isAckRequired;
+        std::cout << "request.isAckRequired " << request.isAckRequired;
         request.responseType = responseTypeToInt(root["ResponseType"].asString());
-        std::cout << "request.responseType " <<request.responseType;
-        request.process_names = Common::toVector(root["ProcessNames"].asString(),',');
-        for(const string &name: request.process_names){
-        std::cout << "request.process_names " << name;
+        std::cout << "request.responseType " << request.responseType;
+        request.process_names = Common::toVector(root["ProcessNames"].asString(), ',');
+        for (const string &name : request.process_names)
+        {
+            std::cout << "request.process_names " << name;
         }
         // request.is_SystemProperties_required = root["SystemProperties"].asInt();
         return request;
@@ -248,12 +224,23 @@ public:
         request.patchVersion = root["patch_version"].asString();
         request.username = root["username"].asString();
         request.password = root["password"].asString();
+
+        //     try
+        //     {
+        //         string validateVersion = validateAndEnsureNewPatch (patchVersion, url , username , password);
+        //         //cout << "patch version" << validateVersion << "is valid and ready for processing. "<< endl;
+        //     }
+        //     catch (const invalid_argument &e)
+        //     {
+        //         cerr << " Validation error: " << e.what() << endl;
+        //     }
+
         return request;
     }
 
     TpmRequest extractTpmRequest(const std::string &json_string)
     {
-        TpmRequest ConfigService;
+        TpmRequest request;
         Json::Value root;
         Json::CharReaderBuilder builder;
         std::istringstream iss(json_string);
@@ -264,14 +251,14 @@ public:
         if (!errs.empty())
         {
             std::cerr << "Error: Failed to parse JSON: " << errs << "\n";
-            return ConfigService;
+            return request;
         }
 
-        ConfigService.actionType = actionTypeToInt(root["ActionType"].asString());
-        ConfigService.sourceId = root["SourceId"].asString();
-        ConfigService.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
-        ConfigService.responseType = responseTypeToInt(root["ResponseType"].asString());
-        ConfigService.command = root["command"].asInt();
+        request.actionType = actionTypeToInt(root["ActionType"].asString());
+        request.sourceId = root["SourceId"].asString();
+        request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
+        request.responseType = responseTypeToInt(root["ResponseType"].asString());
+        request.command = root["command"].asInt();
 
         // switch (static_cast<TpmCommand>(ConfigService.command))
         // {
@@ -285,7 +272,7 @@ public:
         //     break;
         // }
 
-        return ConfigService;
+        return request;
     }
 
     TpmConfig getTpmConfig(const TpmRequest &request, const string &json_string)
@@ -348,7 +335,6 @@ public:
             dataSize);
         return ConfigService; // Return as TpmRequest
     }
-
 };
 
 #endif

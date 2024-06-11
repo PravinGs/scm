@@ -189,21 +189,37 @@ struct TpmDataResponse
 {
 };
 
-template <typename T1, typename T2>
+struct MqttErrorReponse
+{
+    int status;
+    string payload;
+    string errMsg;
+
+    MqttErrorReponse() : status(0) {}
+    MqttErrorReponse(const int statusCode, const string &payloadStr, const string &errMsgStr)
+    {
+        status = statusCode;
+        payload = payloadStr;
+        errMsg = errMsgStr;
+    }
+};
+
 struct MqttResponse
 {
     int status;
-    string err_msg;
-    T1 request;
-    T2 response;
+    string requestId;
+    int actionType;
+    Json::Value result;
+    string errMsg;
+
+    MqttResponse(string request_id, int action_type): status(1),requestId(request_id),actionType(action_type){}
 };
 
-template<typename T>
 struct MqttAck
 {
     int status;
-    string err_msg;
-    T request;
+    string payload;
+    string errMsg;
 };
 
 #endif

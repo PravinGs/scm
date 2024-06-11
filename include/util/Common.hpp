@@ -10,6 +10,8 @@
 
 typedef struct Timer Timer;
 
+using namespace SCM;
+
 struct Timer
 {
     std::chrono::time_point<std::chrono::steady_clock> start, end;
@@ -75,7 +77,7 @@ public:
 
 	static vector<string> toVector(const string& line, const char sep);
 
-
+	static string getErrorString(const int errorCode);
 	~Common()
 	{
 		if (logfp.is_open())

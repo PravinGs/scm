@@ -14,9 +14,9 @@ public:
     {
     }
 
-    MonitorProxy(config_table_type &config_table)
+    MonitorProxy(config_table_type &config_table): thread_handler(true), service(std::make_unique<MonitorServiceImpl>())
     {
-        MonitorProxy();
+        // MonitorProxy();
         r_entity = entity_parser.getRestEntity(config_table);
     }
 

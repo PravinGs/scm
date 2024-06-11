@@ -23,6 +23,13 @@ namespace SCM
 {
 	static bool is_syslog_enabled = false;
 
+	const int LOG_REQUEST_INVALID_ACTION_TYPE      = 100;
+	const int LOG_REQUEST_INVALID_RESPONSE_TYPE    = 101;
+	const int LOG_REQUEST_EMPTY_OR_NULL_SOURCE_ID  = 102;
+	const int LOG_REQUEST_EMPTY_OR_NULL_TARGET_ID  = 103;
+	const int LOG_REQUEST_EMPTY_OR_NULL_REQUEST_ID = 104;	
+	const int LOG_REQUEST_INVALID_LOG_TYPE         = 105;
+
 	namespace StatusCode
 	{
 		const int MQTT_JSON_REQUEST_PARSER_ERROR = -1;
