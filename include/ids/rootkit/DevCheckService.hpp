@@ -91,7 +91,7 @@ public:
  
         dev_total = 0;
         dev_errors = 0;
-        LOG("starting check_rc_dev");
+        INFO("starting check_rc_dev");
  
         snprintf(file_path, 1024, "%s/dev", basedir);
  

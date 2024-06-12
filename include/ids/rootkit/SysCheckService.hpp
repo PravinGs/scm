@@ -71,7 +71,7 @@ class SysCheck
  
             if (errors > 0)
             {
-                LOG("total " + std::to_string(errors) + " number of rootkit detected.");
+                INFO("total " + std::to_string(errors) + " number of rootkit detected.");
             }
             return SUCCESS;
         }

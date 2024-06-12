@@ -51,7 +51,7 @@ private:
             string lower_case_level = Common::toLowerCase(level);
             if (lowercase_line.find(level) != std::string::npos)
             {
-                LOG(level, "***", line);
+                INFO(level, "***", line);
                 if (log_parser_level[lower_case_level] > max_level)
                 {
                     max_level = log_parser_level[lower_case_level];

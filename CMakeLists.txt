@@ -50,6 +50,7 @@ add_executable (SCM
     include/mqtt/MqttService.cpp
     include/mqtt/MqttStringBuilder.cpp
     include/mqtt/MqttPublisher.cpp
+    include/mqtt/MqttTpmHandler.cpp
     include/util/os.cpp 
     include/util/Common.cpp 
     include/ids/IdsServiceImpl.cpp

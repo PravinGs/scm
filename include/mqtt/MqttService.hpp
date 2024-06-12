@@ -12,8 +12,7 @@
 #include "MqttProxy.hpp"
 #include "MqttLogHandler.hpp"
 #include "MqttProcessHandler.hpp"
-
-#define INVALID_MQTT_REQUEST 101
+#include "MqttTpmHandler.hpp"
 
 class MqttService
 {
@@ -27,15 +26,6 @@ class MqttClient : public MqttService
 public:
     MqttClient() {}
 
-    // MqttClient(const MqttEntity &entity,const config_table_type &config_table)
-    //     : entity(entity),
-    //       config_table(config_table)
-    // {
-    //     client = std::make_shared<mqtt::async_client>(entity.conn_string, entity.client_id);
-    //     callback = std::make_shared<MqttCallback>(this);
-    //     client->set_callback(*callback);
-    //     publisher = std::unique_ptr<MqttPublisher>(client);
-    // }
     MqttClient(const MqttEntity &entity, const config_table_type &config_table)
         : entity(entity),
           config_table(config_table),
@@ -60,8 +50,8 @@ public:
             : client(client),
               publisher(std::make_unique<MqttPublisher>(client->client)),
               logHandler(std::make_unique<MqttLogHandler>(client->config_table)),
-              processHandler(std::make_unique<MqttProcessHandler>(client->config_table))
-
+              processHandler(std::make_unique<MqttProcessHandler>(client->config_table)),
+              tpmHandler(std::make_unique<MqttTpmHandler>())
         {
             r_entity = entity_parser.getRestEntity(client->config_table);
         }
@@ -69,22 +59,21 @@ public:
         void message_arrived(mqtt::const_message_ptr msg);
 
     private:
-        void publishMqttResponse(const std::string &topic, const std::string &message);
-        void sendResponse(const std::string &res_type, const std::string &data, const std::string &topic);
         void onMessageReceived(const mqtt::const_message_ptr &msg);
         void handleLog(mqtt::const_message_ptr msg);
         void handleProcess(mqtt::const_message_ptr msg);
         void handlePatch(mqtt::const_message_ptr msg);
-        void handleTpm(mqtt::const_message_ptr msg);
+        void handleTpm(mqtt::const_message_ptr msg, const string& actionType);
 
         config_table_type configTable;
         MqttClient *client;
         std::unique_ptr<MqttPublisher> publisher;
         std::unique_ptr<MqttLogHandler> logHandler;
         std::unique_ptr<MqttProcessHandler> processHandler;
+        std::unique_ptr<MqttTpmHandler> tpmHandler;
         std::unique_ptr<MqttProxy> proxy;
         PatchProxy patch;
-        TpmService tpm_service;
+        // TpmService tpm_service;
         RestEntity r_entity;
         EntityParser entity_parser;
         MqttParser mqtt_parser;

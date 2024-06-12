@@ -193,7 +193,7 @@ public:
                                                 "\n      Netstat is acting correctly."
                                                 " Analyzed %d ports.",
                      total);
-            LOG(op_msg);
+            INFO(op_msg);
         }
         for (int port = 0; port < 65535; port++)
         {

@@ -6,23 +6,23 @@
 class MqttProxy
 {
 private:
-    int validateBaseRequest(const string& id, const int actionType, const int responseType, const string& sourceId)
+    int validateBaseRequest(const string &id, const string &actionType, const int responseType, const string &sourceId)
     {
         if (id.empty())
         {
-            return SCM::LOG_REQUEST_EMPTY_OR_NULL_REQUEST_ID;
+            return SCM::MQTT_REQUEST_EMPTY_OR_NULL_REQUEST_ID;
         }
-        if (actionType < 0 || actionType > 3)
+        if (actionType.empty())
         {
-            return SCM::LOG_REQUEST_INVALID_ACTION_TYPE;
+            return SCM::MQTT_REQUEST_EMPTY_OR_NULL_ACTION_TYPE;
         }
         if (responseType < 0 || responseType > 1)
         {
-            return SCM::LOG_REQUEST_INVALID_RESPONSE_TYPE;
+            return SCM::MQTT_REQUEST_INVALID_RESPONSE_TYPE;
         }
         if (sourceId.empty())
         {
-            return SCM::LOG_REQUEST_EMPTY_OR_NULL_SOURCE_ID;
+            return SCM::MQTT_REQUEST_EMPTY_OR_NULL_SOURCE_ID;
         }
         else
         {
@@ -33,17 +33,23 @@ private:
 public:
     int validateLogRequest(const LogRequest &request)
     {
-        // int isValidBaseRequest =  
+        // int isValidBaseRequest =
         // if (isValidBaseRequest != SCM::SUCCESS)
         // {
         //     return isValidBaseRequest;
         // }
-        return validateBaseRequest(request.id, request.actionType, request.responseType, request.sourceId);;
+        return validateBaseRequest(request.id, request.actionType, request.responseType, request.sourceId);
+        ;
     }
 
     int validateProcessRequest(const ProcessRequest &request)
     {
-        return validateBaseRequest(request.id, request.actionType, request.responseType, request.sourceId);;
+        return validateBaseRequest(request.id, request.actionType, request.responseType, request.sourceId);
+    }
+
+    int validateTpmClearRequest(const TpmClearRequest &request)
+    {
+        return validateBaseRequest(request.id, request.actionType, request.responseType, request.sourceId);
     }
 
     bool validateMqttEntity(MqttEntity &entity)

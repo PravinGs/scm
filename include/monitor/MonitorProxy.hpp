@@ -47,7 +47,7 @@ public:
             }
             if (response.http_code == SCM::Rest::POST_SUCCESS)
             {
-                LOG("Sent to cloud successfully");
+                INFO("Sent to cloud successfully");
                 RestService::start(r_entity, "process"); // see later
             }
         }

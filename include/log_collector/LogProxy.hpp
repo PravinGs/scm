@@ -59,7 +59,7 @@ public:
         }
         DEBUG("reading " + entity.name + " log file.");
         int result = service->getSysLog(entity, logs);
-        LOG("Collected logs size : " + std::to_string(logs.size()));
+        INFO("Collected logs size : " + std::to_string(logs.size()));
         if (result == SCM::SUCCESS && 
                 Common::updateLogWrittenTime(entity.name, entity.current_read_time) == SCM::SUCCESS && 
                     !logs.empty())

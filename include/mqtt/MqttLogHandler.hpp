@@ -44,7 +44,7 @@ public:
             else
             {
                 LOG_ERROR("INVALID_MQTT_REQUEST");
-                result = SCM::LOG_REQUEST_INVALID_LOG_TYPE;
+                result = SCM::MQTT_REQUEST_INVALID_LOG_TYPE;
             }
         }
         catch (const std::exception &e)

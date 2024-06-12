@@ -127,7 +127,7 @@ int Common::updateLogWrittenTime(const string &app_name, const string &time)
         return SCM::FAILED;
     }
     file << time;
-    LOG("time ", time, " updated to ", file_path);
+    INFO("time ", time, " updated to ", file_path);
     file.close();
     return SCM::SUCCESS;
 }
@@ -437,18 +437,26 @@ string Common::getErrorString(const int errorCode)
     {
     case SUCCESS:
         return "SUCCESS";
-    case LOG_REQUEST_INVALID_ACTION_TYPE:
-        return "LOG_REQUEST_INVALID_ACTION_TYPE";
-    case LOG_REQUEST_INVALID_RESPONSE_TYPE:
-        return "LOG_REQUEST_INVALID_RESPONSE_TYPE";
-    case LOG_REQUEST_EMPTY_OR_NULL_SOURCE_ID:
-        return "LOG_REQUEST_EMPTY_OR_NULL_SOURCE_ID";
-    case LOG_REQUEST_EMPTY_OR_NULL_TARGET_ID:
-        return "LOG_REQUEST_EMPTY_OR_NULL_TARGET_ID";
-    case LOG_REQUEST_EMPTY_OR_NULL_REQUEST_ID:
-        return "LOG_REQUEST_EMPTY_OR_NULL_REQUEST_ID";
-    case LOG_REQUEST_INVALID_LOG_TYPE:
-        return "LOG_REQUEST_INVALID_LOG_TYPE";
+    case MQTT_REQUEST_EMPTY_OR_NULL_ACTION_TYPE:
+        return "MQTT_REQUEST_EMPTY_OR_NULL_ACTION_TYPE";
+    case MQTT_REQUEST_INVALID_RESPONSE_TYPE:
+        return "MQTT_REQUEST_INVALID_RESPONSE_TYPE";
+    case MQTT_REQUEST_EMPTY_OR_NULL_SOURCE_ID:
+        return "MQTT_REQUEST_EMPTY_OR_NULL_SOURCE_ID";
+    case MQTT_REQUEST_EMPTY_OR_NULL_TARGET_ID:
+        return "MQTT_REQUEST_EMPTY_OR_NULL_TARGET_ID";
+    case MQTT_REQUEST_EMPTY_OR_NULL_REQUEST_ID:
+        return "MQTT_REQUEST_EMPTY_OR_NULL_REQUEST_ID";
+    case MQTT_REQUEST_INVALID_LOG_TYPE:
+        return "MQTT_REQUEST_INVALID_LOG_TYPE";
+    case SCM::Tpm::TPM2_ABRMD_NOT_ACTIVE:
+        return "TPM2_ABRMD_NOT_ACTIVE";
+    case SCM::Tpm::TPM2_ABRMD_SIMULATOR_ACTIVE:
+        return "TPM2_ABRMD_SIMULATOR_ACTIVE";
+    case SCM::Tpm::TPM2_DEVICE_NOT_EXIST:
+        return "TPM2_DEVICE_NOT_EXIST";
+    case SCM::Tpm::TSS2_LIBRARY_NOT_EXIST:
+        return "TSS2_LIBRARY_NOT_EXIST";
     default:
         return "Unknown Error Code";
     }

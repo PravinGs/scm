@@ -9,7 +9,7 @@
 class MqttParser
 {
 public:
-    int extractRequestype(const std::string &json_string)
+    string extractRequestype(const std::string &json_string)
     {
         Json::Value root;
         Json::CharReaderBuilder builder;
@@ -21,9 +21,9 @@ public:
         if (!errs.empty())
         {
             std::cerr << "Error: Failed to parse JSON: " << errs << "\n";
-            return -1;
+            return "";
         }
-        return actionTypeToInt(root["ActionType"].asString());
+        return root["ActionType"].asString();
     }
 
     int actionTypeToInt(const string &actionType)
@@ -66,83 +66,11 @@ public:
         }
     }
 
-    std::string actionValueToString(ActionType value)
-    {
-        switch (value)
-        {
-        case ActionType::LogRequest:
-            return "LogRequest";
-        case ActionType::PatchRequest:
-            return "FirmwareUpdate";
-        case ActionType::ProcessRequest:
-            return "ProcessRequest";
-        case ActionType::TpmConfigServiceuration:
-            return "TpmConfigServiceuration";
-        }
-        return ""; // Handle default case
-    }
-
-    std::string tpmCommandToString(TpmCommand command)
-    {
-        switch (command)
-        {
-        case TpmCommand::TpmClear:
-            return "TpmClear";
-        case TpmCommand::SealKey:
-            return "SealKey";
-        case TpmCommand::UnsealKey:
-            return "UnsealKey";
-        case TpmCommand::NvStore:
-            return "NvStore";
-        case TpmCommand::NvRead:
-            return "NvRead";
-        }
-        return "";
-    }
-
-    std::string responseTypeToString(int value)
-    {
-        if (value == 0)
-        {
-            return "MqttResponse";
-        }
-        else if (value == 1)
-        {
-            return "RestApiResponse";
-        }
-        else
-        {
-            return "";
-        }
-    }
-
-    std::string ProcessToJSON(const vector<ProcessData> &logs)
-    {
-        DEBUG("Preparing Log response string.");
-        Json::Value json;
-        json["OrgId"] = 234225;
-        json["AppName"] = "system_resources";
-        json["Source"] = os::host_name;
-        json["ProcessObjects"] = Json::Value(Json::arrayValue);
-        json["TimeGenerated"] = os::getCurrentTime();
-        for (auto log : logs)
-        {
-            Json::Value json_log;
-            ProcessData data = ProcessData(log);
-            json_log["process_id"] = std::stoi(data.process_id);
-            json_log["process_name"] = data.process_name;
-            json_log["cpu_usage"] = std::stod(data.cpu_time);
-            json_log["ram_usage"] = std::stod(data.ram_usage);
-            json_log["disk_usage"] = std::stod(data.disk_usage);
-            json["ProcessObjects"].append(json_log);
-        }
-        return json.toStyledString();
-    }
-
     LogRequest extractLogRequest(const string &json_string, int &status, string &error)
     {
         LogRequest request;
         Json::Value root;
+        Json::Value child;
         Json::CharReaderBuilder builder;
         std::istringstream iss(json_string);
 
@@ -153,17 +81,18 @@ public:
             status = SCM::StatusCode::MQTT_JSON_REQUEST_PARSER_ERROR;
             return request;
         }
-
-        request.startDate = root["FromDate"].asString();
-        request.endDate = root["EndDate"].asString();
-        request.actionType = actionTypeToInt(root["ActionType"].asString());
         request.id = root["Id"].asString();
         request.sourceId = root["SourceId"].asString();
         request.targetId = root["TargetId"].asString();
+        request.actionType = root["ActionType"].asString();
         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
         request.responseType = responseTypeToInt(root["ResponseType"].asString());
-        request.logType = root["LogType"].asString();
-        request.logLevels = Common::toVector(root["LogLevels"].asString(), ',');
+        child = root["InputParams"];
+        request.inputParams = child;
+        request.logType = child["LogType"].asString();
+        request.logLevels = Common::toVector(child["LogLevels"].asString(), ',');
+        request.startDate = child["FromDate"].asString();
+        request.endDate = child["EndDate"].asString();
         return request;
     }
 
@@ -171,6 +100,7 @@ public:
     {
         ProcessRequest request;
         Json::Value root;
+        Json::Value child;
         Json::CharReaderBuilder builder;
         std::istringstream iss(json_string);
 
@@ -182,20 +112,12 @@ public:
             return request;
         }
         request.id = root["Id"].asString();
-        request.actionType = actionTypeToInt(root["ActionType"].asString());
-        std::cout << "request.actionType " << request.actionType;
+        request.actionType = root["ActionType"].asString();
         request.sourceId = root["SourceId"].asString();
-        std::cout << "request.SourceId " << request.sourceId;
         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
-        std::cout << "request.isAckRequired " << request.isAckRequired;
         request.responseType = responseTypeToInt(root["ResponseType"].asString());
-        std::cout << "request.responseType " << request.responseType;
-        request.process_names = Common::toVector(root["ProcessNames"].asString(), ',');
-        for (const string &name : request.process_names)
-        {
-            std::cout << "request.process_names " << name;
-        }
-        // request.is_SystemProperties_required = root["SystemProperties"].asInt();
+        request.inputParams = root["InputParams"];
+        request.process_names = Common::toVector(request.inputParams["ProcessNames"].asString(), ',');
         return request;
     }
 
@@ -214,7 +136,7 @@ public:
             std::cerr << "Error: Failed to parse JSON: " << errs << "\n";
             return request;
         }
-        request.actionType = actionTypeToInt(root["ActionType"].asString());
+        request.actionType = root["ActionType"].asString();
         request.sourceId = root["SourceId"].asString();
         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
         request.responseType = responseTypeToInt(root["ResponseType"].asString());
@@ -238,102 +160,66 @@ public:
         return request;
     }
 
-    TpmRequest extractTpmRequest(const std::string &json_string)
+    TpmClearRequest extractTpmClearRequest(const string &json_string, int &status, string &error)
     {
-        TpmRequest request;
+        TpmClearRequest request;
         Json::Value root;
+        Json::Value child;
         Json::CharReaderBuilder builder;
         std::istringstream iss(json_string);
-        std::string errs;
 
-        Json::parseFromStream(builder, iss, &root, &errs);
+        Json::parseFromStream(builder, iss, &root, &error);
 
-        if (!errs.empty())
+        if (!error.empty())
         {
-            std::cerr << "Error: Failed to parse JSON: " << errs << "\n";
+            status = SCM::StatusCode::MQTT_JSON_REQUEST_PARSER_ERROR;
             return request;
         }
 
-        request.actionType = actionTypeToInt(root["ActionType"].asString());
+        request.id = root["Id"].asString();
         request.sourceId = root["SourceId"].asString();
+        request.targetId = root["TargetId"].asString();
+        request.actionType = root["ActionType"].asString();
         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
         request.responseType = responseTypeToInt(root["ResponseType"].asString());
-        request.command = root["command"].asInt();
-
-        // switch (static_cast<TpmCommand>(ConfigService.command))
-        // {
-        // case TpmCommand::TpmClear:
-        // {
-        //     string lockout_auth = root["lockout_auth"].asString();
-        //     TpmConfig tpmConfigService(ConfigService.source_id, ConfigService.ActionType, ConfigService.is_ack_required, ConfigService.ResponseType, ConfigService.command, lockout_auth);
-        //     return TpmRequest(tpmConfigService); // Return as TpmRequest
-        // }
-        // default:
-        //     break;
-        // }
-
+        child = root["InputParams"];
+        request.inputParams = child;
+        request.lockoutAuth = child["LockoutAuth"].asString();
+        request.isBackupenabled = child["Backup"].asBool();
         return request;
     }
 
-    TpmConfig getTpmConfig(const TpmRequest &request, const string &json_string)
+    TpmPostRequest extractTpmSealRequest(const string &json_string, int &status, string &error)
     {
+        TpmPostRequest request;
         Json::Value root;
+        Json::Value child;
         Json::CharReaderBuilder builder;
         std::istringstream iss(json_string);
-        std::string errs;
 
-        Json::parseFromStream(builder, iss, &root, &errs);
-        string lockout_auth = root["lockout_auth"].asString();
-        TpmConfig ConfigService(request.sourceId, request.actionType, request.isAckRequired, request.responseType, request.command, lockout_auth);
-        return ConfigService; // Return as TpmRequest
-    }
+        Json::parseFromStream(builder, iss, &root, &error);
 
-    SealConfig getSealConfig(TpmRequest &request, const string &json_string)
-    {
-        Json::Value root;
-        Json::CharReaderBuilder builder;
-        std::istringstream iss(json_string);
-        std::string errs;
+        if (!error.empty())
+        {
+            status = SCM::StatusCode::MQTT_JSON_REQUEST_PARSER_ERROR;
+            return request;
+        }
 
-        Json::parseFromStream(builder, iss, &root, &errs);
-        string ownerAuth = root["ownerAuth"].asString();
-        string srkAuth = root["srkAuth"].asString();
-        string dekAuth = root["dekAuth"].asString();
-        string fileName = root["fileName"].asString();
-        string objectName = root["objectName"].asString();
-
-        SealConfig ConfigService(request.sourceId, request.actionType, request.isAckRequired, request.responseType, request.command, ownerAuth, srkAuth, dekAuth, fileName, objectName);
-        return ConfigService; // Return as TpmRequest
-    }
-
-    PersistConfig getTpmPersistContext(TpmRequest &request, const string &json_string)
-    {
-        Json::Value root;
-        Json::CharReaderBuilder builder;
-        std::istringstream iss(json_string);
-        std::string errs;
-
-        Json::parseFromStream(builder, iss, &root, &errs);
-        string indexName = root["indexName"].asString();
-        string ownerPassword = root["ownerPassword"].asString();
-        string fileName = root["fileName"].asString();
-        int indexValue = root["indexValue"].asInt();
-        string indexPassword = root["indexPassword"].asString();
-        int dataSize = root["dataSize"].asInt();
-
-        PersistConfig ConfigService(
-            request.sourceId,
-            request.actionType,
-            request.isAckRequired,
-            request.responseType,
-            request.command,
-            indexName,
-            ownerPassword,
-            fileName,
-            indexValue,
-            indexPassword,
-            dataSize);
-        return ConfigService; // Return as TpmRequest
+        request.id = root["Id"].asString();
+        request.sourceId = root["SourceId"].asString();
+        request.targetId = root["TargetId"].asString();
+        request.actionType = root["ActionType"].asString();
+        request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
+        request.responseType = responseTypeToInt(root["ResponseType"].asString());
+        child = root["InputParams"];
+        request.inputParams = child;
+        request.dataSize = child["DataSize"].asInt();
+        request.ownerAuth = child["OwnerAuth"].asString();
+        request.srkAuth = child["SrkAuth"].asString();
+        request.dekAuth = child["DekAuth"].asString();
+        request.data = child["Data"].asString();
+        request.objectName = child["ObjectName"].asString();
+        return request;
     }
 };
 

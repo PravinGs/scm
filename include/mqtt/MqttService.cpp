@@ -9,51 +9,39 @@ void MqttClient::MqttCallback::message_arrived(mqtt::const_message_ptr msg)
     onMessageReceived(msg);
 }
 
-void MqttClient::MqttCallback::publishMqttResponse(const std::string &topic, const std::string &message)
-{
-    DEBUG("Response is about to publish to topic " + topic);
-    mqtt::message_ptr response_msg = mqtt::make_message(topic, message);
-    client->client->publish(response_msg);
-}
-
-void MqttClient::MqttCallback::sendResponse(const std::string &res_type, const std::string &data, const std::string &topic)
-{
-    if (res_type == "MqttResponse")
-    {
-        publishMqttResponse(topic, data);
-    }
-    else if (res_type == "RestApiResponse")
-    {
-        RestResponse response = RestService::http_post(topic, data);
-        DEBUG("Rest Api status: ", std::to_string(response.http_code));
-        if (response.http_code == SCM::Rest::POST_SUCCESS)
-        {
-            DEBUG("Data sent to rest api");
-        }
-        else
-        {
-            LOG_ERROR("Failed to send to rest API");
-        }
-    }
-}
-
 void MqttClient::MqttCallback::onMessageReceived(const mqtt::const_message_ptr &msg)
 {
-    int act_type = mqtt_parser.extractRequestype(msg->get_payload_str());
-
-    switch (static_cast<ActionType>(act_type))
+    string actionType = mqtt_parser.extractRequestype(msg->get_payload_str());
+    string parentType = "";
+    int flag = -1;
+    if (actionType.empty())
     {
-    case ActionType::LogRequest:
+        publisher->sendErrorResponse(msg, SCM::MQTT_REQUEST_EMPTY_OR_NULL_ACTION_TYPE);
+        return;
+    }
+    if (actionType.size() >= 3)
+    {
+        parentType = actionType.substr(0, 3);
+    }
+
+    flag = actionCommand.at(parentType);
+
+    switch (flag)
+    {
+    case -1:
+        publisher->sendErrorResponse(msg, SCM::MQTT_REQUEST_EMPTY_OR_NULL_ACTION_TYPE);
+        break;
+    case 0:
         handleLog(msg);
         break;
-    case ActionType::PatchRequest:
-        handlePatch(msg);
-        break;
-    case ActionType::ProcessRequest:
+    case 1:
         handleProcess(msg);
         break;
-    case ActionType::TpmConfigServiceuration:
-        handleTpm(msg);
+    case 2:
+        handlePatch(msg);
+        break;
+    case 3:
+        handleTpm(msg, actionType);
         break;
     default:
         break;
@@ -71,7 +59,7 @@ void MqttClient::MqttCallback::handleLog(mqtt::const_message_ptr msg)
 
         if (flag != SCM::SUCCESS || (flag = proxy->validateLogRequest(request)) != SCM::SUCCESS)
         {
-            publisher->sendErrorResponse(msg->get_payload_str(), flag);
+            publisher->sendErrorResponse(msg, flag);
             return;
         }
 
@@ -83,7 +71,7 @@ void MqttClient::MqttCallback::handleLog(mqtt::const_message_ptr msg)
         }
         else
         {
-            publisher->sendErrorResponse(msg->get_payload_str(), flag);
+            publisher->sendErrorResponse(msg, flag);
             return;
         }
     }
@@ -103,7 +91,7 @@ void MqttClient::MqttCallback::handleProcess(mqtt::const_message_ptr msg)
         ProcessRequest request = mqtt_parser.extractProcessRequest(msg->get_payload_str(), flag, error);
         if (flag != SCM::SUCCESS || (flag = proxy->validateProcessRequest(request)) != SCM::SUCCESS)
         {
-            publisher->sendErrorResponse(msg->get_payload_str(), flag);
+            publisher->sendErrorResponse(msg, flag);
             return;
         }
 
@@ -115,19 +103,13 @@ void MqttClient::MqttCallback::handleProcess(mqtt::const_message_ptr msg)
         }
         else
         {
-            publisher->sendErrorResponse(msg->get_payload_str(), flag);
+            publisher->sendErrorResponse(msg, flag);
         }
     }
     catch (const std::exception &ex)
     {
         std::cerr << ex.what() << '\n';
     }
-
-    // int result = monitor.getAppResourceDetails(entity, logs, request.process_names);
-
-    // json_string = mqtt_parser.ProcessToJSON(logs);
-
-    // sendResponse(mqtt_parser.responseTypeToString(request.responseType), json_string, request.sourceId);
 }
 
 void MqttClient::MqttCallback::handlePatch(mqtt::const_message_ptr msg)
@@ -151,46 +133,51 @@ void MqttClient::MqttCallback::handlePatch(mqtt::const_message_ptr msg)
         entity.password = request.password;
     }
     patch.start(entity);
-    // sendResponse(mqtt_parser.responseTypeToString(request.responseType), json_string, request.sourceId);
 }
 
-void MqttClient::MqttCallback::handleTpm(mqtt::const_message_ptr msg)
+void MqttClient::MqttCallback::handleTpm(mqtt::const_message_ptr msg, const string &actionType)
 {
-    string json_string = "";
-    TPM2_RC result = TPM2_SUCCESS;
-    TpmRequest request = mqtt_parser.extractTpmRequest(msg->get_payload_str());
-    TpmConfig ConfigService;
-    SealConfig s_ConfigService;
-    PersistConfig p_ConfigService;
+    int status = SCM::SUCCESS;
+    string errMsg;
 
-    switch (request.command)
+    try
     {
-    case 0:
-        ConfigService = mqtt_parser.getTpmConfig(request, msg->get_payload_str());
-        result = TPM2_SUCCESS /*tpm_service.clear_tpm(ConfigService.lockout_auth.c_str())*/;
-        if (result == TPM2_SUCCESS)
+        int flag = tpmCommand.at(actionType);
+        switch (flag)
         {
-            json_string = "Tpm_clear: success";
+        case 0:
+        {
+            TpmClearRequest request = mqtt_parser.extractTpmClearRequest(msg->get_payload_str(), status, errMsg);
+            if (status != SCM::SUCCESS || (status = proxy->validateTpmClearRequest(request)) != SCM::SUCCESS)
+            {
+                publisher->sendErrorResponse(msg, status);
+                return;
+            }
+            BaseRequest baseRequest = request;
+            status = tpmHandler->handle(baseRequest);
+            publisher->sendResponse(request, status);
+            break;
         }
-        break;
-    case 1:
-        s_ConfigService = mqtt_parser.getSealConfig(request, msg->get_payload_str());
-        break;
-    case 2:
-        s_ConfigService = mqtt_parser.getSealConfig(request, msg->get_payload_str());
-        break;
-    case 3:
-        p_ConfigService = mqtt_parser.getTpmPersistContext(request, msg->get_payload_str());
-        break;
-    case 4:
-        p_ConfigService = mqtt_parser.getTpmPersistContext(request, msg->get_payload_str());
-        break;
-    default:
-        LOG_ERROR("Unexpected TpmCommand value: ", request.command);
-        break;
+        case 1:
+        {
+            TpmClearRequest request = mqtt_parser.extractTpmClearRequest(msg->get_payload_str(), status, errMsg);
+            if (status != SCM::SUCCESS || (status = proxy->validateTpmClearRequest(request)) != SCM::SUCCESS)
+            {
+                publisher->sendErrorResponse(msg, status);
+                return;
+            }
+            status = tpmHandler->handle(request);
+            publisher->sendResponse(request, status);
+            break;
+        }
+        default:
+            break;
+        }
     }
-
-    sendResponse(mqtt_parser.responseTypeToString(request.responseType), json_string, request.sourceId);
+    catch (std::exception &ex)
+    {
+        std::cerr << ex.what() << '\n';
+    }
 }
 
 void MqttClient::start()

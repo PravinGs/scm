@@ -113,7 +113,7 @@ private:
                 if (retry > 0)
                 {
                     std::cerr << "Retrying download in 10 seconds...\n";
-                    LOG("Retrying download in 10 seconds...");
+                    INFO("Retrying download in 10 seconds...");
                     std::this_thread::sleep_for(std::chrono::seconds(19));
                 }
                 else

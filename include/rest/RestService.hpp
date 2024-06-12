@@ -121,7 +121,7 @@ public:
                 result.http_code = http_code;
                 result.json_response = response;
                 DEBUG("HTTP Status Code: " + std::to_string(http_code));
-                LOG("Response: ", response);
+                INFO("Response: ", response);
             }
             else
             {

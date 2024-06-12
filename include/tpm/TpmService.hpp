@@ -38,51 +38,6 @@ private:
         g_context_state = (initialize_db(DEFAULT_DB_PATH) == TPM2_INVALID_DATABASE) ? true : false;
     }
 
-    bool check_tpm2_device(string &err_msg)
-    {
-        bool status = std::system("dmesg | grep -i \"tpm2.0\"") == 0 ? true : false;
-        if (!status)
-        {
-            err_msg += "TPM device not exist\n";
-            return SCM::Tpm::TPM2_DEVICE_NOT_EXIST;
-        }
-        return status;
-    }
-
-    bool check_tss2_stack(string &err_msg)
-    {
-        bool localLibStatus = std::system("sudo ls /usr/local/bin | grep -i \"tss2\"") == 0 ? true: false;
-        bool libStatus = std::system("sudo ls /usr/bin | grep -i \"tss2\"") == 0 ? true:false;
-        if ((!localLibStatus) && (!libStatus))
-        {
-            err_msg += "TSS2 Stack Library not exist\n";
-            return SCM::Tpm::TSS2_LIBRARY_NOT_EXIST;
-        }
-        return  localLibStatus || libStatus; 
-    }
-
-    int check_tpm2_abrmd_service(string &err_msg)
-    {
-        int status = std::system("systemctl is-active --quiet tpm2-abrmd");
-        if (status != 0)
-        {
-            err_msg += "TPM2-abrmd service is not active, starting tpm2-abrmd service\n";
-            status = std::system("systemctl start --quiet tpm2-abrmd");
-        }
-
-        if (status == 0)
-        {
-            status = std::system("libtss2-tcti-mssim.so.0:host=127.0.0.1,port=2321");
-            return (status == 0) ? SCM::Tpm::TPM2_ABRMD_SIMULATOR_ACTIVE : SCM::Tpm::TPM2_ABRMD_DEVICE_ACTIVE;
-        }
-        else
-        {
-            err_msg += "TPM2-abrmd service failed to start\n";
-        }
-
-        return SCM::Tpm::TPM2_ABRMD_NOT_ACTIVE;
-    }
-
 public:
     TpmService()
     {
@@ -113,15 +68,6 @@ public:
     {
         char data[2048];
         return nvRead(g_esys_context, context, data);
-    }
-
-    int testTpmConnection(string &err_msg)
-    {
-        if ((!check_tpm2_device(err_msg)) && (!check_tss2_stack(err_msg)) && (check_tpm2_abrmd_service(err_msg) == SCM::Tpm::TPM2_ABRMD_NOT_ACTIVE))
-        {
-            return SCM::FAILED;
-        }
-        return SCM::Tpm::TPM2_TEST_SUCCESS;
     }
 
     ~TpmService()

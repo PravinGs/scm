@@ -68,6 +68,6 @@ void LOG_COLORED(const char *file, const int line, const char *function, const c
     {                                                                                              \
         LOG_COLORED(__FILE__, __LINE__, __FUNCTION__, ANSI_COLOR_YELLOW, "[DEBUG] ", __VA_ARGS__); \
     }
-#define LOG(...) LOG_COLORED(__FILE__, __LINE__, __FUNCTION__, ANSI_COLOR_GREEN, "[SUCCESS] ", __VA_ARGS__)
+#define INFO(...) LOG_COLORED(__FILE__, __LINE__, __FUNCTION__, ANSI_COLOR_GREEN, "[SUCCESS] ", __VA_ARGS__)
 
 #endif // LOGGER_HPP

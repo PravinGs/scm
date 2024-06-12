@@ -24,7 +24,7 @@ struct LogEntity
     string current_read_time;
     conn_entity connection;   
     string err_msg;
-    LogEntity() : count(0), is_empty(true), start_filter(true), end_filter(true), last_read_time(0), end_time(0) {}
+    LogEntity() : count(0), is_empty(true), start_filter(false), end_filter(false), last_read_time(0), end_time(0) {}
 };
 
 typedef struct standardLogAttrs standardLogAttrs;

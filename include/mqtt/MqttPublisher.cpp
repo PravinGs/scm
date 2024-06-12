@@ -9,11 +9,28 @@ void MqttPublisher::publish(const std::string &topic, const std::string &message
     client->publish(response_msg);
 }
 
-void MqttPublisher::sendErrorResponse(const string &request, int status)
+void MqttPublisher::sendErrorResponse(const mqtt::const_message_ptr &request, int status)
 {
-    string err_msg = Common::getErrorString(status);
-    DEBUG("publishing error response to topic erro");
-    MqttErrorReponse errorResponse(status, request, err_msg);
+    DEBUG("publishing error response to topic error");
+    MqttErrorReponse errorResponse;
+    errorResponse.status = status;
+    errorResponse.errMsg = Common::getErrorString(status);
+
+    string err_msg;
+    Json::Value root;
+    Json::CharReaderBuilder builder;
+    std::istringstream iss(request->get_payload_str());
+
+    Json::parseFromStream(builder, iss, &root, &err_msg);
+
+    if (!err_msg.empty())
+    {
+        errorResponse.payload = request->get_payload();
+    }
+    else
+    {
+        errorResponse.payload = root;
+    }
     mqtt::message_ptr response_msg = mqtt::make_message(ERROR_TOPIC, stringBuilder.toJson(errorResponse));
     client->publish(response_msg);
 }
@@ -22,9 +39,6 @@ void MqttPublisher::sendAcknowledge(MqttAck ack)
 {
 }
 
-// void MqttPublisher::sendResponse(const std::string &res_type, const std::string &data, const std::string &topic)
-// {
-// }
 template <>
 void MqttPublisher::sendResponse(const LogRequest &request, std::vector<string> &logs)
 {
@@ -67,4 +81,13 @@ void MqttPublisher::sendResponse(const ProcessRequest &request, std::vector<Proc
         string json = stringBuilder.toJson(response);
         publish(request.sourceId, json);
     }
+}
+
+template <>
+void MqttPublisher::sendResponse(const TpmClearRequest &request, int &status)
+{
+    MqttResponse response(request.id, request.actionType);
+    response.errMsg = Common::getErrorString(status);
+    string json = stringBuilder.toJson(response);
+    publish(request.sourceId, json);
 }

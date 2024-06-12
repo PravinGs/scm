@@ -166,7 +166,7 @@ int os::createLogArchiveFile(int curr_day, int curr_month, int curr_year, string
 	string current_dir = SCM::Config::BASE_LOG_DIR;
 	if (!isDirExist(current_dir) && createDir(current_dir) == SCM::SUCCESS)
 	{
-		LOG("path created", current_dir);
+		INFO("path created", current_dir);
 	}
 	else if (!isDirExist(current_dir) && createDir(current_dir) != SCM::SUCCESS)
 	{
@@ -176,7 +176,7 @@ int os::createLogArchiveFile(int curr_day, int curr_month, int curr_year, string
 	current_dir += SCM::Config::BASE_LOG_ARCHIVE;
 	if (!isDirExist(current_dir) && createDir(current_dir) == SCM::SUCCESS)
 	{
-		LOG("path created", current_dir);
+		INFO("path created", current_dir);
 	}
 	else if (!isDirExist(current_dir) && createDir(current_dir) != SCM::SUCCESS)
 	{
@@ -186,7 +186,7 @@ int os::createLogArchiveFile(int curr_day, int curr_month, int curr_year, string
 	current_dir += SCM::Config::SEP + std::to_string(curr_year);
 	if (!isDirExist(current_dir) && createDir(current_dir) == SCM::SUCCESS)
 	{
-		LOG("path created", current_dir);
+		INFO("path created", current_dir);
 	}
 	else if (!isDirExist(current_dir) && createDir(current_dir) != SCM::SUCCESS)
 	{
@@ -197,7 +197,7 @@ int os::createLogArchiveFile(int curr_day, int curr_month, int curr_year, string
 	current_dir += SCM::Config::SEP + SCM::MONTHS[inclusive_month];
 	if (!isDirExist(current_dir) && createDir(current_dir) == SCM::SUCCESS)
 	{
-		LOG("path created", current_dir);
+		INFO("path created", current_dir);
 	}
 	else if (!isDirExist(current_dir) && createDir(current_dir) != SCM::SUCCESS)
 	{

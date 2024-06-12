@@ -234,7 +234,7 @@ public: // private
                 table[d.decode] = d;
             }
         }
-        LOG("XML parsing success");
+        INFO("XML parsing success");
         return SCM::SUCCESS;
     }
 

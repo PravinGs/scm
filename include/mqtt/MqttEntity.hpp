@@ -1,6 +1,45 @@
 #ifndef MqttEntity_HPP
 #define MqttEntity_HPP
 
+#include "util/Common.hpp"
+
+static const std::map<string, int> actionCommand = {
+    {"LOG", 0},
+    {"PRO", 1},
+    {"PAT", 2},
+    {"TPM", 3},
+};
+
+static const std::map<string, int> tpmCommand = {
+    {"TPMSETUP",0},
+    {"TPMCLR", 1},
+    {"TPMCNGPASS", 2},
+    {"TPMSEAL", 3},
+    {"TPMUNSEAL", 4},
+    {"TPMDELSEAL", 5},
+    {"TPMADDKEY", 6},
+    {"TPMGETKEY", 7},
+    {"TPMDELKEY", 8}
+};
+
+enum class ActionType
+{
+    LogRequest = 0,
+    PatchRequest = 1,
+    ProcessRequest = 2,
+    TpmClear = 3,
+    TpmSealKey = 4,
+};
+
+enum class TpmCommand
+{
+    TpmClear = 0,
+    SealKey = 1,
+    UnsealKey = 2,
+    NvStore = 3,
+    NvRead = 4
+};
+
 struct MqttEntity
 {
     int port;
@@ -15,100 +54,18 @@ struct MqttEntity
     MqttEntity() : port(8000), qos(1), is_secure(true) {}
 };
 
-enum class ActionType
-{
-    LogRequest = 0,
-    PatchRequest = 1,
-    ProcessRequest = 2,
-    TpmConfigServiceuration = 3
-};
-
-enum class ResponseType
-{
-    MqttResponse = 0,
-    RestApiResponse = 1
-};
-
-enum class LogPriority
-{
-    None = 0,
-    Trace = 1,
-    InteractionLevel = 2,
-    StandardLevel = 3,
-    Alarm = 4,
-};
-
-enum class LogLevel
-{
-    None = 0,
-    Trace = 1,
-    Debug = 2,
-    Warning = 3,
-    Error = 4,
-    Critical = 5,
-};
-
-enum class LogEnumCategory
-{
-    Application = 0,
-    SCM = 1,
-    System = 2,
-    Firewall = 3,
-    Network = 4,
-    Other = 5
-};
-
-enum class TpmCommand
-{
-    TpmClear = 0,
-    SealKey = 1,
-    UnsealKey = 2,
-    NvStore = 3,
-    NvRead = 4
-};
-
-struct BaseResponse
-{
-    std::string guid;
-    bool is_deleted;
-    std::string created_on;
-    std::string modified_on;
-    std::string created_by;
-    std::string modified_by;
-    std::string row_version;
-    BaseResponse() : is_deleted(true) {}
-};
-
-struct LogResponse : BaseResponse
-{
-    std::string time_generated;
-    std::string time_wriiten;
-    std::string org_id;
-    std::string app_name;
-    std::string source;
-    std::string message;
-    LogEnumCategory category;
-    std::string user_login_id;
-    LogPriority priority;
-    LogLevel level;
-};
-
-struct MqttLogResponse
-{
-    std::vector<LogResponse> logs;
-};
-
 struct BaseRequest
 {
     std::string id;
     std::string sourceId;
     std::string targetId;
-    int actionType;
+    std::string actionType;
     int isAckRequired;
     int responseType;
+    Json::Value inputParams;
 
-    BaseRequest() : actionType(0), isAckRequired(0), responseType(-1) {}
-    BaseRequest(const std::string &sourceId, int actionType, int isAckRequired, int responseType)
+    BaseRequest() : isAckRequired(0), responseType(-1) {}
+    BaseRequest(const std::string &sourceId, const std::string &actionType, int isAckRequired, int responseType)
         : sourceId(sourceId), actionType(actionType), isAckRequired(isAckRequired), responseType(responseType) {}
 };
 
@@ -144,59 +101,48 @@ struct ProcessRequest : public BaseRequest
     }
 };
 
-struct TpmRequest : BaseRequest
+struct TpmClearRequest : BaseRequest
 {
-    int command;
-    TpmRequest() {}
-    TpmRequest(const std::string &sourceId, int actionType, int isAckRequired, int responseType, int command)
-        : BaseRequest{sourceId, actionType, isAckRequired, responseType}, command(command) {}
+    string lockoutAuth;
+    bool isBackupenabled;
+    TpmClearRequest() : isBackupenabled(false) {}
 };
 
-struct TpmConfig : TpmRequest
+struct TpmPostRequest : BaseRequest
 {
-    string lockout_auth;
-    TpmConfig() {}
-    TpmConfig(const std::string &sourceId, int actionType, int isAckRequired, int responseType, int command, const std::string &lockout_auth)
-        : TpmRequest{sourceId, actionType, isAckRequired, responseType, command}, lockout_auth(lockout_auth) {}
-};
-
-struct SealConfig : TpmRequest
-{
+    int dataSize;
     string ownerAuth;
     string srkAuth;
     string dekAuth;
-    string fileName;
+    string data;
     string objectName;
-    SealConfig() {}
-    SealConfig(const std::string &sourceId, int actionType, int isAckRequired, int responseType, int command, const string &ownerAuth, const string &srkAuth, const string &dekAuth, const string &fileName, const string &objectName)
-        : TpmRequest{sourceId, actionType, isAckRequired, responseType, command}, ownerAuth(ownerAuth), srkAuth(srkAuth), dekAuth(dekAuth), fileName(fileName), objectName(objectName) {}
+    TpmPostRequest() : dataSize(0) {}
 };
 
-struct PersistConfig : TpmRequest
+struct TpmBaseReponse
 {
-    string indexName;
-    string ownerPassword;
-    string fileName;
-    int indexValue;
-    string indexPassword;
-    int dataSize;
-    PersistConfig() {}
-    PersistConfig(const std::string &sourceId, int actionType, int isAckRequired, int responseType, int command, const string &indexName, const string &ownerPassword, const string &fileName, const int indexValue, const string &indexPassword, const int dataSize)
-        : TpmRequest{sourceId, actionType, isAckRequired, responseType, command}, indexName(indexName), ownerPassword(ownerPassword), fileName(fileName), indexValue(indexValue), indexPassword(indexPassword), dataSize(dataSize) {}
+    int status;
+    string errMsg;
+    TpmBaseReponse() : status(1) {}
 };
 
-struct TpmDataResponse
+struct TpmClearResponse : TpmBaseReponse
 {
+    vector<string> keys;
+    TpmClearResponse()
+    {
+        keys.clear();
+    }
 };
 
 struct MqttErrorReponse
 {
     int status;
-    string payload;
+    Json::Value payload;
     string errMsg;
 
     MqttErrorReponse() : status(0) {}
-    MqttErrorReponse(const int statusCode, const string &payloadStr, const string &errMsgStr)
+    MqttErrorReponse(const int statusCode, const Json::Value &payloadStr, const string &errMsgStr)
     {
         status = statusCode;
         payload = payloadStr;
@@ -208,11 +154,11 @@ struct MqttResponse
 {
     int status;
     string requestId;
-    int actionType;
+    std::string actionType;
     Json::Value result;
     string errMsg;
 
-    MqttResponse(string request_id, int action_type): status(1),requestId(request_id),actionType(action_type){}
+    MqttResponse(string request_id, const std::string &action_type) : status(1), requestId(request_id), actionType(action_type) {}
 };
 
 struct MqttAck
