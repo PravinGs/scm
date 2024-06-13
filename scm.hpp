@@ -25,7 +25,7 @@
 // #include "integration_test/patch_test.hpp"
 
 #include "mqtt/MqttController.hpp"
-// #include "tpm/TpmService.hpp"
+#include "tpm/TpmService.hpp"
 
 namespace TestMethods
 {
@@ -38,11 +38,17 @@ namespace TestMethods
     void testClearTpm()
     {
         TpmService service;
+        TpmContext context;
+        context.keyName = "seal1";
+        context.ownerAuth = "";
+        context.srkAuth = "";
+        context.dekAuth = "dekAuth";
+        context.data = "bcuwbeounpoifnfir3wnpofnrlhwg";
         std::cout << "tpm service instantiated\n";
-        TPM2_RC response = service.clear_tpm("");
-        if (response == TPM2_RC_SUCCESS)
+        TPM2_RC response = service.seal_key(context);
+        if (response == SCM::Tpm::TPM2_SUCCESS)
         {
-            std::cout << "Tpm cleared successfully.\n";
+            std::cout << "Tpm sealed successfully.\n";
         }
     }
 

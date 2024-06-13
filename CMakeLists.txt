@@ -101,7 +101,6 @@ target_link_libraries(SCM
     tss2-esys
     tss2-tcti-device
     tss2-rc
-    sw-tpm
     paho-mqttpp3 
     paho-mqtt3a
 )

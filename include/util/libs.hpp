@@ -51,6 +51,13 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <signal.h>
+
+extern "C"
+{
+    #include <tss2/tss2_esys.h>
+    #include <tss2/tss2_tcti_device.h>
+}
+
 #endif
 
 #include "constants.hpp"

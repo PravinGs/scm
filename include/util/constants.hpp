@@ -5,8 +5,12 @@
 
 #include <string>
 #include <vector>
+typedef short unsigned int tpm_string_size;
+
 using std::string;
 using std::vector;
+
+typedef 
 
 struct conn_entity
 {
@@ -23,12 +27,12 @@ namespace SCM
 {
 	static bool is_syslog_enabled = false;
 
-	const int MQTT_REQUEST_EMPTY_OR_NULL_ACTION_TYPE= 100;
-	const int MQTT_REQUEST_INVALID_RESPONSE_TYPE    = 101;
-	const int MQTT_REQUEST_EMPTY_OR_NULL_SOURCE_ID  = 102;
-	const int MQTT_REQUEST_EMPTY_OR_NULL_TARGET_ID  = 103;
-	const int MQTT_REQUEST_EMPTY_OR_NULL_REQUEST_ID = 104;	
-	const int MQTT_REQUEST_INVALID_LOG_TYPE         = 105;
+	const int MQTT_REQUEST_EMPTY_OR_NULL_ACTION_TYPE = 100;
+	const int MQTT_REQUEST_INVALID_RESPONSE_TYPE = 101;
+	const int MQTT_REQUEST_EMPTY_OR_NULL_SOURCE_ID = 102;
+	const int MQTT_REQUEST_EMPTY_OR_NULL_TARGET_ID = 103;
+	const int MQTT_REQUEST_EMPTY_OR_NULL_REQUEST_ID = 104;
+	const int MQTT_REQUEST_INVALID_LOG_TYPE = 105;
 
 	namespace StatusCode
 	{
@@ -92,7 +96,7 @@ namespace SCM
 		const int PATCH_DEFAULT_MIN_DOWNLOAD_SPEED = 1;
 	}
 
-	namespace Tpm 
+	namespace Tpm
 	{
 		const int TPM2_TEST_SUCCESS = 200;
 		const int TPM2_ABRMD_DEVICE_ACTIVE = 201;
@@ -100,6 +104,28 @@ namespace SCM
 		const int TPM2_ABRMD_NOT_ACTIVE = 203;
 		const int TSS2_LIBRARY_NOT_EXIST = 204;
 		const int TPM2_DEVICE_NOT_EXIST = 205;
+		const int TPM2_SUCCESS = 0;
+		const int TPM2_INVALID_FILE = 10;
+		const int TPM2_INVALID_SEAL_CONTEXT = 11;
+		const int TPM2_INVALID_USER_CONTEXT = 12;
+		const int TPM2_INVALID_PERSISTED_CONTEXT = 13;
+		const int TPM2_INVALID_HIERARCHY_AUTH = 2466;
+		const int TPM2_INVALID_ESYS_CONTEXT = 458757;
+		const int TPM2_INVALID_OBJECT_AUTHORIZATION = 2446;
+		const int TPM2_EXCEEDED_MAX_BUFFER_SIZE = 469;
+		const int TPM2_EMPTY_KEY_FILE = 706;
+		const int TPM2_INVALID_OBJECT = 1;
+		const int TPM2_INVALID_OBJECT_CREDENTIAL = 15;
+		const int TPM2_DUPLICATE_VALUE = 102;
+		const int TPM2_DATABASE_TRANSACTION_FAILED = 101;
+		const int TPM2_INVALID_DB_QUERY = 105;
+		const int TPM2_GENERIC_MESSAGE = 2;
+		const int TPM2_INVALID_DEVICE = 3;
+		const int TPM2_INVALID_DATABASE = 4;
+		const int TPM2_PERSISTENT_KEY_LIMIT = 7;
+		const int TPM2_DATABASE_CONSTARINT_VIOLATION = 19;
+		const int TPM2_EMPTY_STRING = 20;
+		const int MAX_SEAL_BUFFER_SIZE = 256;
 	}
 
 	namespace Rest

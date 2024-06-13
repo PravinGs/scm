@@ -19,7 +19,7 @@ int main(int argc, char **argv)
     // testClearTpm();
     // getCurrentPatchVersion();
     // trackMessageArrived();
-    startMqtt();
+    testClearTpm();
     
     if (Common::logfp.is_open())
     {

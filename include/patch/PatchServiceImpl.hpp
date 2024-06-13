@@ -1,7 +1,7 @@
 #ifndef PatchServiceImpl_HPP
 #define PatchServiceImpl_HPP
 #pragma once
-#include "patch/PatchService.hpp"
+#include "patch/PatchService.hpp"   
 class PatchServiceImpl : public PatchService {
 public:
 	int start(PatchEntity& entity) 
@@ -9,6 +9,13 @@ public:
         int result = SCM::SUCCESS;
         int count = entity.retry_count;
         curl = curl_easy_init();
+
+        // if (isFileComplete(entity)) 
+        // {
+        //    DEBUG("File already downloaded completely.")
+        //    return result;
+        // }
+
         while (count > 0)
         {
             result = download(entity);
@@ -128,11 +135,23 @@ private:
         } while (res != CURLE_OK && retry > 0);
         if (retry <= 0)
         {
-            return_val = SCM::FAILED;
+            return_val = SCM::FAILED; 
         }
         fclose(file);
         return return_val;
     }
+
+    // bool isFileComplete(const PatchEntity& entity)
+    //  { 
+    //     ifstream file(entity.download_path, ios::binary | ios::ate); 
+    //     if (file) 
+    //     { 
+    //         current_size = file.(); 
+    //         file.close(); 
+    //         return current_size >= entity.expected_size; 
+    //     } 
+    //     return false; 
+    // }
 
 private:
     CURL* curl = nullptr;
