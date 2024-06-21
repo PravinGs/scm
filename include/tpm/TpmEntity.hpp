@@ -11,8 +11,13 @@ struct TpmContext
     string data;
     string fileName;
     int index;
+    int dataSize;       
+    int type;      
+   
+    TpmContext() : index(0), dataSize(0), type(-1) {}
 
-    TpmContext(): index(0){}
+    void setKeyName(string key) { this->keyName = key; }
+    void setDekAuth(string dek) { this->dekAuth = dek; }
 };
 
 #endif

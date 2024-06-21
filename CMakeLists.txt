@@ -103,6 +103,7 @@ target_link_libraries(SCM
     tss2-rc
     paho-mqttpp3 
     paho-mqtt3a
+    sqlite3
 )
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)

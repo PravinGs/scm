@@ -10,9 +10,9 @@ typedef short unsigned int tpm_string_size;
 using std::string;
 using std::vector;
 
-typedef 
+typedef
 
-struct conn_entity
+	struct conn_entity
 {
 	int port;
 	string conn_string;
@@ -98,6 +98,7 @@ namespace SCM
 
 	namespace Tpm
 	{
+		const int TPM2_SEAL_BUFFER_SIZE = 328;
 		const int TPM2_TEST_SUCCESS = 200;
 		const int TPM2_ABRMD_DEVICE_ACTIVE = 201;
 		const int TPM2_ABRMD_SIMULATOR_ACTIVE = 202;
@@ -112,7 +113,8 @@ namespace SCM
 		const int TPM2_INVALID_HIERARCHY_AUTH = 2466;
 		const int TPM2_INVALID_ESYS_CONTEXT = 458757;
 		const int TPM2_INVALID_OBJECT_AUTHORIZATION = 2446;
-		const int TPM2_EXCEEDED_MAX_BUFFER_SIZE = 469;
+		const int TPM2_EXCEEDED_MAX_NV_BUFFER_SIZE = 469;
+		const int TPM2_EXCEEDED_MAX_SEAL_BUFFER_SIZE = 589840;
 		const int TPM2_EMPTY_KEY_FILE = 706;
 		const int TPM2_INVALID_OBJECT = 1;
 		const int TPM2_INVALID_OBJECT_CREDENTIAL = 15;
@@ -126,6 +128,14 @@ namespace SCM
 		const int TPM2_DATABASE_CONSTARINT_VIOLATION = 19;
 		const int TPM2_EMPTY_STRING = 20;
 		const int MAX_SEAL_BUFFER_SIZE = 256;
+		const int TPM2_INVALID_CONTEXT = 44;
+
+		const string SIMULATOR_ADDRESS = "libtss2-tcti-mssim.so.0:host=127.0.0.1,port=2321";
+
+		const string DEFAULT_DB_PATH = "/home/champ/scm/include/db/secrets";
+		const string TPM_AUTHORIZATION_STORAGE = "/etc/scl/tpm/";
+		const string SEAL_PREFIX = "seal_";
+		const string NV_PREFIX = "nv_";
 	}
 
 	namespace Rest

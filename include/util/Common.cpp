@@ -8,6 +8,7 @@ bool debug_enabled = false;
 bool console_log_enabled = false;
 
 string accessToken = "";
+string dbPath = SCM::Tpm::DEFAULT_DB_PATH;
 
 void write_to_file(const string &log)
 {
@@ -429,6 +430,16 @@ vector<string> Common::toVector(const string &line, const char sep)
         names.push_back(Common::trim(name));
     }
     return names;
+}
+
+string Common::generateKeyName(int type, int index)
+{
+    if (!os::isDirExist(SCM::Tpm::TPM_AUTHORIZATION_STORAGE))
+    {
+        (void)os::createDir(SCM::Tpm::TPM_AUTHORIZATION_STORAGE);
+    }
+    string suffix = "key_" + std::to_string(index);
+    return (type == 0) ? (SCM::Tpm::TPM_AUTHORIZATION_STORAGE + SCM::Tpm::SEAL_PREFIX + suffix) : (SCM::Tpm::TPM_AUTHORIZATION_STORAGE + SCM::Tpm::NV_PREFIX + suffix);
 }
 
 string Common::getErrorString(const int errorCode)

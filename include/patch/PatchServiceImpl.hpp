@@ -140,14 +140,15 @@ private:
         fclose(file);
         return return_val;
     }
-
+public : 
     // bool isFileComplete(const PatchEntity& entity)
     //  { 
-    //     ifstream file(entity.download_path, ios::binary | ios::ate); 
+    //     int current_size;
+    //     std::ifstream file(entity.download_path, std::ios::binary | std::ios::ate); 
     //     if (file) 
     //     { 
-    //         current_size = file.(); 
-    //         file.close(); 
+    //         current_size = file.PatchEntity(); 
+    //         file.close();      
     //         return current_size >= entity.expected_size; 
     //     } 
     //     return false; 

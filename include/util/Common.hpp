@@ -35,6 +35,7 @@ public:
 	static fstream logfp;
 	static bool debug;
 	static string accessToken;
+	static string dbPath;
 
 	static int setupLogger(const string &log_file); // default SCM::Config
 
@@ -73,11 +74,14 @@ public:
 	static void pauseTillNextExecution(const cron::cronexpr &cron);
 
 	static void parseArguments(int argc, char *argv[]);
+
 	static int convertToUtc(const string &sys_time, string &utc_time);
 
 	static vector<string> toVector(const string& line, const char sep);
 
 	static string getErrorString(const int errorCode);
+
+	static string generateKeyName(int type, int index);
 	~Common()
 	{
 		if (logfp.is_open())

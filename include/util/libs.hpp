@@ -24,6 +24,7 @@
 #include <chrono>
 #include <thread>
 #include <time.h>
+#include <sqlite3.h>
 
 #if __linux__
 #include <zlib.h>
@@ -51,6 +52,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <signal.h>
+#include <gtest/gtest.h>
 
 extern "C"
 {

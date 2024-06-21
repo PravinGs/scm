@@ -174,6 +174,12 @@ public:
         memcpy(inSensitive.sensitive.userAuth.buffer, context.dekAuth.c_str(), (tpm_string_size)context.dekAuth.size());
         memcpy(inSensitive.sensitive.data.buffer, key_buffer, key_buffe_size);
 
+        TPM2B_DIGEST keyedHash =
+            {
+                .size = 0,
+                .buffer = {0},
+            };
+
         TPM2B_PUBLIC inPublic;
         inPublic.size = 0;
         inPublic.publicArea.type = TPM2_ALG_KEYEDHASH;
@@ -184,8 +190,10 @@ public:
         inPublic.publicArea.authPolicy.size = 0;
         inPublic.publicArea.parameters.keyedHashDetail.scheme.scheme = TPM2_ALG_NULL;
         inPublic.publicArea.parameters.keyedHashDetail.scheme.details.hmac.hashAlg = TPM2_ALG_SHA256;
-        inPublic.publicArea.unique.keyedHash.size = 0;
-        memset(inPublic.publicArea.unique.keyedHash.buffer, 0, sizeof(inPublic.publicArea.unique.keyedHash.buffer));
+        inPublic.publicArea.unique.keyedHash = keyedHash;
+        // inPublic.publicArea.unique.keyedHash.size = 0;
+        // inPublic.publicArea.unique.keyedHash.buffer = {0};
+        // memset(inPublic.publicArea.unique.keyedHash.buffer, 0, sizeof(inPublic.publicArea.unique.keyedHash.buffer));
 
         TPM2B_DATA outsideInfo =
             {

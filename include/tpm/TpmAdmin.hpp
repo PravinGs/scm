@@ -2,10 +2,15 @@
 #define TPM_ADMIN_HPP
 
 #include "util/Common.hpp"
+#include "db/DbService.hpp"
+#include "TpmException.hpp"
 using namespace SCM::Tpm;
 class TpmAdmin
 {
 public:
+    TpmAdmin() : db(std::make_unique<DbService>(SCM::Tpm::DEFAULT_DB_PATH))
+    {
+    }
 
     TPM2_RC setAuthHierarchy(ESYS_CONTEXT *esys_context, const int type, const string &oldAuth, const string &newAuth)
     {
@@ -112,34 +117,20 @@ public:
             }
 
             response = Esys_StartAuthSession(esys_context, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE, NULL, TPM2_SE_HMAC, &symmteric, TPM2_ALG_SHA256, &session);
-            if (response != TPM2_SUCCESS)
-            {
-
-                throw std::invalid_argument("Failed to start auth session");
-            }
+            handleTPMResponse(response, "Failed to start auth session");
             response = Esys_TR_SetAuth(esys_context, ESYS_TR_RH_LOCKOUT, &authValue); // Authentication check for using owner hierarchy.
-            if (response != TPM2_SUCCESS)
-            {
-                throw std::invalid_argument("Failed to set auth value");
-            }
+            handleTPMResponse(response, "Failed to set auth value");
 
             response = Esys_Clear(esys_context, ESYS_TR_RH_LOCKOUT, session, ESYS_TR_NONE, ESYS_TR_NONE);
-
-            if (response != TPM2_SUCCESS)
-            {
-                throw std::invalid_argument("Error during TPM Clear...");
-            }
+            handleTPMResponse(response, "Error during TPM Clear...");
 
             response = Esys_FlushContext(esys_context, session);
 
-            if (response != TPM2_SUCCESS)
-            {
-                throw std::invalid_argument("Failed to flush session.");
-            }
-            // response = clearHandles(); // Requires DB connection
+            handleTPMResponse(response, "Failed to flush session.");
+            response = clearHandles(); // Requires DB connection
             return response;
         }
-        catch (const std::exception &e)
+        catch (const TPMException &e)
         {
             LOG_ERROR(e.what());
             if (session != ESYS_TR_NONE && Esys_FlushContext(esys_context, session) != TPM2_SUCCESS)
@@ -151,6 +142,17 @@ public:
     }
 
 private:
-};
+    int clearHandles()
+    {
+        string command = "rm -rf " + SCM::Tpm::TPM_AUTHORIZATION_STORAGE;
+        if (std::system(command.c_str()) == 0)
+        {
+            std::cout << "Files removed from TPM_AUTHORIZATION_STORAGE\n";
+        }
+        return db->deleteTpmContextAllHandles();
+    }
 
+private:
+    std::unique_ptr<DbService> db;
+};
 #endif

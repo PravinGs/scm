@@ -3,39 +3,43 @@
 #include "util/ConfigService.hpp"
 #include "util/EntityParser.hpp"
 
-using namespace TestMethods;
-
-int main(int argc, char **argv)
-{
-    Common::parseArguments(argc, argv);
-    openlog("agent.service", LOG_INFO | LOG_CONS, LOG_USER);
-    SCM::is_syslog_enabled = true;
-    Common::setupLogger(SCM::Config::LOG_PATH);
-    if (!SCM::is_syslog_enabled)
-    {
-        Common::logfp.open(SCM::Config::LOG_PATH, std::ios::app);
-    }
-
-    // testClearTpm();
-    // getCurrentPatchVersion();
-    // trackMessageArrived();
-    testClearTpm();
-    
-    if (Common::logfp.is_open())
-    {
-        Common::logfp.close();
-    }
-    closelog();
-}
+// using namespace TestMethods;
 
 // int main(int argc, char **argv)
 // {
-//     // std::cout << "build completed\n";
 //     Common::parseArguments(argc, argv);
-//     testing::InitGoogleTest(&argc, argv);
-//     return RUN_ALL_TESTS();
+//     openlog("agent.service", LOG_INFO | LOG_CONS, LOG_USER);
+//     SCM::is_syslog_enabled = true;
+//     Common::setupLogger(SCM::Config::LOG_PATH);
+//     if (!SCM::is_syslog_enabled)
+//     {
+//         Common::logfp.open(SCM::Config::LOG_PATH, std::ios::app);
+//     }
+
+//     testDatabase();
+
+//     if (Common::logfp.is_open())
+//     {
+//         Common::logfp.close();
+//     }
+//     closelog();
 // }
 
+// int main()
+// {
+//     PatchServiceImpl Patch;
+//     PatchEntity& entity;
+//     Patch.isFileComplete(entity);
+//     return 0;
+// }
+
+int main(int argc, char **argv)
+{
+    // std::cout << "build completed\n";
+    Common::parseArguments(argc, argv);
+    testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
 
 // string validatePatchRequest (const string &patchversion,  const string &url, const string &username , const string &password)
 // {

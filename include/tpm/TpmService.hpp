@@ -13,8 +13,10 @@
 #include "util/Common.hpp"
 #include "util/constants.hpp"
 #include "mqtt/MqttEntity.hpp"
+#include "db/DbService.hpp"
 #include "TpmAdmin.hpp"
 #include "TpmSealHash.hpp"
+#include "TpmNv.hpp"
 class TpmService
 {
     void setup()
@@ -34,15 +36,14 @@ class TpmService
     }
 
 public:
-    TpmService()
+    TpmService() : db(std::make_unique<DbService>(SCM::Tpm::DEFAULT_DB_PATH))
     {
         setup();
     }
-
     TPM2_RC clear_tpm(const string &lockoutAuth)
     {
-        return admin.clearTpm(g_esys_context, lockoutAuth);
-        // return clearTpm(g_esys_context, lockout_auth);
+        TPM2_RC response = admin.clearTpm(g_esys_context, lockoutAuth);
+        return (response == SCM::Tpm::TPM2_SUCCESS) ? db->deleteTpmContextAllHandles() : response;
     }
 
     TPM2_RC changePassword(const int type, const string &oldAuth, const string &newAuth)
@@ -55,21 +56,25 @@ public:
         return seal.add(g_esys_context, context);
     }
 
-    // int unseal_key(SEAL_CONTEXT &seal)
-    // {
-    //     return unSealSecret(g_esys_context, seal);
-    // }
+    int unseal_key(TpmContext &context)
+    {
+        return seal.unSealSecret(g_esys_context, context);
+    }
 
-    // int nv_write(PERSISTED_CONTEXT &context)
-    // {
-    //     return nvProxy(g_esys_context, context);
-    // }
+    int nv_write(TpmContext &context)
+    {
+        return nv.nvProxy(g_esys_context, context);
+    }
 
-    // int nv_read(PERSISTED_CONTEXT &context, char *key)
-    // {
-    //     char data[2048];
-    //     return nvRead(g_esys_context, context, data);
-    // }
+    int nv_read(TpmContext &context)
+    {
+        return nv.nvRead(g_esys_context, context);
+    }
+
+    int nv_delete(TpmContext& context)
+    {
+        return nv.nvDelete(g_esys_context, context);
+    }
 
     ~TpmService()
     {
@@ -80,6 +85,7 @@ public:
     }
 
 private:
+    std::unique_ptr<DbService> db;
     ESYS_CONTEXT *g_esys_context = nullptr;
     TSS2_TCTI_CONTEXT *g_tcti_context = nullptr;
     bool g_context_state = true;
@@ -87,6 +93,7 @@ private:
     size_t device_size = 0;
     TpmAdmin admin;
     TpmSeal seal;
+    TpmNv nv;
 };
 
 #endif
