@@ -6,7 +6,7 @@
 class MqttProxy
 {
 private:
-    int validateBaseRequest(const string &id, const string &actionType, const int responseType, const string &sourceId)
+    int validateBaseRequest(const string &id, const string &actionType, const int responseType, const string &topic)
     {
         if (id.empty())
         {
@@ -20,9 +20,9 @@ private:
         {
             return SCM::MQTT_REQUEST_INVALID_RESPONSE_TYPE;
         }
-        if (sourceId.empty())
+        if (topic.empty())
         {
-            return SCM::MQTT_REQUEST_EMPTY_OR_NULL_SOURCE_ID;
+            return SCM::MQTT_REQUEST_EMPTY_OR_NULL_TOPIC_ID;
         }
         else
         {
@@ -38,20 +38,27 @@ public:
         // {
         //     return isValidBaseRequest;
         // }
-        return validateBaseRequest(request.id, request.actionType, request.responseType, request.sourceId);
+        return validateBaseRequest(request.id, request.actionType, request.responseType, request.topic);
         ;
     }
 
     int validateProcessRequest(const ProcessRequest &request)
     {
-        return validateBaseRequest(request.id, request.actionType, request.responseType, request.sourceId);
+        return validateBaseRequest(request.id, request.actionType, request.responseType, request.topic);
     }
 
     int validateTpmClearRequest(const TpmClearRequest &request)
     {
-        return validateBaseRequest(request.id, request.actionType, request.responseType, request.sourceId);
+        return validateBaseRequest(request.id, request.actionType, request.responseType, request.topic);
     }
-
+    int validateTpmRequest(const TpmRequest &request)
+    {
+        return validateBaseRequest(request.id, request.actionType, request.responseType, request.topic);
+    }
+    int validateTpmChangePasswordRequest(const TpmChangePasswordRequest &request)
+    {
+        return validateBaseRequest(request.id, request.actionType, request.responseType, request.topic);
+    }
     bool validateMqttEntity(MqttEntity &entity)
     {
         if (entity.conn_string.empty())

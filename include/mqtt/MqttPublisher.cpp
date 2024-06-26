@@ -48,7 +48,7 @@ void MqttPublisher::sendResponse(const LogRequest &request, std::vector<string> 
     {
         response.result = stringBuilder.toJson(logs, request.logType);
         string json = stringBuilder.toJson(response);
-        publish(request.sourceId, json);
+        publish(request.topic, json);
         return;
     }
     for (size_t i = 0; i < logs.size(); i += batch_size)
@@ -57,7 +57,7 @@ void MqttPublisher::sendResponse(const LogRequest &request, std::vector<string> 
         std::vector<std::string> batch(logs.begin() + i, logs.begin() + end);
         response.result = stringBuilder.toJson(batch, request.logType);
         string json = stringBuilder.toJson(response);
-        publish(request.sourceId, json);
+        publish(request.topic, json);
     }
 }
 
@@ -70,7 +70,7 @@ void MqttPublisher::sendResponse(const ProcessRequest &request, std::vector<Proc
     {
         response.result = stringBuilder.toJson(logs);
         string json = stringBuilder.toJson(response);
-        publish(request.sourceId, json);
+        publish(request.topic, json);
         return;
     }
     for (size_t i = 0; i < logs.size(); i += batch_size)
@@ -79,7 +79,7 @@ void MqttPublisher::sendResponse(const ProcessRequest &request, std::vector<Proc
         std::vector<ProcessData> batch(logs.begin() + i, logs.begin() + end);
         response.result = stringBuilder.toJson(batch);
         string json = stringBuilder.toJson(response);
-        publish(request.sourceId, json);
+        publish(request.topic, json);
     }
 }
 
@@ -89,5 +89,23 @@ void MqttPublisher::sendResponse(const TpmClearRequest &request, int &status)
     MqttResponse response(request.id, request.actionType);
     response.errMsg = Common::getErrorString(status);
     string json = stringBuilder.toJson(response);
-    publish(request.sourceId, json);
+    publish(request.topic, json);
+}
+
+template <>
+void MqttPublisher::sendResponse(const TpmChangePasswordRequest &request, int &status)
+{
+    MqttResponse response(request.id, request.actionType);
+    response.errMsg = Common::getErrorString(status);
+    string json = stringBuilder.toJson(response);
+    publish(request.topic, json);
+}
+
+template <>
+void MqttPublisher::sendResponse(const TpmRequest &request, int &status)
+{
+    MqttResponse response(request.id, request.actionType);
+    response.errMsg = Common::getErrorString(status);
+    string json = stringBuilder.toJson(response);
+    publish(request.topic, json);
 }

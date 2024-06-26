@@ -170,6 +170,42 @@ void MqttClient::MqttCallback::handleTpm(mqtt::const_message_ptr msg, const stri
             publisher->sendResponse(request, status);
             break;
         }
+        case 2:
+        {
+            TpmChangePasswordRequest request = mqtt_parser.extractTpmChangePasswordRequest(msg->get_payload_str(), status, errMsg);
+            if (status != SCM::SUCCESS || (status = proxy->validateTpmChangePasswordRequest(request)) != SCM::SUCCESS)
+            {
+                publisher->sendErrorResponse(msg, status);
+                return;
+            }
+            status = tpmHandler->handle(request);
+            publisher->sendResponse(request, status);
+            break;
+        }
+        case 3:
+        {
+            TpmRequest request = mqtt_parser.extractTpmSealRequest(msg->get_payload_str(), status, errMsg);
+            if (status != SCM::SUCCESS || (status = proxy->validateTpmRequest(request)) != SCM::SUCCESS)
+            {
+                publisher->sendErrorResponse(msg, status);
+                return;
+            }
+            status = tpmHandler->handle(request, 3);
+            publisher->sendResponse(request, status);
+            break;
+        }
+        // case 4:
+        // {
+        //     TpmRequest request = mqtt_parser.extractTpmUnSealRequest(msg->get_payload_str(), status, errMsg);
+        //     if (status != SCM::SUCCESS || (status = proxy->validateTpmRequest(request)) != SCM::SUCCESS)
+        //     {
+        //         publisher->sendErrorResponse(msg, status);
+        //         return;
+        //     }
+        //     status = tpmHandler->handle(request);
+        //     publisher->sendResponse(request, status);
+        //     break;
+        // }
         default:
             break;
         }

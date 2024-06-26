@@ -452,14 +452,16 @@ string Common::getErrorString(const int errorCode)
         return "MQTT_REQUEST_EMPTY_OR_NULL_ACTION_TYPE";
     case MQTT_REQUEST_INVALID_RESPONSE_TYPE:
         return "MQTT_REQUEST_INVALID_RESPONSE_TYPE";
-    case MQTT_REQUEST_EMPTY_OR_NULL_SOURCE_ID:
-        return "MQTT_REQUEST_EMPTY_OR_NULL_SOURCE_ID";
+    case MQTT_REQUEST_EMPTY_OR_NULL_TOPIC_ID:
+        return "MQTT_REQUEST_EMPTY_OR_NULL_TOPIC_ID";
     case MQTT_REQUEST_EMPTY_OR_NULL_TARGET_ID:
         return "MQTT_REQUEST_EMPTY_OR_NULL_TARGET_ID";
     case MQTT_REQUEST_EMPTY_OR_NULL_REQUEST_ID:
         return "MQTT_REQUEST_EMPTY_OR_NULL_REQUEST_ID";
     case MQTT_REQUEST_INVALID_LOG_TYPE:
         return "MQTT_REQUEST_INVALID_LOG_TYPE";
+    case MQTT_INVALID_TPM_COMMAND:
+        return "MQTT_INVALID_TPM_COMMAND";
     case SCM::Tpm::TPM2_ABRMD_NOT_ACTIVE:
         return "TPM2_ABRMD_NOT_ACTIVE";
     case SCM::Tpm::TPM2_ABRMD_SIMULATOR_ACTIVE:
@@ -468,6 +470,8 @@ string Common::getErrorString(const int errorCode)
         return "TPM2_DEVICE_NOT_EXIST";
     case SCM::Tpm::TSS2_LIBRARY_NOT_EXIST:
         return "TSS2_LIBRARY_NOT_EXIST";
+    case SCM::Tpm::TPM2_INVALID_HIERARCHY_AUTH:
+        return "TPM2_INVALID_HIERARCHY_AUTH";
     default:
         return "Unknown Error Code";
     }

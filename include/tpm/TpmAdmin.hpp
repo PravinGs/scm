@@ -57,35 +57,24 @@ public:
         try
         {
             response = Esys_StartAuthSession(esys_context, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE, NULL, TPM2_SE_HMAC, &symmteric, TPM2_ALG_SHA256, &session);
-            if (response != TPM2_SUCCESS)
-            {
-                throw std::invalid_argument("failed to start auth session.");
-            }
+            handleTPMResponse(response, "failed to start auth session.");
+            
             response = Esys_TR_SetAuth(esys_context, typeHandle, &oldPasword);
-            if (response != TPM2_SUCCESS)
-            {
-                throw std::invalid_argument("failed to set auth value.");
-            }
+            handleTPMResponse(response, "failed to set auth value.");
+            
             response = Esys_HierarchyChangeAuth(esys_context,
                                                 typeHandle,
                                                 session,
                                                 ESYS_TR_NONE,
                                                 ESYS_TR_NONE,
                                                 &newPassword);
-            if (response != TPM2_SUCCESS)
-            {
-                throw std::invalid_argument("error at changing the password..");
-            }
+            handleTPMResponse(response, "error at changing the password..");
+            
             response = Esys_FlushContext(esys_context, session);
-
-            if (response != TPM2_SUCCESS)
-            {
-                throw std::invalid_argument("failed to flush the session context.");
-            }
-
+            handleTPMResponse(response, "failed to flush the session context.");
             return response;
         }
-        catch (std::exception &ex)
+        catch (TPMException &ex)
         {
             LOG_ERROR(ex.what());
             if (session != ESYS_TR_NONE && Esys_FlushContext(esys_context, session) != TPM2_SUCCESS)

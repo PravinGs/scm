@@ -189,7 +189,7 @@ private:
         std::time_t current_log_time = Common::stringToTime(standard_time_format_string); /* Convert string time to time_t format for comparision between time_t objects */
         if (current_log_time < entity.last_read_time)
         {
-            std::cout << line << '\n';
+            // std::cout << line << '\n';
             return 0;
         }
 

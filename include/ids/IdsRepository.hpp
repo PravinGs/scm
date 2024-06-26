@@ -39,7 +39,7 @@ public:
         string file_path = os::createJSONFile("root-analysis");
         Json::Value json;
         json["OrgId"] = 5268;
-        json["Source"] = os::host_name;
+        json["Topic"] = os::host_name;
         json["AppName"] = "Rootkit Analysis and Linux Network commands";
         json["Alerts"] = Json::Value(Json::arrayValue);
         std::ofstream ofile(file_path); /*need update*/
@@ -61,7 +61,7 @@ public:
         string file_path = os::createJSONFile("log-analysis-report");
         Json::Value json;
         json["OrgId"] = 5268;
-        json["Source"] = os::host_name;
+        json["Topic"] = os::host_name;
         json["AppName"] = "system_events";
         json["Alerts"] = Json::Value(Json::arrayValue);
         Json::Value alert;

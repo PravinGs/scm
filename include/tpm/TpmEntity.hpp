@@ -15,6 +15,16 @@ struct TpmContext
     int type;      
    
     TpmContext() : index(0), dataSize(0), type(-1) {}
+    TpmContext(const TpmRequest& request) : 
+            keyName(request.keyName),
+            ownerAuth(request.ownerAuth), 
+            srkAuth(request.srkAuth),
+            dekAuth(request.dekAuth),
+            data(request.data),
+            fileName(request.fileName),
+            index(request.index),
+            dataSize(request.dataSize),
+            type(request.type){}
 
     void setKeyName(string key) { this->keyName = key; }
     void setDekAuth(string dek) { this->dekAuth = dek; }

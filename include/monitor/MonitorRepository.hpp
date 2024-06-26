@@ -67,7 +67,7 @@ public:
         jsonData["DeviceTotalSpace"] = props;
         jsonData["DeviceUsedSpace"] = availed_props;
         jsonData["TimeGenerated"] = os::getCurrentTime();
-        jsonData["Source"] = os::host_name;
+        jsonData["Topic"] = os::host_name;
         jsonData["OrgId"] = 10;
         jsonData["ProcessObjects"] = Json::Value(Json::arrayValue);
         for (ProcessData data : logs)

@@ -99,7 +99,7 @@ string ProcessToJSON(const vector<ProcessData> &logs, const SystemProperties &pr
     json["DeviceTotalSpace"] = props;
     json["DeviceUsedSpace"] = availed_props;
     json["TimeGenerated"] = os::getCurrentTime();
-    json["Source"] = os::host_name;
+    json["Topic"] = os::host_name;
     json["OrgId"] = 10;
     json["ProcessObjects"] = Json::Value(Json::arrayValue);
     for (auto log : logs)

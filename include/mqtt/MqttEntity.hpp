@@ -57,7 +57,7 @@ struct MqttEntity
 struct BaseRequest
 {
     std::string id;
-    std::string sourceId;
+    std::string topic;
     std::string targetId;
     std::string actionType;
     int isAckRequired;
@@ -65,8 +65,8 @@ struct BaseRequest
     Json::Value inputParams;
 
     BaseRequest() : isAckRequired(0), responseType(-1) {}
-    BaseRequest(const std::string &sourceId, const std::string &actionType, int isAckRequired, int responseType)
-        : sourceId(sourceId), actionType(actionType), isAckRequired(isAckRequired), responseType(responseType) {}
+    BaseRequest(const std::string &topic, const std::string &actionType, int isAckRequired, int responseType)
+        : topic(topic), actionType(actionType), isAckRequired(isAckRequired), responseType(responseType) {}
 };
 
 struct PatchRequest : BaseRequest
@@ -106,6 +106,29 @@ struct TpmClearRequest : BaseRequest
     string lockoutAuth;
     bool isBackupenabled;
     TpmClearRequest() : isBackupenabled(false) {}
+};
+
+struct TpmChangePasswordRequest : BaseRequest
+{
+    int type;
+    string oldAuth;
+    string newAuth;
+    TpmChangePasswordRequest() : type(0) {}
+};
+
+struct TpmRequest : BaseRequest
+{
+    string keyName;
+    string ownerAuth;
+    string srkAuth;
+    string dekAuth;
+    string data;
+    string fileName;
+    int index;
+    int dataSize;       
+    int type;
+
+    TpmRequest() : index(0),dataSize(0),type(-1) {}
 };
 
 struct TpmPostRequest : BaseRequest

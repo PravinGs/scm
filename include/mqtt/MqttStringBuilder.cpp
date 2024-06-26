@@ -25,7 +25,7 @@ string MqttStringBuilder::toJson(const MqttResponse &response)
 {
     Json::Value j;
     j["Status"] = response.status;
-    j["ErrorMessage"] = Common::getErrorString(response.status);
+    j["ErrorMessage"] = response.errMsg;
     j["RequestId"] = response.requestId;
     j["ActionType"] = response.actionType;
     j["Result"] = response.result;
@@ -37,7 +37,7 @@ Json::Value MqttStringBuilder::toJson(const vector<std::string> &logs, const str
     Json::Value json;
     json["OrgId"] = 234225;
     json["AppName"] = name;
-    json["Source"] = os::host_name;
+    json["Topic"] = os::host_name;
     json["LogObjects"] = Json::Value(Json::arrayValue);
     json["TimeGenerated"] = os::getCurrentTime();
     for (auto log : logs)
@@ -63,7 +63,7 @@ Json::Value MqttStringBuilder::toJson(const vector<ProcessData> &logs)
     Json::Value json;
     json["OrgId"] = 234225;
     json["AppName"] = "system_resources";
-    json["Source"] = os::host_name;
+    json["Topic"] = os::host_name;
     json["ProcessObjects"] = Json::Value(Json::arrayValue);
     json["TimeGenerated"] = os::getCurrentTime();
     for (auto log : logs)

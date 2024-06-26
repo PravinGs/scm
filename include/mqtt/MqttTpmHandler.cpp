@@ -1,4 +1,5 @@
 #include "MqttTpmHandler.hpp"
+#include "tpm/TpmEntity.hpp"
 
 template <>
 int MqttTpmHandler::handle(BaseRequest &request)
@@ -13,6 +14,44 @@ int MqttTpmHandler::handle(TpmClearRequest &request)
 
     return (result == TPM2_SUCCESS) ? SCM::SUCCESS : result;
 }
+
+template <>
+int MqttTpmHandler::handle(TpmChangePasswordRequest &request)
+{
+    int result = tpm->changePassword(request.type, request.oldAuth.c_str(), request.newAuth.c_str());
+
+    return (result == TPM2_SUCCESS) ? SCM::SUCCESS : result;
+}
+
+int MqttTpmHandler::handle(TpmRequest &request, int type)
+{
+    TpmContext context(request);
+    std::cout << context.keyName;
+    switch (type)
+    {
+    case 3:
+    {
+        int result = tpm->seal_key(context);
+        return result == SCM::Tpm::TPM2_SUCCESS ? SCM::SUCCESS : result; 
+    }
+    
+    case 4:
+    {
+        return tpm->unseal_key(context);    
+    }
+    
+    default:
+        return SCM::MQTT_INVALID_TPM_COMMAND;
+    }
+}
+
+// template <>
+// int MqttTpmHandler::handle(TpmRequest &request)
+// {
+//     int result = tpm->unseal_key(request);
+
+//     return (result == TPM2_SUCCESS) ? SCM::SUCCESS :result;
+// }
 
 int MqttTpmHandler::testTpmConfiguration()
 {

@@ -14,6 +14,7 @@
 #include "util/constants.hpp"
 #include "mqtt/MqttEntity.hpp"
 #include "db/DbService.hpp"
+#include "TpmEntity.hpp"
 #include "TpmAdmin.hpp"
 #include "TpmSealHash.hpp"
 #include "TpmNv.hpp"

@@ -323,21 +323,12 @@ int os::getRegularFiles(const string &directory, vector<string> &files)
 
 std::string os::getCurrentTime()
 {
-	std::ostringstream oss;
-	time_t now;
-	time(&now);
-
-	struct tm *timeinfo = gmtime(&now); // Get UTC time
-	timeinfo->tm_hour += 5;
-	timeinfo->tm_min += 30;
-
-	// Format time with two-digit seconds and 'Z' for UTC (discard microseconds)
-	oss << std::put_time(timeinfo, "%Y-%m-%dT%H:%M:")
-		<< std::setfill('0') << std::setw(2) << (timeinfo->tm_sec % 100) << 'Z';
-
-	return oss.str();
+	char currentTime[20];
+	time_t now = time(NULL);
+	struct tm *t = localtime(&now);
+	strftime(currentTime, sizeof(currentTime), "%Y-%m-%d %H:%M:%S", t);
+	return Common::convertDpkgTimeToUtcFormat(currentTime);
 }
-
 
 string os::createJSONFile(const string &type)
 {

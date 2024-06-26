@@ -64,7 +64,7 @@ private:
         {
             json["OrgId"] = SCM::Rest::ORG_ID;
             json["AppName"] = entity.name;
-            json["Source"] = os::host_name;
+            json["Topic"] = os::host_name;
             return saveSysLogReport(entity, logs, json);
         }
         else

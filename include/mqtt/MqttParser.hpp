@@ -52,11 +52,11 @@ public:
 
     int responseTypeToInt(const string &responseType)
     {
-        if (responseType == "MqttResponse")
+        if (responseType == "Mqtt")
         {
             return 0;
         }
-        else if (responseType == "RestApiResponse")
+        else if (responseType == "Rest")
         {
             return 1;
         }
@@ -82,7 +82,7 @@ public:
             return request;
         }
         request.id = root["Id"].asString();
-        request.sourceId = root["SourceId"].asString();
+        request.topic = root["Topic"].asString();
         request.targetId = root["TargetId"].asString();
         request.actionType = root["ActionType"].asString();
         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
@@ -113,7 +113,7 @@ public:
         }
         request.id = root["Id"].asString();
         request.actionType = root["ActionType"].asString();
-        request.sourceId = root["SourceId"].asString();
+        request.topic = root["Topic"].asString();
         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
         request.responseType = responseTypeToInt(root["ResponseType"].asString());
         request.inputParams = root["InputParams"];
@@ -137,7 +137,7 @@ public:
             return request;
         }
         request.actionType = root["ActionType"].asString();
-        request.sourceId = root["SourceId"].asString();
+        request.topic = root["Topic"].asString();
         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
         request.responseType = responseTypeToInt(root["ResponseType"].asString());
 
@@ -177,7 +177,7 @@ public:
         }
 
         request.id = root["Id"].asString();
-        request.sourceId = root["SourceId"].asString();
+        request.topic = root["Topic"].asString();
         request.targetId = root["TargetId"].asString();
         request.actionType = root["ActionType"].asString();
         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
@@ -189,9 +189,9 @@ public:
         return request;
     }
 
-    TpmPostRequest extractTpmSealRequest(const string &json_string, int &status, string &error)
+    TpmChangePasswordRequest extractTpmChangePasswordRequest(const string &json_string, int &status, string &error)
     {
-        TpmPostRequest request;
+        TpmChangePasswordRequest request;
         Json::Value root;
         Json::Value child;
         Json::CharReaderBuilder builder;
@@ -206,7 +206,37 @@ public:
         }
 
         request.id = root["Id"].asString();
-        request.sourceId = root["SourceId"].asString();
+        request.topic = root["Topic"].asString();
+        request.targetId = root["TargetId"].asString();
+        request.actionType = root["ActionType"].asString();
+        request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
+        request.responseType = responseTypeToInt(root["ResponseType"].asString());
+        child = root["InputParams"];
+        request.inputParams = child;
+        request.type = child["Type"].asInt();
+        request.oldAuth = child["OldAuth"].asString();
+        request.newAuth = child["NewAuth"].asString();
+        return request;
+    }
+
+    TpmRequest extractTpmSealRequest(const string &json_string, int &status, string &error)
+    {
+        TpmRequest request;
+        Json::Value root;
+        Json::Value child;
+        Json::CharReaderBuilder builder;
+        std::istringstream iss(json_string);
+
+        Json::parseFromStream(builder, iss, &root, &error);
+
+        if (!error.empty())
+        {
+            status = SCM::StatusCode::MQTT_JSON_REQUEST_PARSER_ERROR;
+            return request;
+        }
+
+        request.id = root["Id"].asString();
+        request.topic = root["Topic"].asString();
         request.targetId = root["TargetId"].asString();
         request.actionType = root["ActionType"].asString();
         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
@@ -218,9 +248,42 @@ public:
         request.srkAuth = child["SrkAuth"].asString();
         request.dekAuth = child["DekAuth"].asString();
         request.data = child["Data"].asString();
-        request.objectName = child["ObjectName"].asString();
+        request.keyName = child["KeyName"].asString();
         return request;
     }
 };
 
 #endif
+
+// TpmRequest extractTpmUnSealRequest(const string &json_string, int &status, string &error)
+//     {
+//         TpmRequest request;
+//         Json::Value root;
+//         Json::Value child;
+//         Json::CharReaderBuilder builder;
+//         std::istringstream iss(json_string);
+
+//         Json::parseFromStream(builder, iss, &root, &error);
+
+//         if (!error.empty())
+//         {
+//             status = SCM::StatusCode::MQTT_JSON_REQUEST_PARSER_ERROR;
+//             return request;
+//         }
+
+//         request.id = root["Id"].asString();
+//         request.topic = root["Topic"].asString();
+//         request.targetId = root["TargetId"].asString();
+//         request.actionType = root["ActionType"].asString();
+//         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
+//         request.responseType = responseTypeToInt(root["ResponseType"].asString());
+//         child = root["InputParams"];
+//         request.inputParams = child;
+//         request.dataSize = child["DataSize"].asInt();
+//         request.ownerAuth = child["OwnerAuth"].asString();
+//         request.srkAuth = child["SrkAuth"].asString();
+//         request.dekAuth = child["DekAuth"].asString();
+//         request.data = child["Data"].asString();
+//         request.keyName = child["KeyName"].asString();
+//         return request;
+//     }
