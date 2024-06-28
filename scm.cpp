@@ -16,7 +16,7 @@ int main(int argc, char **argv)
         Common::logfp.open(SCM::Config::LOG_PATH, std::ios::app);
     }
 
-    startMqtt();
+    unsealHash();
 
     if (Common::logfp.is_open())
     {

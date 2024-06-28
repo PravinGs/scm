@@ -56,10 +56,10 @@ public:
 
     int addTpmContext(const TpmContext &handle)
     {
-        int handleValid = validateTpmContext(handle);
-        if (handleValid != TPM2_SUCCESS)
+        int ValidateHandle = validateTpmContext(handle);
+        if (ValidateHandle != TPM2_SUCCESS)
         {
-            return TPM2_INVALID_CONTEXT;
+            return ValidateHandle;
         }
         sqlite3_stmt *stmt = nullptr;
         TPM2_RC response = 0;
@@ -112,10 +112,10 @@ public:
 
     int deleteHandle(const TpmContext &handle)
     {
-        int handleValid = validateTpmContext(handle);
-        if (handleValid != TPM2_SUCCESS)
+        int ValidateHandle = validateTpmContext(handle);
+        if (ValidateHandle != TPM2_SUCCESS)
         {
-            return TPM2_INVALID_CONTEXT;
+            return ValidateHandle;
         }
         TPM2_RC response = 0;
         sqlite3_stmt *stmt = nullptr;
@@ -163,6 +163,32 @@ public:
         }
         return response;
     }
+
+    // std::vector<TpmContext> getAllHandles()
+    // {
+    //     std::vector<TpmContext> handles;
+    //     TPM2_RC response = 0;
+    //     sqlite3_stmt *stmt = nullptr;
+    //     const char *QUERY = "SELECT * FROM handles";
+    //     int success = 0;
+    //     int state = getConnection(dbPath);
+    //     try
+    //     {
+    //         if (connection && state == SCM::SUCCESS)
+    //         {
+    //             if (sqlite3_prepare_v2(connection, QUERY, strlen(QUERY), &stmt, nullptr) == SQLITE_OK)
+    //             {
+    //                 TpmContext context;
+    //                 sqlite3_bind_text(stmt, 1, handle.keyName.c_str(), strlen(handle.keyName.c_str()), SQLITE_STATIC);
+    //                 sqlite3_bind_text(stmt, 2, handle.dekAuth.c_str(), strlen(handle.dekAuth.c_str()), SQLITE_STATIC);
+    //             }
+    //         }
+    //     }
+    //     catch (const std::exception &e)
+    //     {
+    //         std::cerr << e.what() << '\n';
+    //     }
+    // }
 
     int getTpmContextByKeyNameAndDekAuth(TpmContext &handle)
     {
@@ -365,12 +391,12 @@ private:
     {
         if (context.dekAuth.empty())
         {
-            DEBUG("TPM2_INVALID_CONTEXT");
+            DEBUG("DekAuth should not be Empty.");
             return TPM2_EMPTY_STRING;
         }
         else if (context.keyName.empty())
         {
-            DEBUG("TPM2_INVALID_CONTEXT");
+            DEBUG("KeyName should not be Empty.");
             return TPM2_EMPTY_STRING;
         }
         return TPM2_SUCCESS;

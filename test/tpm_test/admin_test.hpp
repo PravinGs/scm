@@ -27,7 +27,7 @@ struct ADMIN_TEST : public testing::Test
         {
             g_context_state = false;
         }
-        // g_context_state = (initialize_db(DEFAULT_DB_PATH) == TPM2_INVALID_DATABASE) ? true : false;
+        // g_context_state = (initialize_db(TPM_CONTEXT_DB_PATH) == TPM2_INVALID_DATABASE) ? true : false;
     }
     void TearDown()
     {

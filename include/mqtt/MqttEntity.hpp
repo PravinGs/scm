@@ -3,6 +3,8 @@
 
 #include "util/Common.hpp"
 
+typedef struct TpmRequest TpmContext;
+
 static const std::map<string, int> actionCommand = {
     {"LOG", 0},
     {"PRO", 1},
@@ -105,6 +107,7 @@ struct TpmClearRequest : BaseRequest
 {
     string lockoutAuth;
     bool isBackupenabled;
+    map<string, string> keys;
     TpmClearRequest() : isBackupenabled(false) {}
 };
 

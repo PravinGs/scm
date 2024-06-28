@@ -33,11 +33,11 @@ class TpmService
         {
             g_context_state = false;
         }
-        // g_context_state = (initialize_db(DEFAULT_DB_PATH) == TPM2_INVALID_DATABASE) ? true : false;
+        // g_context_state = (initialize_db(TPM_CONTEXT_DB_PATH) == TPM2_INVALID_DATABASE) ? true : false;
     }
 
 public:
-    TpmService() : db(std::make_unique<DbService>(SCM::Tpm::DEFAULT_DB_PATH))
+    TpmService() : db(std::make_unique<DbService>(TPM_CONTEXT_DB_PATH))
     {
         setup();
     }

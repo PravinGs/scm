@@ -1,4 +1,5 @@
 #include "MqttPublisher.hpp"
+#include "MqttService.hpp"
 
 MqttPublisher::MqttPublisher(const std::shared_ptr<mqtt::async_client> &client) : client(client) {}
 
@@ -105,7 +106,42 @@ template <>
 void MqttPublisher::sendResponse(const TpmRequest &request, int &status)
 {
     MqttResponse response(request.id, request.actionType);
-    response.errMsg = Common::getErrorString(status);
+
+    try
+    {
+        int flag = tpmCommand.at(request.actionType);
+        switch (flag)
+        {
+        case 1:
+        {
+            // Backup keys
+            break;
+        }
+        case 4:
+        {
+            Json::Value json;
+            if (status == SCM::SUCCESS)
+            {
+                json["Data"] = request.data;
+                json["DataSize"] = request.dataSize;
+                response.result = json;
+            }
+            else
+            {
+                json["DataSize"] = 0;
+            }
+            break;
+        }
+        default:
+            break;
+        }
+    }
+    catch (std::exception &ex)
+    {
+        LOG_ERROR(ex.what());
+        response.errMsg = ex.what();
+    }
+    response.errMsg += Common::getErrorString(status);
     string json = stringBuilder.toJson(response);
     publish(request.topic, json);
 }

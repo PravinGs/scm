@@ -8,7 +8,10 @@
 class TpmKeyService
 {
 public:
-    TpmKeyService() : db(std::make_unique<DbService>(SCM::Tpm::DEFAULT_DB_PATH)) {}
+    TpmKeyService() : db(std::make_unique<DbService>(TPM_CONTEXT_DB_PATH))
+    {
+    }
+
     TPM2_RC createSRK(ESYS_CONTEXT *esys_context, TpmContext &tpmContext)
     {
         TPM2_RC response = TPM2_RC_SUCCESS;
@@ -106,7 +109,6 @@ public:
             Esys_Free(creationHash);
             Esys_Free(creationTicket);
             LOG_ERROR(ex.what());
-            // return ex.errorCode;
         }
         return response;
     }
@@ -191,15 +193,10 @@ public:
                                          permanentHandle, &persistent_handle);
             handleTPMResponse(response, "Unable to save the authorization context");
 
-            response = Esys_TR_Serialize(esys_context, loadedKeyHandle, &buffer, &buffer_size);
+            response = Esys_TR_Serialize(esys_context, persistent_handle, &buffer, &buffer_size);
             handleTPMResponse(response, "Error serializing DEK handle.");
 
             std::ofstream outFile(tpmContext.fileName, std::ios::binary);
-            // if (outFile.is_open())
-            // {
-            //     outFile.write(reinterpret_cast<char *>(buffer), buffer_size);
-            //     outFile.close();
-            // }
             if (!outFile)
             {
                 LOG_ERROR("No such file to write DEK handle:", tpmContext.fileName);

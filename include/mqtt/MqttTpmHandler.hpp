@@ -8,7 +8,7 @@ public:
     MqttTpmHandler() : tpm(std::make_unique<TpmService>()) {}
     template <typename T>
     int handle(T &request);
-    int handle(TpmRequest &request, int type);
+    int handle(TpmContext &context, int type);
 
 private:
     int testTpmConfiguration();

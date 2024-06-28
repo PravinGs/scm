@@ -89,7 +89,6 @@ namespace TestMethods
         }
     }
 
-
     void testSealTpm()
     {
         TpmService service;

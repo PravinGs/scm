@@ -108,9 +108,6 @@ namespace SCM
 		const int TPM2_DEVICE_NOT_EXIST = 205;
 		const int TPM2_SUCCESS = 0;
 		const int TPM2_INVALID_FILE = 10;
-		const int TPM2_INVALID_SEAL_CONTEXT = 11;
-		const int TPM2_INVALID_USER_CONTEXT = 12;
-		const int TPM2_INVALID_PERSISTED_CONTEXT = 13;
 		const int TPM2_INVALID_HIERARCHY_AUTH = 2466;
 		const int TPM2_INVALID_ESYS_CONTEXT = 458757;
 		const int TPM2_INVALID_OBJECT_AUTHORIZATION = 2446;
@@ -129,11 +126,10 @@ namespace SCM
 		const int TPM2_DATABASE_CONSTARINT_VIOLATION = 19;
 		const int TPM2_EMPTY_STRING = 20;
 		const int MAX_SEAL_BUFFER_SIZE = 256;
-		const int TPM2_INVALID_CONTEXT = 44;
 
 		const string SIMULATOR_ADDRESS = "libtss2-tcti-mssim.so.0:host=127.0.0.1,port=2321";
 
-		const string DEFAULT_DB_PATH = "/home/champ/scm/include/db/secrets";
+		const string TPM_CONTEXT_DB_PATH = "/home/champ/scm/include/db/secrets";
 		const string TPM_AUTHORIZATION_STORAGE = "/etc/scl/tpm/";
 		const string SEAL_PREFIX = "seal_";
 		const string NV_PREFIX = "nv_";

@@ -9,7 +9,7 @@ using namespace SCM::Tpm;
 class TpmNv
 {
 public:
-    TpmNv() : db(std::make_unique<DbService>(SCM::Tpm::DEFAULT_DB_PATH)) {}
+    TpmNv() : db(std::make_unique<DbService>(TPM_CONTEXT_DB_PATH)) {}
 
     TPM2_RC nvDelete(ESYS_CONTEXT *esys_context, TpmContext &context)
     {

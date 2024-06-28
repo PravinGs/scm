@@ -5,6 +5,7 @@
 using namespace SCM::Tpm;
 class KeyHandler
 {
+    
 public:
     TPM2_RC createSrk(ESYS_CONTEXT *esys_context, TpmContext &context)
     {
@@ -322,6 +323,7 @@ public:
         }
         return SCM::SUCCESS;
     }
+
 };
 
 #endif

@@ -10,7 +10,7 @@ int MqttTpmHandler::handle(BaseRequest &request)
 template <>
 int MqttTpmHandler::handle(TpmClearRequest &request)
 {
-    int result = tpm->clear_tpm(request.lockoutAuth.c_str());
+    int result = tpm->clear_tpm(request);
 
     return (result == TPM2_SUCCESS) ? SCM::SUCCESS : result;
 }
@@ -23,10 +23,8 @@ int MqttTpmHandler::handle(TpmChangePasswordRequest &request)
     return (result == TPM2_SUCCESS) ? SCM::SUCCESS : result;
 }
 
-int MqttTpmHandler::handle(TpmRequest &request, int type)
+int MqttTpmHandler::handle(TpmContext &context, int type)
 {
-    TpmContext context(request);
-    std::cout << context.keyName;
     switch (type)
     {
     case 3:
@@ -37,7 +35,8 @@ int MqttTpmHandler::handle(TpmRequest &request, int type)
     
     case 4:
     {
-        return tpm->unseal_key(context);    
+        int result = tpm->unseal_key(context); 
+        return result == SCM::Tpm::TPM2_SUCCESS ? SCM::SUCCESS : result;   
     }
     
     default:

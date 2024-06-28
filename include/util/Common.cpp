@@ -1,5 +1,7 @@
 #include "Common.hpp"
 
+using namespace SCM::Tpm;
+
 fstream Common::logfp;
 std::mutex logfile_mutex;
 bool Common::debug = false;
@@ -8,7 +10,7 @@ bool debug_enabled = false;
 bool console_log_enabled = false;
 
 string accessToken = "";
-string dbPath = SCM::Tpm::DEFAULT_DB_PATH;
+string dbPath = TPM_CONTEXT_DB_PATH;
 
 void write_to_file(const string &log)
 {
@@ -434,12 +436,12 @@ vector<string> Common::toVector(const string &line, const char sep)
 
 string Common::generateKeyName(int type, int index)
 {
-    if (!os::isDirExist(SCM::Tpm::TPM_AUTHORIZATION_STORAGE))
+    if (!os::isDirExist(TPM_AUTHORIZATION_STORAGE))
     {
-        (void)os::createDir(SCM::Tpm::TPM_AUTHORIZATION_STORAGE);
+        (void)os::createDir(TPM_AUTHORIZATION_STORAGE);
     }
     string suffix = "key_" + std::to_string(index);
-    return (type == 0) ? (SCM::Tpm::TPM_AUTHORIZATION_STORAGE + SCM::Tpm::SEAL_PREFIX + suffix) : (SCM::Tpm::TPM_AUTHORIZATION_STORAGE + SCM::Tpm::NV_PREFIX + suffix);
+    return (type == 0) ? (TPM_AUTHORIZATION_STORAGE + SEAL_PREFIX + suffix) : (TPM_AUTHORIZATION_STORAGE + NV_PREFIX + suffix);
 }
 
 string Common::getErrorString(const int errorCode)
@@ -462,16 +464,24 @@ string Common::getErrorString(const int errorCode)
         return "MQTT_REQUEST_INVALID_LOG_TYPE";
     case MQTT_INVALID_TPM_COMMAND:
         return "MQTT_INVALID_TPM_COMMAND";
-    case SCM::Tpm::TPM2_ABRMD_NOT_ACTIVE:
+    case TPM2_INVALID_FILE:
+        return "TPM2_INVALID_FILE";
+    case TPM2_ABRMD_NOT_ACTIVE:
         return "TPM2_ABRMD_NOT_ACTIVE";
-    case SCM::Tpm::TPM2_ABRMD_SIMULATOR_ACTIVE:
+    case TPM2_ABRMD_SIMULATOR_ACTIVE:
         return "TPM2_ABRMD_SIMULATOR_ACTIVE";
-    case SCM::Tpm::TPM2_DEVICE_NOT_EXIST:
+    case TPM2_DEVICE_NOT_EXIST:
         return "TPM2_DEVICE_NOT_EXIST";
-    case SCM::Tpm::TSS2_LIBRARY_NOT_EXIST:
+    case TSS2_LIBRARY_NOT_EXIST:
         return "TSS2_LIBRARY_NOT_EXIST";
-    case SCM::Tpm::TPM2_INVALID_HIERARCHY_AUTH:
+    case TPM2_INVALID_HIERARCHY_AUTH:
         return "TPM2_INVALID_HIERARCHY_AUTH";
+    case TPM2_INVALID_OBJECT_CREDENTIAL:
+        return "TPM2_INVALID_OBJECT_CREDENTIAL";
+    case TPM2_PERSISTENT_KEY_LIMIT:
+        return "TPM2_PERSISTENT_KEY_LIMIT";
+    case TPM2_EMPTY_STRING:
+        return "TPM2_EMPTY_STRING";
     default:
         return "Unknown Error Code";
     }

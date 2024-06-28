@@ -8,7 +8,7 @@ using namespace SCM::Tpm;
 struct SEAL_TEST : public testing::Test
 {
     TpmSeal tpmSeal;
-    DbService dbService = DEFAULT_DB_PATH;
+    DbService dbService = TPM_CONTEXT_DB_PATH;
     TpmAdmin tpmAdmin;
     ESYS_CONTEXT *g_esys_context = nullptr;
     TSS2_TCTI_CONTEXT *g_tcti_context = nullptr;
@@ -33,7 +33,7 @@ struct SEAL_TEST : public testing::Test
         {
             g_context_state = false;
         }
-        // g_context_state = (initialize_db(DEFAULT_DB_PATH) == TPM2_INVALID_DATABASE) ? true : false;
+        // g_context_state = (initialize_db(TPM_CONTEXT_DB_PATH) == TPM2_INVALID_DATABASE) ? true : false;
     }
 
     void TearDown()
@@ -75,7 +75,7 @@ string readFile(const string &path)
 // {
 //     if (!g_context_state)
 //     {
-//         if (db(DEFAULT_DB_PATH) == TPM2_INVALID_DATABASE)
+//         if (db(TPM_CONTEXT_DB_PATH) == TPM2_INVALID_DATABASE)
 //         {
 //             GTEST_SKIP() << "Skipping to next test\n";
 //         }

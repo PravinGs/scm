@@ -4,7 +4,7 @@ using namespace SCM::Tpm;
 
 struct DB_TEST : public testing::Test
 {
-    DbService dbService = SCM::Tpm::DEFAULT_DB_PATH;
+    DbService dbService = TPM_CONTEXT_DB_PATH;
 
     void SetUp()
     {

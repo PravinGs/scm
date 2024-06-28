@@ -8,7 +8,7 @@ using namespace SCM::Tpm;
 class TpmAdmin
 {
 public:
-    TpmAdmin() : db(std::make_unique<DbService>(SCM::Tpm::DEFAULT_DB_PATH))
+    TpmAdmin() : db(std::make_unique<DbService>(TPM_CONTEXT_DB_PATH))
     {
     }
 
@@ -85,7 +85,7 @@ public:
         }
     }
 
-    TPM2_RC clearTpm(ESYS_CONTEXT *esys_context, const string &hierarchyAuth)
+    TPM2_RC clearTpm(ESYS_CONTEXT *esys_context, TpmClearRequest& request)
     {
         TPM2_RC response = TPM2_SUCCESS;
         ESYS_TR session = ESYS_TR_NONE;
@@ -93,10 +93,10 @@ public:
 
         TPM2B_AUTH authValue =
             {
-                .size = static_cast<tpm_string_size>(hierarchyAuth.size()),
+                .size = static_cast<tpm_string_size>(request.lockoutAuth.size()),
                 .buffer = {0}};
 
-        memcpy(authValue.buffer, hierarchyAuth.c_str(), (tpm_string_size)hierarchyAuth.size());
+        memcpy(authValue.buffer, request.lockoutAuth.c_str(), (tpm_string_size)request.lockoutAuth.size());
         try
         {
             if (esys_context == nullptr)

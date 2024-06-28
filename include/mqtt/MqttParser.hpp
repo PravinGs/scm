@@ -251,39 +251,36 @@ public:
         request.keyName = child["KeyName"].asString();
         return request;
     }
+
+    TpmRequest extractTpmUnSealRequest(const string &json_string, int &status, string &error)
+    {
+        TpmRequest request;
+        Json::Value root;
+        Json::Value child;
+        Json::CharReaderBuilder builder;
+        std::istringstream iss(json_string);
+
+        Json::parseFromStream(builder, iss, &root, &error);
+
+        if (!error.empty())
+        {
+            status = SCM::StatusCode::MQTT_JSON_REQUEST_PARSER_ERROR;
+            return request;
+        }
+
+        request.id = root["Id"].asString();
+        request.topic = root["Topic"].asString();
+        request.targetId = root["TargetId"].asString();
+        request.actionType = root["ActionType"].asString();
+        request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
+        request.responseType = responseTypeToInt(root["ResponseType"].asString());
+        child = root["InputParams"];
+        request.inputParams = child;
+        request.ownerAuth = child["OwnerAuth"].asString();
+        request.keyName = child["KeyName"].asString();
+        request.dekAuth = child["DekAuth"].asString();
+        return request;
+    }
 };
 
 #endif
-
-// TpmRequest extractTpmUnSealRequest(const string &json_string, int &status, string &error)
-//     {
-//         TpmRequest request;
-//         Json::Value root;
-//         Json::Value child;
-//         Json::CharReaderBuilder builder;
-//         std::istringstream iss(json_string);
-
-//         Json::parseFromStream(builder, iss, &root, &error);
-
-//         if (!error.empty())
-//         {
-//             status = SCM::StatusCode::MQTT_JSON_REQUEST_PARSER_ERROR;
-//             return request;
-//         }
-
-//         request.id = root["Id"].asString();
-//         request.topic = root["Topic"].asString();
-//         request.targetId = root["TargetId"].asString();
-//         request.actionType = root["ActionType"].asString();
-//         request.isAckRequired = root["IsAckRequired"].asBool() ? 1 : 0;
-//         request.responseType = responseTypeToInt(root["ResponseType"].asString());
-//         child = root["InputParams"];
-//         request.inputParams = child;
-//         request.dataSize = child["DataSize"].asInt();
-//         request.ownerAuth = child["OwnerAuth"].asString();
-//         request.srkAuth = child["SrkAuth"].asString();
-//         request.dekAuth = child["DekAuth"].asString();
-//         request.data = child["Data"].asString();
-//         request.keyName = child["KeyName"].asString();
-//         return request;
-//     }

@@ -8,7 +8,7 @@ using namespace SCM::Tpm;
 class TpmSeal
 {
 public:
-    TpmSeal() : db(std::make_unique<DbService>(SCM::Tpm::DEFAULT_DB_PATH))
+    TpmSeal() : db(std::make_unique<DbService>(TPM_CONTEXT_DB_PATH))
     {
     }
 
@@ -154,106 +154,139 @@ public:
         return response;
     }
 
-   /* TPM2_RC deleteSealKey(ESYS_CONTEXT *esys_context, TpmContext &context)
-    {
-        if (esys_context == NULL)
-        {
-            return TPM2_INVALID_ESYS_CONTEXT;
-        }
-        int result = db->getTpmContextByKeyNameAndDekAuth(context);
-        if (result != SCM::SUCCESS)
-        {
-            LOG_ERROR("Invalid object name and password:", context.keyName, context.dekAuth);
-            return SCM::Tpm::TPM2_INVALID_OBJECT_CREDENTIAL;
-        }
-        else
-        {
-            context.fileName = Common::generateKeyName(context.type, context.index);
-        }
+    // void unseal_data(ESYS_CONTEXT *esys_context, TpmContext &tpmContext)
+    // {
+    //     tpmContext.type = 0;
+    //     tpmContext.fileName = Common::generateKeyName(tpmContext.type, tpmContext.index);
+    //     TPMS_CONTEXT context;
+    //     read_context_from_file(&context, tpmContext.fileName);
 
-        TPM2_RC response = TPM2_SUCCESS;
-        ESYS_TR objectHandle = ESYS_TR_NONE;
-        ESYS_TR session = ESYS_TR_NONE;
-        TPMT_SYM_DEF symmteric = {.algorithm = TPM2_ALG_NULL};
-        uint8_t buffer[TPM2_SEAL_BUFFER_SIZE];
-        FILE *file = NULL;
-        size_t buffer_size;
-        std::ifstream file(context.fileName, std::ios::binary);
-        if (!file)
-        {
-            LOG_ERROR("No such file to read dek handle: ", context.fileName);
-            return TPM2_INVALID_FILE; // Or appropriate error handling
-        }
-        else
-        {
-            file.read(reinterpret_cast<char *>(buffer), TPM2_SEAL_BUFFER_SIZE);
-            std::streamsize size = file.gcount();
-            buffer_size = static_cast<size_t>(size);
-            file.close();
-        }
+    //     ESYS_TR primaryHandle;
+    //     TPM2_RC ret = Esys_ContextLoad(esys_context, &context, &primaryHandle);
+    //     if (ret != TSS2_RC_SUCCESS)
+    //     {
+    //         fprintf(stderr, "Esys_ContextLoad failed: 0x%x\n", ret);
+    //         exit(1);
+    //     }
 
-        try
-        {
-            response = Esys_TR_Deserialize(esys_context, buffer, buffer_size, &objectHandle);
-            handleTPMResponse(response, "Failed to DE-Serialize the SRK handle in Seal key deletion.");
-            response = Esys_StartAuthSession(esys_context, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE, NULL, TPM2_SE_HMAC, &symmteric, TPM2_ALG_SHA256, &session);
-            handleTPMResponse(response, "Failed to start auth session.");
-            response = Esys_EvictControl(esys_context, ESYS_TR_RH_OWNER, objectHandle,
-                                         session, ESYS_TR_NONE, ESYS_TR_NONE,
-                                         handle.indexValue, &objectHandle);
-            handleTPMResponse(response, "Failed to evict the handle");
-            response = Esys_FlushContext(esys_context, session);
-        }
-        catch (const TPMException &e)
-        {
-            std::cerr << e.what() << '\n';
-        }
+    //     TPM2B_SENSITIVE_DATA *outData;
+    //     ret = Esys_Unseal(
+    //         esys_context,
+    //         primaryHandle,
+    //         ESYS_TR_PASSWORD,
+    //         ESYS_TR_NONE,
+    //         ESYS_TR_NONE,
+    //         &outData);
+    //     if (ret != TSS2_RC_SUCCESS)
+    //     {
+    //         fprintf(stderr, "Esys_Unseal failed: 0x%x\n", ret);
+    //         exit(1);
+    //     }
 
-        response = Esys_EvictControl(esys_context, ESYS_TR_RH_OWNER, objectHandle,
-                                     session, ESYS_TR_NONE, ESYS_TR_NONE,
-                                     handle.indexValue, &objectHandle);
+    //     Esys_Finalize(&esys_context);
 
-        if (response != TPM2_SUCCESS)
-        {
-            LOG(TPM2_ERROR_STRING, "Failed to evict the handle {%d}", handle.indexValue);
-            goto error;
-        }
+    //     // Use outData as needed
+    // }
+    /* TPM2_RC deleteSealKey(ESYS_CONTEXT *esys_context, TpmContext &context)
+     {
+         if (esys_context == NULL)
+         {
+             return TPM2_INVALID_ESYS_CONTEXT;
+         }
+         int result = db->getTpmContextByKeyNameAndDekAuth(context);
+         if (result != SCM::SUCCESS)
+         {
+             LOG_ERROR("Invalid object name and password:", context.keyName, context.dekAuth);
+             return SCM::Tpm::TPM2_INVALID_OBJECT_CREDENTIAL;
+         }
+         else
+         {
+             context.fileName = Common::generateKeyName(context.type, context.index);
+         }
 
-        response = Esys_FlushContext(esys_context, session);
-        if (response != TPM2_SUCCESS)
-        {
-            LOG(TPM2_ERROR_STRING, "failed to flush session handle.");
-            goto error;
-        }
+         TPM2_RC response = TPM2_SUCCESS;
+         ESYS_TR objectHandle = ESYS_TR_NONE;
+         ESYS_TR session = ESYS_TR_NONE;
+         TPMT_SYM_DEF symmteric = {.algorithm = TPM2_ALG_NULL};
+         uint8_t buffer[TPM2_SEAL_BUFFER_SIZE];
+         FILE *file = NULL;
+         size_t buffer_size;
+         std::ifstream file(context.fileName, std::ios::binary);
+         if (!file)
+         {
+             LOG_ERROR("No such file to read dek handle: ", context.fileName);
+             return TPM2_INVALID_FILE; // Or appropriate error handling
+         }
+         else
+         {
+             file.read(reinterpret_cast<char *>(buffer), TPM2_SEAL_BUFFER_SIZE);
+             std::streamsize size = file.gcount();
+             buffer_size = static_cast<size_t>(size);
+             file.close();
+         }
 
-        if (!(deleteHandle(seal.objectName, seal.dekAuth)))
-        {
-            goto error;
-        }
-        remove(filepath);
-        char *childObjectName = malloc(strlen(seal.objectName) + sizeof(DEK_KEY));
-        strcpy(childObjectName, seal.objectName);
-        strcat(childObjectName, DEK_KEY);
-        LOG(TPM2_INFO_STRING, "DEK key : %s\n", childObjectName);
-        snprintf(filepath, sizeof(filepath), "%d", handle.indexValue + handle.dataSize);
-        LOG(TPM2_INFO_STRING, "The DEK file name : %s\n", filepath);
-        if (!(deleteHandle(childObjectName, seal.dekAuth)))
-        {
-            free(childObjectName);
-            goto error;
-        }
-        remove(filepath);
-        free(childObjectName);
+         try
+         {
+             response = Esys_TR_Deserialize(esys_context, buffer, buffer_size, &objectHandle);
+             handleTPMResponse(response, "Failed to DE-Serialize the SRK handle in Seal key deletion.");
+             response = Esys_StartAuthSession(esys_context, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE, ESYS_TR_NONE, NULL, TPM2_SE_HMAC, &symmteric, TPM2_ALG_SHA256, &session);
+             handleTPMResponse(response, "Failed to start auth session.");
+             response = Esys_EvictControl(esys_context, ESYS_TR_RH_OWNER, objectHandle,
+                                          session, ESYS_TR_NONE, ESYS_TR_NONE,
+                                          handle.indexValue, &objectHandle);
+             handleTPMResponse(response, "Failed to evict the handle");
+             response = Esys_FlushContext(esys_context, session);
+         }
+         catch (const TPMException &e)
+         {
+             std::cerr << e.what() << '\n';
+         }
 
-        return response;
-    error:
-        if (session != ESYS_TR_NONE && Esys_FlushContext(esys_context, session) != TPM2_SUCCESS)
-        {
-            LOG(TPM2_ERROR_STRING, "Failed to clear session context.");
-        }
-        return response;
-    }
-*/
+         response = Esys_EvictControl(esys_context, ESYS_TR_RH_OWNER, objectHandle,
+                                      session, ESYS_TR_NONE, ESYS_TR_NONE,
+                                      handle.indexValue, &objectHandle);
+
+         if (response != TPM2_SUCCESS)
+         {
+             LOG(TPM2_ERROR_STRING, "Failed to evict the handle {%d}", handle.indexValue);
+             goto error;
+         }
+
+         response = Esys_FlushContext(esys_context, session);
+         if (response != TPM2_SUCCESS)
+         {
+             LOG(TPM2_ERROR_STRING, "failed to flush session handle.");
+             goto error;
+         }
+
+         if (!(deleteHandle(seal.objectName, seal.dekAuth)))
+         {
+             goto error;
+         }
+         remove(filepath);
+         char *childObjectName = malloc(strlen(seal.objectName) + sizeof(DEK_KEY));
+         strcpy(childObjectName, seal.objectName);
+         strcat(childObjectName, DEK_KEY);
+         LOG(TPM2_INFO_STRING, "DEK key : %s\n", childObjectName);
+         snprintf(filepath, sizeof(filepath), "%d", handle.indexValue + handle.dataSize);
+         LOG(TPM2_INFO_STRING, "The DEK file name : %s\n", filepath);
+         if (!(deleteHandle(childObjectName, seal.dekAuth)))
+         {
+             free(childObjectName);
+             goto error;
+         }
+         remove(filepath);
+         free(childObjectName);
+
+         return response;
+     error:
+         if (session != ESYS_TR_NONE && Esys_FlushContext(esys_context, session) != TPM2_SUCCESS)
+         {
+             LOG(TPM2_ERROR_STRING, "Failed to clear session context.");
+         }
+         return response;
+     }
+ */
 private:
     TPM2_RC addHash(ESYS_CONTEXT *esys_context, TpmContext &context)
     {
